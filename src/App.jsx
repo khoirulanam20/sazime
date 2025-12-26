@@ -1,80 +1,46 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
+  LineChart, Line, AreaChart, Area, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import {
-  LayoutDashboard,
-  Store,
-  ScanLine,
-  BarChart3,
-  Settings,
-  LogOut,
-  ChevronRight,
-  TrendingUp,
-  AlertCircle,
-  CheckCircle2,
-  Search,
-  Filter,
-  Plus,
-  Download,
-  ArrowLeft,
-  Package,
-  ShoppingBag,
-  ExternalLink,
-  ChevronDown,
-  Wallet,
-  FileSpreadsheet,
-  Edit3,
-  X,
-  Eye,
-  ClipboardList,
-  Calendar,
-  Share2,
-  RefreshCw,
-  Camera,
-  Zap,
-  Key,
-  User,
-  Truck,
-  MapPin,
-  CreditCard,
-  Clock,
-  FileText,
-  CheckSquare,
-  Square,
-  QrCode,
-  Keyboard,
-  Phone,
-  Printer,
-  MoreVertical,
+  LayoutDashboard, Store, ScanLine, Settings, LogOut, ChevronRight,
+  TrendingUp, AlertCircle, CheckCircle2, Search, Filter, Plus,
+  Download, ArrowLeft, Package, ShoppingBag, ExternalLink, ChevronDown,
+  Wallet, FileSpreadsheet, Edit3, X, Eye, Calendar, Share2, RefreshCw,
+  Camera, Zap, Key, User, Truck, MapPin, CreditCard, Clock, FileText,
+  CheckSquare, Square, QrCode, Keyboard, Phone, Printer, Menu
 } from 'lucide-react';
+
+// --- KONFIGURASI TEMA ---
+const THEME = {
+  primary: 'bg-red-600',
+  primaryHover: 'hover:bg-red-700',
+  primaryText: 'text-red-600',
+  primaryBorder: 'border-red-600',
+  primaryLight: 'bg-red-50',
+  primaryLightText: 'text-red-600',
+  secondary: 'bg-slate-900', // Navy
+  secondaryText: 'text-slate-900',
+  headerMobile: 'bg-red-700',
+  bottomNav: 'bg-red-700',
+};
 
 // --- SUB-KOMPONEN UI ---
 
 const Sidebar = ({ activeMenu, setActiveMenu }) => (
-  <div className="hidden lg:flex w-64 bg-slate-900 text-white h-screen fixed left-0 top-0 flex-col z-20 shadow-2xl">
-    <div className="p-6 border-b border-slate-800">
-      <h1 className="text-xl font-bold tracking-tight text-blue-400">
-        SAZIME <span className="text-white">SalesHub</span>
+  <aside className={`hidden lg:flex w-64 ${THEME.secondary} text-white h-screen fixed left-0 top-0 flex-col z-30 shadow-2xl`}>
+    <div className="p-6 border-b border-slate-700/50">
+      <h1 className="text-2xl font-black tracking-tighter flex items-center">
+        <span className="text-red-500 mr-1">SALES</span>
+        <span className="text-white italic">HUB</span>
       </h1>
-      <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-bold">
-        Internal Management
+      <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-bold opacity-80">
+        Internal Management System
       </p>
     </div>
 
-    <nav className="flex-1 p-4 space-y-1">
+    <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
       {[
         { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { id: 'toko', icon: Store, label: 'Toko & Pesanan' },
@@ -86,29 +52,29 @@ const Sidebar = ({ activeMenu, setActiveMenu }) => (
         <button
           key={item.id}
           onClick={() => setActiveMenu(item.id)}
-          className={`flex items-center w-full p-3 rounded-xl transition-all ${
-            activeMenu === item.id ||
-            (activeMenu === 'toko-detail' && item.id === 'toko')
-              ? 'bg-blue-600 text-white shadow-lg'
-              : 'hover:bg-slate-800 text-slate-400'
+          className={`flex items-center w-full p-3.5 rounded-xl transition-all duration-200 group ${
+            activeMenu === item.id || (activeMenu === 'toko-detail' && item.id === 'toko')
+              ? `${THEME.primary} text-white shadow-lg shadow-red-900/20`
+              : 'hover:bg-white/10 text-slate-400 hover:text-white'
           }`}
         >
-          <item.icon className="w-5 h-5 mr-3" />{' '}
-          <span className="font-medium">{item.label}</span>
+          <item.icon className={`w-5 h-5 mr-3 transition-transform ${activeMenu === item.id ? 'scale-110' : 'group-hover:scale-110'}`} />
+          <span className="font-bold text-sm tracking-wide">{item.label}</span>
         </button>
       ))}
     </nav>
 
-    <div className="p-4 border-t border-slate-800">
-      <button className="flex items-center w-full p-3 text-red-400 hover:text-red-300 transition rounded-xl hover:bg-red-950/30">
-        <LogOut className="w-5 h-5 mr-3" /> Keluar
+    <div className="p-4 border-t border-slate-700/50">
+      <button className="flex items-center w-full p-3.5 text-red-400 hover:text-white transition rounded-xl hover:bg-red-600/20 group">
+        <LogOut className="w-5 h-5 mr-3 group-hover:-translate-x-1 transition-transform" />
+        <span className="font-bold">Keluar</span>
       </button>
     </div>
-  </div>
+  </aside>
 );
 
 const BottomNavbar = ({ activeMenu, setActiveMenu }) => (
-  <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around p-2 z-[60] pb-6 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+  <nav className={`lg:hidden fixed bottom-0 left-0 right-0 ${THEME.bottomNav} text-white flex justify-around p-2 z-[60] pb-safe-area shadow-[0_-4px_20px_rgba(0,0,0,0.15)]`}>
     {[
       { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
       { id: 'toko', icon: Store, label: 'Toko' },
@@ -119,307 +85,270 @@ const BottomNavbar = ({ activeMenu, setActiveMenu }) => (
       <button
         key={item.id}
         onClick={() => setActiveMenu(item.id)}
-        className={`flex flex-col items-center p-2 rounded-xl transition-all duration-300 ${
-          activeMenu === item.id ||
-          (activeMenu === 'toko-detail' && item.id === 'toko')
-            ? 'text-blue-600'
-            : 'text-slate-400'
+        className={`flex flex-col items-center p-2 rounded-xl transition-all duration-300 w-1/5 relative ${
+          activeMenu === item.id || (activeMenu === 'toko-detail' && item.id === 'toko')
+            ? 'opacity-100'
+            : 'opacity-60 hover:opacity-100'
         }`}
       >
-        <item.icon
-          className={`w-6 h-6 ${activeMenu === item.id ? 'scale-110' : ''}`}
-        />
-        <span className="text-[10px] font-bold mt-1 uppercase tracking-tighter">
+        <div className={`transition-all duration-300 ${activeMenu === item.id ? '-translate-y-1' : ''}`}>
+           <item.icon className={`w-6 h-6 ${activeMenu === item.id ? 'scale-110 drop-shadow-md' : ''}`} />
+        </div>
+        <span className={`text-[9px] font-bold mt-1 uppercase tracking-tight transition-all ${activeMenu === item.id ? 'opacity-100 font-black' : 'opacity-0 h-0 overflow-hidden'}`}>
           {item.label}
         </span>
+        {activeMenu === item.id && (
+          <span className="absolute -bottom-2 w-1 h-1 bg-white rounded-full"></span>
+        )}
       </button>
     ))}
-  </div>
+  </nav>
 );
 
 const TopBar = ({ activeMenu, activeView, setActiveView }) => (
-  <div className="h-16 bg-white/80 backdrop-blur-md border-b flex items-center justify-between px-6 md:px-8 sticky top-0 z-40">
-    <div className="flex items-center space-x-4 uppercase tracking-tighter">
-      <h2 className="font-black text-slate-800 tracking-tight italic text-lg md:text-xl">
-        {activeMenu.replace('-', ' ')}
+  <header className={`h-16 md:h-20 ${THEME.headerMobile} md:bg-white md:backdrop-blur-md md:border-b md:border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 shadow-sm transition-colors duration-300`}>
+    {/* Mobile Left */}
+    <div className="flex items-center md:hidden">
+       <div className="w-8 h-8 bg-white/10 backdrop-blur rounded-lg flex items-center justify-center mr-3">
+          <span className="font-black text-white text-lg">S</span>
+       </div>
+       <h2 className="font-black text-white tracking-tight text-lg uppercase truncate max-w-[200px]">
+        {activeMenu.replace(/-/g, ' ')}
       </h2>
     </div>
-    <div className="flex items-center space-x-4">
-      <div className="hidden sm:flex bg-slate-100 p-1 rounded-xl">
+
+    {/* Desktop Left */}
+    <div className="hidden md:flex items-center space-x-4 uppercase tracking-tighter">
+      <h2 className="font-black text-slate-900 tracking-tight italic text-2xl">
+        {activeMenu.replace(/-/g, ' ')}
+      </h2>
+    </div>
+
+    {/* Right Section */}
+    <div className="flex items-center space-x-3 md:space-x-4">
+      <div className="flex bg-black/20 md:bg-slate-100 p-1 rounded-xl backdrop-blur-sm">
         <button
           onClick={() => setActiveView('owner')}
-          className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition ${
+          className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${
             activeView === 'owner'
-              ? 'bg-white shadow-sm text-blue-600'
-              : 'text-slate-500'
+              ? 'bg-white shadow-sm text-red-600'
+              : 'text-white/70 md:text-slate-500 hover:text-white md:hover:text-slate-700'
           }`}
         >
           OWNER
         </button>
         <button
           onClick={() => setActiveView('admin')}
-          className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition ${
+          className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${
             activeView === 'admin'
-              ? 'bg-white shadow-sm text-blue-600'
-              : 'text-slate-500'
+              ? 'bg-white shadow-sm text-red-600'
+              : 'text-white/70 md:text-slate-500 hover:text-white md:hover:text-slate-700'
           }`}
         >
           ADMIN
         </button>
       </div>
-      <div className="flex items-center space-x-2 border-l pl-4 font-bold text-slate-700">
-        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-xs">
-          S
+      
+      <div className="flex items-center space-x-2 md:border-l md:border-slate-200 md:pl-4">
+        <div className="w-8 h-8 md:w-10 md:h-10 bg-white md:bg-red-600 rounded-full md:rounded-xl flex items-center justify-center text-red-600 md:text-white text-xs md:text-sm font-black shadow-sm ring-2 ring-white/20 md:ring-0">
+          U
         </div>
-        <span className="text-xs hidden md:inline">Sazime User</span>
+        <div className="hidden md:flex flex-col">
+          <span className="text-xs font-bold text-slate-800">Sazime User</span>
+          <span className="text-[10px] text-slate-500 font-medium">Administrator</span>
+        </div>
       </div>
     </div>
-  </div>
+  </header>
 );
 
 const FilterBar = ({
-  showStore = true,
-  showMarketplace = true,
-  showDate = true,
-  filterStore,
-  setFilterStore,
-  filterMarketplace,
-  setFilterMarketplace,
-  startDate,
-  setStartDate,
-  endDate,
-  setEndDate,
+  showStore = true, showDate = true,
+  filterStore, setFilterStore,
+  startDate, setStartDate,
+  endDate, setEndDate,
+  dateFilterMode, setDateFilterMode,
   stores,
 }) => (
-  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    {showMarketplace && (
-      <div className="space-y-1">
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-          Marketplace
-        </label>
-        <div className="relative">
-          <ShoppingBag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <select
-            value={filterMarketplace}
-            onChange={(e) => setFilterMarketplace(e.target.value)}
-            className="w-full bg-slate-50 border-none rounded-xl text-xs font-bold py-2.5 pl-9 pr-4 outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
-          >
-            <option value="All">Semua Platform</option>
-            <option value="Shopee">Shopee</option>
-            <option value="TikTok Shop">TikTok Shop</option>
-          </select>
-          <ChevronDown className="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-        </div>
-      </div>
-    )}
+  <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 items-center">
     {showStore && (
-      <div className="space-y-1">
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-          Pilih Toko
+      <div className="space-y-1.5">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center">
+          <Store className="w-3 h-3 mr-1" /> Pilih Toko
         </label>
-        <div className="relative">
-          <Store className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <div className="relative group">
           <select
             value={filterStore}
             onChange={(e) => setFilterStore(e.target.value)}
-            className="w-full bg-slate-50 border-none rounded-xl text-xs font-bold py-2.5 pl-9 pr-4 outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+            className="w-full bg-slate-50 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-xl text-xs font-bold py-3 pl-4 pr-10 outline-none focus:ring-2 focus:ring-red-500 transition-all appearance-none cursor-pointer text-slate-700"
           >
             <option value="All">Semua Toko</option>
             {stores.map((s) => (
-              <option key={s.id} value={s.name}>
-                {s.name}
-              </option>
+              <option key={s.id} value={s.name}>{s.name}</option>
             ))}
           </select>
-          <ChevronDown className="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-red-500 transition-colors" />
         </div>
       </div>
     )}
     {showDate && (
-      <>
-        <div className="space-y-1">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-            Dari Tanggal
-          </label>
-          <div className="relative">
-            <Calendar className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full bg-slate-50 border-none rounded-xl text-xs font-bold py-2.5 pl-9 pr-4 outline-none focus:ring-2 focus:ring-blue-500"
-            />
+      <div className="space-y-1.5 lg:col-span-2">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center">
+          <Calendar className="w-3 h-3 mr-1" /> Periode Laporan
+        </label>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-100">
+            {[{ k: 'day', l: 'Hari' }, { k: 'month', l: 'Bulan' }, { k: 'year', l: 'Tahun' }].map((m) => (
+              <button
+                key={m.k}
+                onClick={() => {
+                  setDateFilterMode(m.k);
+                  const now = new Date();
+                  if (m.k === 'day') {
+                    const d = now.toISOString().slice(0, 10);
+                    setStartDate(d); setEndDate(d);
+                  } else if (m.k === 'month') {
+                    const y = now.getFullYear();
+                    const mm = String(now.getMonth() + 1).padStart(2, '0');
+                    setStartDate(`${y}-${mm}-01`);
+                    setEndDate(`${y}-${mm}-${String(new Date(y, now.getMonth() + 1, 0).getDate()).padStart(2, '0')}`);
+                  } else {
+                    const y = now.getFullYear();
+                    setStartDate(`${y}-01-01`); setEndDate(`${y}-12-31`);
+                  }
+                }}
+                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                  dateFilterMode === m.k ? 'bg-white shadow-sm text-red-600 ring-1 ring-slate-100' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {m.l}
+              </button>
+            ))}
+          </div>
+          <div className="relative flex-1">
+            {dateFilterMode === 'day' ? (
+              <input type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setEndDate(e.target.value); }} className="w-full bg-slate-50 rounded-xl text-xs font-bold py-2.5 px-4 outline-none focus:ring-2 focus:ring-red-500 border border-slate-100" />
+            ) : dateFilterMode === 'month' ? (
+              <input type="month" value={startDate.slice(0, 7)} onChange={(e) => { const [y, m] = e.target.value.split('-'); setStartDate(`${y}-${m}-01`); setEndDate(`${y}-${m}-${new Date(y, m, 0).getDate()}`); }} className="w-full bg-slate-50 rounded-xl text-xs font-bold py-2.5 px-4 outline-none focus:ring-2 focus:ring-red-500 border border-slate-100" />
+            ) : (
+              <input type="number" min="2000" max="2099" value={startDate.slice(0, 4)} onChange={(e) => { const y = e.target.value; setStartDate(`${y}-01-01`); setEndDate(`${y}-12-31`); }} className="w-full bg-slate-50 rounded-xl text-xs font-bold py-2.5 px-4 outline-none focus:ring-2 focus:ring-red-500 border border-slate-100" />
+            )}
           </div>
         </div>
-        <div className="space-y-1">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-            Sampai Tanggal
-          </label>
-          <div className="relative">
-            <Calendar className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full bg-slate-50 border-none rounded-xl text-xs font-bold py-2.5 pl-9 pr-4 outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-      </>
+      </div>
     )}
   </div>
 );
 
 const Modal = ({ title, type, onClose, data, products }) => (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+  <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/80 backdrop-blur-sm sm:p-4">
     <div
-      className={`bg-white rounded-[2.5rem] w-full ${
-        type === 'order-detail' || type === 'store-orders'
-          ? 'max-w-2xl'
-          : type === 'integrasi-api' || type === 'setting-profil'
-          ? 'max-w-lg'
-          : 'max-w-md'
-      } shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col`}
+      className={`bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full ${
+        ['order-detail', 'store-orders'].includes(type) ? 'max-w-2xl' : 'max-w-md'
+      } shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300 max-h-[90vh] flex flex-col`}
     >
-      <div className="p-6 border-b flex justify-between items-center bg-slate-50 font-black shrink-0">
-        <h3 className="text-lg text-slate-800 tracking-tight uppercase italic">
+      <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+        <h3 className="text-lg text-slate-800 font-black tracking-tight uppercase italic flex items-center">
+           <span className="w-1 h-6 bg-red-600 mr-3 rounded-full"></span>
           {title}
         </h3>
-        <button
-          onClick={onClose}
-          className="p-2 hover:bg-slate-200 rounded-full transition"
-        >
+        <button onClick={onClose} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-full transition-colors">
           <X className="w-5 h-5" />
         </button>
       </div>
-      <div className="p-8 space-y-6 overflow-y-auto">
+      
+      <div className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
         {type === 'order-detail' && data ? (
-          <div className="space-y-6 text-sm">
-            <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex justify-between items-center">
+          <div className="space-y-6">
+            <div className="bg-red-50 p-5 rounded-2xl border border-red-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <p className="text-[10px] text-blue-500 font-bold uppercase">
-                  No. Pesanan
-                </p>
-                <p className="font-mono font-black text-lg text-blue-900">
-                  {data.id}
-                </p>
+                <p className="text-[10px] text-red-500 font-black uppercase tracking-widest">No. Pesanan</p>
+                <p className="font-mono font-black text-lg md:text-xl text-slate-900 tracking-tight">{data.id}</p>
               </div>
-              <div className="text-right">
-                <p className="text-[10px] text-blue-500 font-bold uppercase">
-                  Waktu Pesanan
-                </p>
-                <p className="font-bold text-blue-900">
-                  {data.waktuDibuat || '2025-11-01 10:40'}
-                </p>
+              <div className="text-left sm:text-right">
+                 <p className="text-[10px] text-red-500 font-black uppercase tracking-widest">Waktu Pesanan</p>
+                 <p className="font-bold text-slate-700">{data.waktuDibuat || '2025-11-01 10:40'}</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
               <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <User className="w-5 h-5 text-slate-400 mt-0.5" />
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">
-                      Pembeli / Penerima
-                    </p>
-                    <p className="font-bold text-slate-800">{data.username}</p>
-                    <p className="text-xs text-slate-500">
-                      {data.namaPenerima} ({data.noTelepon})
-                    </p>
+                {[
+                  { icon: User, label: 'Pembeli', val: data.username, sub: `${data.namaPenerima} (${data.noTelepon})` },
+                  { icon: MapPin, label: 'Alamat', val: `${data.alamat}, ${data.kota}` },
+                  { icon: CreditCard, label: 'Pembayaran', val: data.metodePembayaran },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start space-x-3 group">
+                    <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-red-50 transition-colors">
+                      <item.icon className="w-4 h-4 text-slate-400 group-hover:text-red-500" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase">{item.label}</p>
+                      <p className="font-bold text-slate-800 leading-tight">{item.val}</p>
+                      {item.sub && <p className="text-xs text-slate-500 mt-0.5">{item.sub}</p>}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <MapPin className="w-5 h-5 text-slate-400 mt-0.5" />
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">
-                      Alamat Pengiriman
-                    </p>
-                    <p className="font-bold text-slate-800 leading-tight">
-                      {data.alamat}, {data.kota}, {data.provinsi}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <CreditCard className="w-5 h-5 text-slate-400 mt-0.5" />
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">
-                      Metode Pembayaran
-                    </p>
-                    <p className="font-bold text-slate-800">
-                      {data.metodePembayaran}
-                    </p>
-                  </div>
-                </div>
+                ))}
               </div>
               <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <Truck className="w-5 h-5 text-slate-400 mt-0.5" />
+                <div className="flex items-start space-x-3 group">
+                  <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-red-50 transition-colors">
+                    <Truck className="w-4 h-4 text-slate-400 group-hover:text-red-500" />
+                  </div>
                   <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">
-                      Pengiriman
-                    </p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase">Ekspedisi</p>
                     <p className="font-bold text-slate-800">{data.jasaKirim}</p>
-                    <p className="text-xs text-blue-600 font-medium">
-                      Status: {data.kurirStatus}
-                    </p>
-                    <p className="text-[10px] text-slate-500 font-mono mt-1">
-                      Resi: {data.resi}
-                    </p>
+                    <div className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 mt-1">
+                      {data.kurirStatus}
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <FileText className="w-5 h-5 text-slate-400 mt-0.5" />
+                <div className="flex items-start space-x-3 group">
+                  <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-red-50 transition-colors">
+                    <FileText className="w-4 h-4 text-slate-400 group-hover:text-red-500" />
+                  </div>
                   <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">
-                      Catatan
-                    </p>
-                    <p className="font-bold text-slate-800 italic">
-                      "{data.catatan}"
-                    </p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase">Catatan</p>
+                    <p className="font-bold text-slate-800 italic text-xs">"{data.catatan || '-'}"</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-slate-100 pt-4 space-y-2">
-              <p className="text-[10px] text-slate-400 font-bold uppercase mb-2">
-                Rincian Produk
-              </p>
-              <div className="bg-slate-50 p-3 rounded-xl flex justify-between items-center">
+            <div className="border-t border-dashed border-slate-200 pt-4">
+              <p className="text-[10px] text-slate-400 font-black uppercase mb-3 tracking-widest">Item Pesanan</p>
+              <div className="bg-slate-50 p-4 rounded-xl flex justify-between items-center border border-slate-100">
                 <div>
-                  <p className="font-bold text-slate-800">{data.produk}</p>
-                  <p className="text-xs text-slate-500 italic">
-                    {data.variasi} x {data.jumlah}
-                  </p>
+                  <p className="font-bold text-slate-800 text-sm">{data.produk}</p>
+                  <p className="text-xs text-slate-500 font-medium mt-1">Variasi: {data.variasi} <span className="mx-1">•</span> Qty: {data.jumlah}</p>
                 </div>
-                <p className="font-bold text-slate-800">
-                  Rp {data.totalBayar.toLocaleString()}
-                </p>
+                <div className="text-right">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold">Total</p>
+                  <p className="font-black text-red-600 text-base">Rp {data.totalBayar.toLocaleString()}</p>
+                </div>
               </div>
             </div>
           </div>
         ) : type === 'store-orders' ? (
           <div className="space-y-4">
-            <p className="text-sm text-slate-500">
-              Menampilkan daftar pesanan yang masuk dalam rekap periode ini.
-            </p>
-            <div className="overflow-x-auto border border-slate-200 rounded-xl">
-              <table className="w-full text-left text-sm">
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs text-slate-500">
+              Menampilkan daftar pesanan yang masuk dalam periode laporan.
+            </div>
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <table className="w-full text-left text-sm min-w-max">
                 <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase">
                   <tr>
                     <th className="px-4 py-3">Order ID</th>
-                    <th className="px-4 py-3">Tgl Selesai</th>
-                    <th className="px-4 py-3 text-right">Setoran</th>
+                    <th className="px-4 py-3">Tanggal</th>
+                    <th className="px-4 py-3 text-right">Nominal</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-slate-100">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <tr key={i}>
-                      <td className="px-4 py-3 font-mono">ORD-2025-{i}99</td>
-                      <td className="px-4 py-3">2{i} Nov 2025</td>
-                      <td className="px-4 py-3 text-right font-bold text-emerald-600">
-                        Rp 150.000
-                      </td>
+                    <tr key={i} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-3 font-mono text-xs font-bold text-slate-700">ORD-2025-{i}99</td>
+                      <td className="px-4 py-3 text-xs text-slate-500">2{i} Nov 2025</td>
+                      <td className="px-4 py-3 text-right font-black text-emerald-600">Rp 150.000</td>
                     </tr>
                   ))}
                 </tbody>
@@ -427,40 +356,131 @@ const Modal = ({ title, type, onClose, data, products }) => (
             </div>
           </div>
         ) : type === 'harga-setoran' ? (
-          <div className="space-y-4">
-            <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl flex items-start space-x-3 mb-4">
-              <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
-              <p className="text-[11px] text-amber-700 leading-relaxed font-bold">
-                Perubahan ini akan memperbarui HARGA SETORAN untuk semua barang
-                dengan nama yang sama secara GLOBAL.
+          <div className="space-y-5">
+             <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl flex gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
+              <p className="text-xs text-amber-800 font-medium leading-relaxed">
+                Perubahan ini akan memperbarui <b>HARGA SETORAN</b> untuk semua barang dengan nama yang sama secara global.
               </p>
             </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                Pilih Barang dari List
-              </label>
-              <select className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none font-bold cursor-pointer hover:bg-slate-100 transition">
-                <option>-- Pilih Barang --</option>
-                {products &&
-                  products.map((p) => (
-                    <option key={p.id} value={p.name}>
-                      {p.name} (SKU: {p.sku})
-                    </option>
-                  ))}
-              </select>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pilih Barang</label>
+                <select className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500">
+                  <option>-- Pilih Barang --</option>
+                  {products?.map((p) => <option key={p.id} value={p.name}>{p.name}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Harga Setoran Baru</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rp</span>
+                  <input type="number" className="w-full p-3 pl-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-black outline-none focus:ring-2 focus:ring-red-500" placeholder="0" />
+                </div>
+              </div>
             </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                Harga Setoran Baru (Rp)
+            <button className="w-full py-3.5 bg-red-600 text-white rounded-xl font-black shadow-lg shadow-red-200 hover:bg-red-700 transition uppercase tracking-widest text-sm">Simpan Harga</button>
+          </div>
+        ) : type === 'integrasi-api' ? (
+          <div className="space-y-6">
+            <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-start space-x-3">
+              <Key className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[11px] text-red-700 leading-relaxed font-bold">
+                  Masukkan API Key dari Binderbyte untuk mengaktifkan fitur pelacakan resi otomatis.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                Binderbyte API Key
               </label>
               <input
-                type="number"
-                placeholder="Contoh: 350000"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none font-bold"
+                type="password"
+                placeholder="Masukkan API Key 64 karakter..."
+                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-mono focus:ring-2 focus:ring-red-500 outline-none font-bold"
               />
+              <p className="text-[10px] text-slate-400 font-medium ml-1">
+                API Key dapat diperoleh dari dashboard Binderbyte
+              </p>
             </div>
-            <button className="w-full py-4 bg-emerald-600 text-white rounded-xl font-black shadow-lg hover:bg-emerald-700 transition uppercase mt-4">
-              Simpan Perubahan Global
+            <button className="w-full py-4 bg-red-600 text-white rounded-2xl font-black shadow-lg hover:bg-red-700 transition uppercase tracking-widest text-sm">
+              Simpan API Key
+            </button>
+          </div>
+        ) : type === 'setting-profil' ? (
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="w-24 h-24 bg-slate-100 rounded-2xl flex items-center justify-center border-2 border-dashed border-slate-300 cursor-pointer hover:border-red-500 hover:bg-red-50 transition group">
+                  <Camera className="w-8 h-8 text-slate-400 group-hover:text-red-600" />
+                </div>
+                <button className="text-xs font-bold text-red-600 hover:text-red-700 uppercase tracking-widest">
+                  Upload Logo
+                </button>
+              </div>
+              
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  Nama Perusahaan / Toko
+                </label>
+                <input
+                  type="text"
+                  placeholder="Masukkan nama perusahaan..."
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  Alamat Pusat
+                </label>
+                <textarea
+                  placeholder="Masukkan alamat lengkap..."
+                  rows="3"
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500 resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                    Kota
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Kota"
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                    Provinsi
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Provinsi"
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  Nomor Telepon
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="tel"
+                    placeholder="081234567890"
+                    className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+              </div>
+            </div>
+            <button className="w-full py-4 bg-red-600 text-white rounded-2xl font-black shadow-lg hover:bg-red-700 transition uppercase tracking-widest text-sm">
+              Simpan Perubahan
             </button>
           </div>
         ) : type === 'add-store' ? (
@@ -474,7 +494,7 @@ const Modal = ({ title, type, onClose, data, products }) => (
                   (platform) => (
                     <button
                       key={platform}
-                      className="p-4 rounded-2xl border-2 border-slate-100 font-bold text-sm text-slate-600 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="p-4 rounded-2xl border-2 border-slate-100 font-bold text-sm text-slate-600 hover:border-red-500 hover:text-red-600 hover:bg-red-50 transition focus:ring-2 focus:ring-red-500 focus:outline-none"
                     >
                       {platform}
                     </button>
@@ -489,486 +509,229 @@ const Modal = ({ title, type, onClose, data, products }) => (
               <input
                 type="text"
                 placeholder="Masukkan Nama Toko..."
-                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 transition"
+                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:border-red-500 transition"
               />
             </div>
-            <button className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-blue-200 hover:bg-blue-700 transition">
+            <button className="w-full py-4 bg-red-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-red-200 hover:bg-red-700 transition">
               Simpan Toko Baru
             </button>
           </div>
-        ) : type === 'integrasi-api' ? (
-          <div className="space-y-6">
-            <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-start space-x-3">
-              <Key className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-[11px] text-blue-700 leading-relaxed font-bold">
-                  Masukkan API Key dari Binderbyte untuk mengaktifkan fitur pelacakan resi otomatis.
-                </p>
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                Binderbyte API Key
-              </label>
-              <input
-                type="password"
-                placeholder="Masukkan API Key 64 karakter..."
-                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-mono focus:ring-2 focus:ring-blue-500 outline-none font-bold"
-              />
-              <p className="text-[10px] text-slate-400 font-medium ml-1">
-                API Key dapat diperoleh dari dashboard Binderbyte
-              </p>
-            </div>
-            <button className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg hover:bg-blue-700 transition uppercase tracking-widest">
-              Simpan API Key
-            </button>
-          </div>
-        ) : type === 'setting-profil' ? (
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="w-24 h-24 bg-slate-100 rounded-2xl flex items-center justify-center border-2 border-dashed border-slate-300 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition group">
-                  <Camera className="w-8 h-8 text-slate-400 group-hover:text-blue-600" />
-                </div>
-                <button className="text-xs font-bold text-blue-600 hover:text-blue-700 uppercase tracking-widest">
-                  Upload Logo
-                </button>
-              </div>
-              
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                  Nama Perusahaan / Toko
-                </label>
-                <input
-                  type="text"
-                  placeholder="Masukkan nama perusahaan..."
-                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                  Alamat Pusat
-                </label>
-                <textarea
-                  placeholder="Masukkan alamat lengkap..."
-                  rows="3"
-                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                    Kota
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Kota"
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                    Provinsi
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Provinsi"
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                  Nomor Telepon
-                </label>
-                <div className="relative">
-                  <Phone className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="tel"
-                    placeholder="081234567890"
-                    className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-            <button className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg hover:bg-blue-700 transition uppercase tracking-widest">
-              Simpan Perubahan
-            </button>
-          </div>
         ) : (
-          <div className="text-center py-4 space-y-4">
-            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
-              <FileSpreadsheet className="w-10 h-10 text-slate-200" />
-            </div>
-            <p className="text-slate-500 text-xs font-black uppercase italic tracking-widest opacity-50">
-              Fungsi Import Excel
-            </p>
-          </div>
+           <div className="text-center py-10">
+             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+               <Settings className="w-8 h-8 text-slate-300" />
+             </div>
+             <p className="text-slate-500 font-bold">Fitur ini sedang dalam pengembangan.</p>
+           </div>
         )}
-        {type !== 'order-detail' &&
-          type !== 'harga-setoran' &&
-          type !== 'add-store' &&
-          type !== 'integrasi-api' &&
-          type !== 'setting-profil' && (
-            <button
-              onClick={onClose}
-              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase shadow-lg shadow-slate-200 hover:bg-slate-800 transition tracking-widest"
-            >
-              Tutup
-            </button>
-          )}
       </div>
     </div>
   </div>
 );
 
-// --- MAIN APP ---
+// --- MAIN APP COMPONENT ---
 
 const App = () => {
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [selectedStore, setSelectedStore] = useState(null);
   const [activeView, setActiveView] = useState('owner');
-
   const [filterStore, setFilterStore] = useState('All');
-  const [filterMarketplace, setFilterMarketplace] = useState('All');
-  const [startDate, setStartDate] = useState('2025-11-01');
-  const [endDate, setEndDate] = useState('2025-11-30');
+  
+  // Date Handling
+  const _now = new Date();
+  const [startDate, setStartDate] = useState(`${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-01`);
+  const [endDate, setEndDate] = useState(`${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(new Date(_now.getFullYear(), _now.getMonth() + 1, 0).getDate()).padStart(2, '0')}`);
+  const [dateFilterMode, setDateFilterMode] = useState('month');
 
+  // UI States
   const [detailTab, setDetailTab] = useState('pesanan');
   const [showModal, setShowModal] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
-
   const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [refreshingStatus, setRefreshingStatus] = useState(null);
+  const [scanMode, setScanMode] = useState('camera');
   const [selectedOrderIds, setSelectedOrderIds] = useState([]);
+  const [selectedShippingIds, setSelectedShippingIds] = useState([]);
+  const [showActionDropdown, setShowActionDropdown] = useState(false);
+  const [isCompactMobile, setIsCompactMobile] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', undoData: null, timerId: null });
 
-  // State baru untuk mode scan
-  const [scanMode, setScanMode] = useState('camera'); // 'camera' or 'manual'
-
-  // State untuk waktu terakhir cek resi massal
+  // Last Check States
   const [lastBulkCheckToko, setLastBulkCheckToko] = useState(null);
   const [lastBulkCheckPengiriman, setLastBulkCheckPengiriman] = useState(null);
 
-  // State untuk dropdown menu aksi
-  const [showActionDropdown, setShowActionDropdown] = useState(false);
+  // Mock Data
+  const stores = [
+    { id: 1, name: 'Sazime Official Store', platform: 'Shopee', totalOrders: 450, totalSetoran: 12500000, omset: 65000000, status: 'Active' },
+    { id: 2, name: 'Sazime Woodwork', platform: 'TikTok Shop', totalOrders: 320, totalSetoran: 8200000, omset: 42000000, status: 'Active' },
+    { id: 3, name: 'Sazime Second Store', platform: 'Shopee', totalOrders: 110, totalSetoran: 2100000, omset: 12000000, status: 'Inactive' },
+  ];
 
-  // Handler untuk cek resi massal di halaman detail toko
+  const products = [
+    { id: 1, name: 'Sangkar Murai No 1', sku: 'SKR-M01', stock: 45, hargaSetoran: 350000 },
+    { id: 2, name: 'Sangkar Kotak Jati', sku: 'SKR-K02', stock: 12, hargaSetoran: 210000 },
+  ];
+
+  const [orders, setOrders] = useState([
+    {
+      id: '251101K28MAGVY', storeName: 'Sazime Official Store', platform: 'Shopee', status: 'Selesai',
+      resi: 'SPXID05015085787B', jasaKirim: 'Reguler (Cashless)-SPX Standard', kurirStatus: 'Tiba di Tujuan',
+      produk: 'Sangkar Murai No 1 - Sazime Original', variasi: 'No. 1 - (6cm)', jumlah: 1,
+      totalBayar: 245000, setoran: 200000, username: 'customer_shopee_01', namaPenerima: 'R******h',
+      noTelepon: '******70', alamat: 'Jalan Pendidikan Gang Jawa', kota: 'KAB. SAMBAS',
+      metodePembayaran: 'COD', waktuDibuat: '2025-12-03 23:59', sudahDibayar: 150000,
+      catatan: 'Packing kayu ya kak'
+    },
+    {
+      id: '251126R2SVSYNX', storeName: 'Sazime Woodwork', platform: 'TikTok Shop', status: 'Selesai',
+      resi: 'SPXID05704205283B', jasaKirim: 'Hemat Kargo-SPX Hemat', kurirStatus: 'Dalam Perjalanan',
+      produk: 'Cangkir Cepuk Pakan Mika', variasi: 'Segi 8 Bening', jumlah: 3,
+      totalBayar: 180000, setoran: 150000, username: 'grosir_bird_shop', namaPenerima: 'Budi Santoso',
+      noTelepon: '08123456789', alamat: 'Jl. Merdeka No 45', kota: 'SURABAYA',
+      metodePembayaran: 'Transfer', waktuDibuat: '2025-11-26 10:40', sudahDibayar: 0,
+      catatan: 'Warna campur gan'
+    },
+  ]);
+
+  // Effects & Helpers
+  useEffect(() => {
+    const onResize = () => setIsCompactMobile(window.innerWidth < 640);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const filteredOrders = useMemo(() => orders.filter(o => {
+    const d = o.waktuDibuat.split(' ')[0];
+    return (filterStore === 'All' || o.storeName === filterStore) &&
+           (!startDate || d >= startDate) && (!endDate || d <= endDate);
+  }), [orders, filterStore, startDate, endDate]);
+
+  const filteredStores = useMemo(() => {
+    return filterStore === 'All' ? stores : stores.filter(s => s.name === filterStore);
+  }, [filterStore, stores]);
+
+  const totalSetoran = useMemo(() => filteredStores.reduce((acc, s) => acc + s.totalSetoran, 0), [filteredStores]);
+
+  const perStoreSummary = useMemo(() => {
+    const map = {};
+    stores.forEach((s) => {
+      map[s.name] = { totalSetoran: 0, sudahDibayar: 0 };
+    });
+    orders.forEach((o) => {
+      if (!map[o.storeName]) map[o.storeName] = { totalSetoran: 0, sudahDibayar: 0 };
+      map[o.storeName].totalSetoran += o.setoran || 0;
+      map[o.storeName].sudahDibayar += o.sudahDibayar || 0;
+    });
+    return map;
+  }, [orders, stores]);
+  
+  const totalSudahDibayar = useMemo(
+    () => orders.reduce((acc, curr) => acc + (curr.sudahDibayar || 0), 0),
+    [orders]
+  );
+
+  const sisaTagihan = totalSetoran - totalSudahDibayar;
+
+  // Actions
+  const handleBulkMarkPaid = () => {
+    const prevOrders = [...orders];
+    setOrders(prev => prev.map(o => selectedOrderIds.includes(o.id) ? { ...o, sudahDibayar: o.setoran } : o));
+    setShowActionDropdown(false);
+    
+    // Toast with Undo
+    if (toast.timerId) clearTimeout(toast.timerId);
+    const tid = setTimeout(() => setToast({ show: false, message: '', undoData: null, timerId: null }), 5000);
+    setToast({
+      show: true,
+      message: `${selectedOrderIds.length} pesanan ditandai lunas.`,
+      undoData: prevOrders,
+      timerId: tid
+    });
+    setSelectedOrderIds([]);
+  };
+
+  const undoAction = () => {
+    if (toast.undoData) setOrders(toast.undoData);
+    setToast({ show: false, message: '', undoData: null, timerId: null });
+  };
+
   const handleBulkCheckToko = () => {
     setLastBulkCheckToko(new Date());
     setShowActionDropdown(false);
-    // TODO: Implementasi logika cek resi massal
-    console.log('Cek resi massal untuk toko:', selectedOrderIds);
   };
 
-  // Handler untuk cetak resi massal
+  const handleBulkCheckPengiriman = () => {
+     setLastBulkCheckPengiriman(new Date());
+  }
+
   const handlePrintResi = () => {
     setShowActionDropdown(false);
-    // TODO: Implementasi logika cetak resi
-    console.log('Cetak resi untuk toko:', selectedOrderIds);
-    window.print(); // Temporary: trigger print dialog
+    window.print();
   };
 
-  // Handler untuk cek resi massal di halaman pengiriman
-  const handleBulkCheckPengiriman = () => {
-    setLastBulkCheckPengiriman(new Date());
-    // TODO: Implementasi logika cek resi massal
-    console.log('Cek resi massal untuk pengiriman:', selectedShippingIds);
-  };
-
-  // Format waktu untuk ditampilkan
   const formatLastCheckTime = (date) => {
     if (!date) return null;
     const now = new Date();
     const diff = now - date;
     const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
     if (minutes < 1) return 'Baru saja';
     if (minutes < 60) return `${minutes} menit yang lalu`;
-    if (hours < 24) return `${hours} jam yang lalu`;
-    if (days < 7) return `${days} hari yang lalu`;
-
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return '1+ jam yang lalu';
   };
 
-  // Data Mock Updated with store info for filtering
-  const stores = [
-    {
-      id: 1,
-      name: 'Sazime Official Store',
-      platform: 'Shopee',
-      totalOrders: 450,
-      totalSetoran: 12500000,
-      omset: 65000000,
-      status: 'Active',
-    },
-    {
-      id: 2,
-      name: 'Sazime Woodwork',
-      platform: 'TikTok Shop',
-      totalOrders: 320,
-      totalSetoran: 8200000,
-      omset: 42000000,
-      status: 'Active',
-    },
-    {
-      id: 3,
-      name: 'Sazime Second Store',
-      platform: 'Shopee',
-      totalOrders: 110,
-      totalSetoran: 2100000,
-      omset: 12000000,
-      status: 'Inactive',
-    },
-  ];
+  // --- CONTENT PAGES ---
 
-  const mockOrders = [
-    {
-      id: '251101K28MAGVY',
-      storeName: 'Sazime Official Store',
-      platform: 'Shopee',
-      status: 'Selesai',
-      resi: 'SPXID05015085787B',
-      jasaKirim: 'Reguler (Cashless)-SPX Standard',
-      kurirStatus: 'Tiba di Tujuan',
-      produk: 'Sangkar Murai No 1 - Sazime Original',
-      variasi: 'No. 1 - (6cm)',
-      jumlah: 1,
-      totalBayar: 245000,
-      setoran: 200000,
-      waktuSelesai: '2025-12-20 19:39',
-      username: 'customer_shopee_01',
-      namaPenerima: 'R******h',
-      noTelepon: '******70',
-      alamat: 'Jalan Pendidikan Gang Jawa, RT.4/RW.2, Dusun Jawa, Sambas',
-      kota: 'KAB. SAMBAS',
-      provinsi: 'KALIMANTAN BARAT',
-      metodePembayaran: 'COD (Bayar di Tempat)',
-      waktuDibuat: '2025-11-03 23:59',
-      catatan: 'Packing kayu ya kak',
-    },
-    {
-      id: '251126R2SVSYNX',
-      storeName: 'Sazime Woodwork',
-      platform: 'TikTok Shop',
-      status: 'Selesai',
-      resi: 'SPXID05704205283B',
-      jasaKirim: 'Hemat Kargo-SPX Hemat',
-      kurirStatus: 'Dalam Perjalanan',
-      produk: '(GROSIR 1 PACK) Cangkir Cepuk Pakan Mika',
-      variasi: 'Segi 8 Bening',
-      jumlah: 3,
-      totalBayar: 180000,
-      setoran: 150000,
-      waktuSelesai: '2025-12-21 10:40',
-      username: 'grosir_bird_shop',
-      namaPenerima: 'Budi Santoso',
-      noTelepon: '08123456789',
-      alamat: 'Jl. Merdeka No 45',
-      kota: 'SURABAYA',
-      provinsi: 'JAWA TIMUR',
-      metodePembayaran: 'ShopeePay',
-      waktuDibuat: '2025-11-26 10:40',
-      catatan: 'Warna campur gan',
-    },
-  ];
-
-  const products = [
-    {
-      id: 1,
-      name: 'Sangkar Murai No 1',
-      sku: 'SKR-M01',
-      stock: 45,
-      hargaSetoran: 350000,
-    },
-    {
-      id: 2,
-      name: 'Sangkar Kotak Jati',
-      sku: 'SKR-K02',
-      stock: 12,
-      hargaSetoran: 210000,
-    },
-  ];
-
-  const setoranTrendData = [
-    { name: '1 Nov', setoran: 4500000 },
-    { name: '10 Nov', setoran: 5200000 },
-    { name: '20 Nov', setoran: 4800000 },
-    { name: '30 Nov', setoran: 6100000 },
-  ];
-
-  // Filtering Logic for Orders
-  const filteredOrders = useMemo(() => {
-    return mockOrders.filter((order) => {
-      // Basic date filter logic (simplified for string comparison)
-      const orderDate = order.waktuDibuat.split(' ')[0]; // Extract YYYY-MM-DD
-      const isDateInRange =
-        (!startDate || orderDate >= startDate) &&
-        (!endDate || orderDate <= endDate);
-
-      const isStoreMatch =
-        filterStore === 'All' || order.storeName === filterStore;
-      const isPlatformMatch =
-        filterMarketplace === 'All' || order.platform === filterMarketplace;
-
-      return isDateInRange && isStoreMatch && isPlatformMatch;
-    });
-  }, [mockOrders, startDate, endDate, filterStore, filterMarketplace]);
-
-  const filteredData = useMemo(() => {
-    let result = stores;
-    if (filterStore !== 'All')
-      result = result.filter((s) => s.name === filterStore);
-    if (filterMarketplace !== 'All')
-      result = result.filter((s) => s.platform === filterMarketplace);
-    return result;
-  }, [filterStore, filterMarketplace, stores]);
-
-  const totalSetoranGlobal = useMemo(
-    () => filteredData.reduce((acc, curr) => acc + curr.totalSetoran, 0),
-    [filteredData]
-  );
-
-  const handleStoreClick = (store) => {
-    setSelectedStore(store);
-    setActiveMenu('toko-detail');
-  };
-
-  const handleShowOrderDetail = (order) => {
-    setSelectedOrder(order);
-    setShowModal('order-detail');
-  };
-
-  const handleAddStore = () => {
-    setShowModal('add-store');
-  };
-
-  const toggleSelectOrder = (id) => {
-    if (selectedOrderIds.includes(id)) {
-      setSelectedOrderIds(selectedOrderIds.filter((oid) => oid !== id));
-    } else {
-      setSelectedOrderIds([...selectedOrderIds, id]);
-    }
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedOrderIds.length === mockOrders.length) {
-      setSelectedOrderIds([]);
-    } else {
-      setSelectedOrderIds(mockOrders.map((o) => o.id));
-    }
-  };
-
-  // --- HALAMAN KONTEN ---
-
-  const DashboardContent = () => (
-    <div className="space-y-6">
+  const Dashboard = () => (
+    <div className="space-y-6 animate-in fade-in duration-500">
       <FilterBar
-        filterStore={filterStore}
-        setFilterStore={setFilterStore}
-        filterMarketplace={filterMarketplace}
-        setFilterMarketplace={setFilterMarketplace}
-        startDate={startDate}
-        setStartDate={setStartDate}
-        endDate={endDate}
-        setEndDate={setEndDate}
+        filterStore={filterStore} setFilterStore={setFilterStore}
+        startDate={startDate} setStartDate={setStartDate}
+        endDate={endDate} setEndDate={setEndDate}
+        dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
         stores={stores}
       />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-2xl border shadow-sm border-slate-200 hover:shadow-lg transition-all duration-300">
-          <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">
-            Setoran Riil Filtered
-          </p>
-          <h3 className="text-2xl lg:text-3xl font-black text-slate-900 mt-1">
-            Rp {totalSetoranGlobal.toLocaleString()}
-          </h3>
-          <div className="mt-4 flex items-center text-emerald-600 text-xs font-bold bg-emerald-50 w-fit px-2 py-1 rounded-lg">
-            <TrendingUp className="w-4 h-4 mr-1" /> +12.4%
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {[
+           { label: 'Total Setoran', val: `Rp ${totalSetoran.toLocaleString()}`, icon: Wallet, color: 'text-slate-900', bg: 'bg-white' },
+           { label: 'Total Pesanan', val: filteredOrders.length, icon: Package, color: 'text-slate-900', bg: 'bg-white' },
+           { label: 'Toko Aktif', val: stores.length, icon: Store, color: 'text-red-600', bg: 'bg-white' },
+           { label: 'Rata-rata Keranjang', val: 'Rp 145.000', icon: ShoppingBag, color: 'text-slate-900', bg: 'bg-white' }
+        ].map((stat, idx) => (
+          <div key={idx} className={`${stat.bg} p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group`}>
+             <div className="flex justify-between items-start mb-4">
+                <div className={`p-3 rounded-xl ${stat.color === 'text-red-600' ? 'bg-red-50' : 'bg-slate-50'} group-hover:scale-110 transition-transform`}>
+                   <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-md">
+                   Filtered
+                </span>
+             </div>
+             <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">{stat.label}</p>
+             <h3 className={`text-2xl lg:text-3xl font-black ${stat.color} tracking-tight`}>{stat.val}</h3>
           </div>
-        </div>
-        <div className="bg-white p-6 rounded-2xl border shadow-sm border-slate-200 hover:shadow-lg transition-all duration-300">
-          <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">
-            Total Pesanan Filtered
-          </p>
-          <h3 className="text-3xl font-black text-slate-900 mt-1">
-            {filteredData.reduce((acc, curr) => acc + curr.totalOrders, 0)}
-          </h3>
-          <p className="mt-4 text-slate-400 text-xs font-bold uppercase tracking-widest">
-            Periode Terpilih
-          </p>
-        </div>
-        <div className="bg-white p-6 rounded-2xl border shadow-sm border-slate-200 hover:shadow-lg transition-all duration-300">
-          <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">
-            Total Toko/Marketplace
-          </p>
-          <h3 className="text-3xl font-black text-blue-600 mt-1">
-            {stores.length}
-          </h3>
-          <p className="mt-4 text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center">
-            <Clock className="w-3 h-3 mr-1" /> Update Resi: 10m lalu
-          </p>
-        </div>
-        <div className="bg-white p-6 rounded-2xl border shadow-sm border-slate-200 hover:shadow-lg transition-all duration-300">
-          <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">
-            Rata-rata Keranjang
-          </p>
-          <h3 className="text-3xl font-black text-amber-500 mt-1">Rp 145rb</h3>
-          <p className="mt-4 text-slate-400 text-xs font-bold uppercase tracking-widest">
-            Per Transaksi
-          </p>
-        </div>
+        ))}
       </div>
 
-      <div className="bg-white p-8 rounded-2xl border shadow-sm border-slate-200">
-        <h3 className="text-lg font-black text-slate-800 mb-6 uppercase tracking-tight italic">
-          Grafik Pertumbuhan Setoran
+      <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
+        <h3 className="text-lg font-black text-slate-800 mb-6 uppercase tracking-tight italic flex items-center">
+          <TrendingUp className="w-5 h-5 mr-2 text-red-600" />
+          Grafik Pertumbuhan
         </h3>
-        <div className="h-[300px] w-full">
+        <div className="h-[250px] sm:h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={setoranTrendData}>
+            <AreaChart data={[{n:'Mg 1',v:4000000},{n:'Mg 2',v:3000000},{n:'Mg 3',v:5000000},{n:'Mg 4',v:4500000}]}>
               <defs>
-                <linearGradient id="colorSetoran" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#dc2626" stopOpacity={0.1} />
+                  <stop offset="95%" stopColor="#dc2626" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={false}
-                stroke="#f1f5f9"
-              />
-              <XAxis
-                dataKey="name"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: '#64748b', fontSize: 10 }}
-                dy={10}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: '#64748b', fontSize: 10 }}
-              />
-              <Tooltip />
-              <Area
-                type="monotone"
-                dataKey="setoran"
-                stroke="#3b82f6"
-                strokeWidth={3}
-                fillOpacity={1}
-                fill="url(#colorSetoran)"
-              />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis dataKey="n" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} dy={10} />
+              <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} tickFormatter={(v) => `${v/1000}k`} />
+              <Tooltip contentStyle={{borderRadius:'12px', border:'none', boxShadow:'0 10px 15px -3px rgba(0,0,0,0.1)'}} cursor={{stroke:'#dc2626', strokeWidth:1}} />
+              <Area type="monotone" dataKey="v" stroke="#dc2626" strokeWidth={3} fillOpacity={1} fill="url(#colorVal)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -976,726 +739,325 @@ const App = () => {
     </div>
   );
 
-  const TokoDetailContent = () => (
-    <div className="space-y-6">
-      <button
-        onClick={() => setActiveMenu('toko')}
-        className="flex items-center text-slate-500 hover:text-blue-600 font-bold text-sm transition"
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" /> Kembali ke Daftar Toko
+  const TokoList = () => (
+    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+       <div className="flex justify-between items-center">
+         <h3 className="text-xl font-black text-slate-900 italic uppercase">Daftar Toko</h3>
+         <button onClick={() => setShowModal('add-store')} className="bg-red-600 text-white px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg hover:bg-red-700 transition flex items-center">
+           <Plus className="w-4 h-4 mr-2" /> Baru
+         </button>
+       </div>
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {stores.map((t) => (
+            <div key={t.id} onClick={() => { setSelectedStore(t); setActiveMenu('toko-detail'); }} className="bg-white group cursor-pointer rounded-[2rem] border border-slate-200 p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
+               <div className={`absolute top-0 right-0 px-4 py-1.5 rounded-bl-2xl text-[10px] font-black uppercase text-white ${t.platform === 'Shopee' ? 'bg-orange-500' : 'bg-black'}`}>
+                 {t.platform}
+               </div>
+               <div className="flex items-center space-x-4 mb-6 mt-2">
+                 <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-red-50 transition-colors">
+                    <Store className="w-7 h-7 text-slate-400 group-hover:text-red-600 transition-colors" />
+                 </div>
+                 <div>
+                   <h4 className="font-black text-slate-800 text-lg leading-tight group-hover:text-red-600 transition-colors">{t.name}</h4>
+                   <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 mt-1 inline-block">{t.status}</span>
+                 </div>
+               </div>
+               <div className="grid grid-cols-2 gap-3">
+                 <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Orders</p>
+                    <p className="text-lg font-black text-slate-800">{t.totalOrders}</p>
+                 </div>
+                 <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Setoran</p>
+                    <p className="text-lg font-black text-red-600 truncate">{(t.totalSetoran/1000000).toFixed(1)} jt</p>
+                 </div>
+               </div>
+            </div>
+          ))}
+       </div>
+    </div>
+  );
+
+  const TokoDetail = () => (
+    <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
+      <button onClick={() => setActiveMenu('toko')} className="flex items-center text-slate-500 hover:text-red-600 font-bold text-sm transition-colors group">
+        <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" /> Kembali
       </button>
 
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center">
-            <ShoppingBag className="w-8 h-8 text-blue-600" />
-          </div>
-          <div>
-            <h3 className="text-xl font-black text-slate-800 tracking-tight">
-              {selectedStore?.name}
-            </h3>
-            <p className="text-sm text-slate-500 uppercase font-black text-[10px] tracking-widest">
-              {selectedStore?.platform}
-            </p>
-            {detailTab === 'pesanan' && (
-              <p className="text-[10px] text-slate-400 font-medium mt-1">
-                {lastBulkCheckToko ? (
-                  <>Terakhir cek: {formatLastCheckTime(lastBulkCheckToko)}</>
-                ) : (
-                  <>Belum pernah dicek resi</>
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+         <div className="flex items-center space-x-4">
+            <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center border border-red-100">
+               <ShoppingBag className="w-8 h-8 text-red-600" />
+            </div>
+            <div>
+               <h3 className="text-2xl font-black text-slate-900 tracking-tight">{selectedStore?.name}</h3>
+               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{selectedStore?.platform}</p>
+                {detailTab === 'pesanan' && (
+                  <p className="text-[10px] text-slate-400 font-medium mt-1">
+                    {lastBulkCheckToko ? `Terakhir cek: ${formatLastCheckTime(lastBulkCheckToko)}` : 'Belum pernah dicek resi'}
+                  </p>
                 )}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setShowModal('import')}
-            className="flex items-center px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-black hover:bg-slate-200 transition border border-slate-200 shadow-sm"
-          >
-            <FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-600" /> Import
-            Excel
-          </button>
-          <button
-            onClick={() => setShowModal('harga-setoran')}
-            className="flex items-center px-4 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-slate-800 transition shadow-lg shadow-slate-200"
-          >
-            <Edit3 className="w-4 h-4 mr-2 text-blue-400" /> Input Harga Setoran
-          </button>
-        </div>
+            </div>
+         </div>
+         <div className="flex gap-2 w-full md:w-auto">
+            <button onClick={() => setShowModal('import')} className="flex-1 md:flex-none items-center justify-center px-4 py-3 bg-slate-50 text-slate-700 rounded-xl text-xs font-black hover:bg-slate-100 border border-slate-200 transition">
+              <FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-600" /> Import
+            </button>
+            <button onClick={() => setShowModal('harga-setoran')} className="flex-1 md:flex-none items-center justify-center px-4 py-3 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-slate-800 shadow-lg transition">
+              <Edit3 className="w-4 h-4 mr-2 text-red-400" /> Harga Setoran
+            </button>
+         </div>
       </div>
 
-      <FilterBar
-        showStore={false}
-        showMarketplace={false}
-        startDate={startDate}
-        setStartDate={setStartDate}
-        endDate={endDate}
-        setEndDate={setEndDate}
-      />
-
-      <div className="bg-white rounded-2xl border shadow-sm overflow-hidden border-slate-200">
-        <div className="p-1 px-4 border-b bg-slate-50/50 flex flex-col sm:flex-row justify-between items-center gap-2">
-          <div className="flex space-x-1 py-2">
-            <button
-              onClick={() => setDetailTab('pesanan')}
-              className={`px-5 py-2 rounded-lg text-[10px] font-black tracking-widest uppercase transition ${
-                detailTab === 'pesanan'
-                  ? 'bg-white shadow text-blue-600'
-                  : 'text-slate-500 hover:bg-slate-100'
-              }`}
-            >
-              Data Pesanan
-            </button>
-            <button
-              onClick={() => setDetailTab('barang')}
-              className={`px-5 py-2 rounded-lg text-[10px] font-black tracking-widest uppercase transition ${
-                detailTab === 'barang'
-                  ? 'bg-white shadow text-blue-600'
-                  : 'text-slate-500 hover:bg-slate-100'
-              }`}
-            >
-              Data Barang
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+         <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-wrap gap-4 justify-between items-center">
+            <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg">
+               {['pesanan', 'barang'].map(tab => (
+                 <button key={tab} onClick={() => setDetailTab(tab)} className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${detailTab === tab ? 'bg-white text-red-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                   {tab}
+                 </button>
+               ))}
+            </div>
             {detailTab === 'pesanan' && (
               <div className="relative">
                 <button
-                  onClick={() => {
-                    if (selectedOrderIds.length > 0) {
-                      setShowActionDropdown(!showActionDropdown);
-                    }
-                  }}
                   disabled={selectedOrderIds.length === 0}
-                  className={`flex items-center px-4 py-2 text-xs font-bold rounded-xl transition shadow-lg ${
-                    selectedOrderIds.length > 0
-                      ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200 cursor-pointer'
-                      : 'bg-slate-300 text-slate-500 cursor-not-allowed'
-                  }`}
+                  onClick={() => setShowActionDropdown(!showActionDropdown)}
+                  className={`flex items-center px-4 py-2 text-xs font-bold rounded-xl transition shadow-sm ${selectedOrderIds.length > 0 ? 'bg-red-600 text-white shadow-red-200' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
                 >
-                 Aksi
-                  {selectedOrderIds.length > 0 && ` (${selectedOrderIds.length})`}
-                  <ChevronDown className="w-3.5 h-3.5 ml-2" />
+                  Aksi Masal ({selectedOrderIds.length}) <ChevronDown className="w-3 h-3 ml-2" />
                 </button>
-                {showActionDropdown && selectedOrderIds.length > 0 && (
+                {showActionDropdown && (
                   <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setShowActionDropdown(false)}
-                    ></div>
-                    <div className="absolute right-0 top-full mt-2 bg-white rounded-xl border border-slate-200 shadow-xl z-20 min-w-[200px] overflow-hidden">
-                      <button
-                        onClick={handleBulkCheckToko}
-                        className="w-full flex items-center px-4 py-3 text-left text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition"
-                      >
-                        <RefreshCw className="w-4 h-4 mr-3" /> Cek Resi
-                      </button>
-                      <button
-                        onClick={handlePrintResi}
-                        className="w-full flex items-center px-4 py-3 text-left text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition border-t border-slate-100"
-                      >
-                        <Printer className="w-4 h-4 mr-3" /> Cetak Resi
-                      </button>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowActionDropdown(false)} />
+                    <div className="absolute right-0 top-full mt-2 bg-white rounded-xl border border-slate-200 shadow-xl z-20 w-48 py-1 overflow-hidden">
+                       <button onClick={handleBulkMarkPaid} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center"><CheckCircle2 className="w-4 h-4 mr-2" /> Tandai Lunas</button>
+                       <button onClick={handleBulkCheckToko} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center border-t border-slate-50"><RefreshCw className="w-4 h-4 mr-2" /> Cek Resi</button>
+                       <button onClick={handlePrintResi} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center border-t border-slate-50"><Printer className="w-4 h-4 mr-2" /> Cetak Resi</button>
                     </div>
                   </>
                 )}
               </div>
             )}
-          </div>
-        </div>
+         </div>
 
-        {detailTab === 'pesanan' ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
+         {detailTab === 'pesanan' ? (
+           <div className="overflow-x-auto w-full">
+             <table className="w-full text-left whitespace-nowrap">
+               <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-100">
+                 <tr>
+                    <th className="p-4 w-10 text-center">
+                      <button onClick={() => setSelectedOrderIds(selectedOrderIds.length === orders.length ? [] : orders.map(o => o.id))}>
+                        {selectedOrderIds.length === orders.length && orders.length > 0 ? <CheckSquare className="w-4 h-4 text-red-600" /> : <Square className="w-4 h-4" />}
+                      </button>
+                    </th>
+                    <th className="p-4">Info Pesanan</th>
+                    <th className="p-4">Status & Resi</th>
+                    <th className="p-4 text-right">Nominal</th>
+                    <th className="p-4 text-center">Aksi</th>
+                 </tr>
+               </thead>
+               <tbody className="divide-y divide-slate-50">
+                 {filteredOrders.map(order => (
+                   <tr key={order.id} className={`hover:bg-slate-50 transition-colors ${selectedOrderIds.includes(order.id) ? 'bg-red-50/30' : ''}`}>
+                      <td className="p-4 text-center">
+                        <button onClick={() => setSelectedOrderIds(prev => prev.includes(order.id) ? prev.filter(id => id !== order.id) : [...prev, order.id])}>
+                          {selectedOrderIds.includes(order.id) ? <CheckSquare className="w-4 h-4 text-red-600" /> : <Square className="w-4 h-4 text-slate-300" />}
+                        </button>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex flex-col">
+                           <span className="font-mono text-[10px] text-slate-400">{order.id}</span>
+                           <span className="font-bold text-sm text-slate-800 truncate max-w-[200px]">{order.produk}</span>
+                           <span className="text-[10px] text-slate-500 italic">{order.variasi}</span>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                         <div className="flex flex-col items-start">
+                            <span className={`text-[10px] px-2 py-0.5 rounded font-black uppercase ${order.kurirStatus.includes('Tiba') ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>{order.kurirStatus}</span>
+                            <span className="text-[10px] font-mono mt-1 text-slate-400">{order.resi}</span>
+                         </div>
+                      </td>
+                      <td className="p-4 text-right">
+                         <div className="flex flex-col">
+                           <span className="font-black text-slate-900 text-sm">Rp {order.setoran.toLocaleString()}</span>
+                           {order.sudahDibayar > 0 ? (
+                             <span className="text-[10px] font-bold text-emerald-600 flex items-center justify-end"><CheckCircle2 className="w-3 h-3 mr-1" /> Lunas</span>
+                           ) : (
+                             <span className="text-[10px] font-bold text-amber-500">Belum Setor</span>
+                           )}
+                         </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex justify-center gap-2">
+                           <button onClick={() => { setSelectedOrder(order); setShowModal('order-detail'); }} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"><Eye className="w-4 h-4" /></button>
+                        </div>
+                      </td>
+                   </tr>
+                 ))}
+               </tbody>
+             </table>
+           </div>
+         ) : (
+            <div className="w-full overflow-x-auto table-scroll pb-2">
+            <table className="w-full text-left whitespace-nowrap min-w-max">
               <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b">
                 <tr>
-                  <th className="px-4 py-4 w-10 text-center">
-                    <button
-                      onClick={toggleSelectAll}
-                      className="hover:text-blue-600"
-                    >
-                      {selectedOrderIds.length === mockOrders.length ? (
-                        <CheckSquare className="w-4 h-4" />
-                      ) : (
-                        <Square className="w-4 h-4" />
-                      )}
-                    </button>
-                  </th>
-                  <th className="px-6 py-4">No. Pesanan</th>
-                  <th className="px-6 py-4">Nama Produk</th>
-                  <th className="px-6 py-4">Status Kurir</th>
-                  <th className="px-6 py-4">Total Bayar</th>
-                  <th className="px-6 py-4">Setoran</th>
-                  <th className="px-6 py-4 text-center">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y text-sm text-slate-900 font-bold">
-                {mockOrders.map((order) => (
-                  <tr
-                    key={order.id}
-                    className={`hover:bg-slate-50/80 transition group ${
-                      selectedOrderIds.includes(order.id) ? 'bg-blue-50/50' : ''
-                    }`}
-                  >
-                    <td className="px-4 py-4 text-center">
-                      <button
-                        onClick={() => toggleSelectOrder(order.id)}
-                        className={
-                          selectedOrderIds.includes(order.id)
-                            ? 'text-blue-600'
-                            : 'text-slate-300'
-                        }
-                      >
-                        {selectedOrderIds.includes(order.id) ? (
-                          <CheckSquare className="w-4 h-4" />
-                        ) : (
-                          <Square className="w-4 h-4" />
-                        )}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 font-mono text-xs">{order.id}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col max-w-[200px]">
-                        <span
-                          className="font-bold text-slate-800 text-xs truncate"
-                          title={order.produk}
-                        >
-                          {order.produk}
-                        </span>
-                        <span className="text-[10px] text-slate-500 italic">
-                          {order.variasi} (x{order.jumlah})
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`text-[11px] ${
-                          order.kurirStatus.includes('Update')
-                            ? 'text-emerald-600'
-                            : 'text-blue-500'
-                        }`}
-                      >
-                        {order.kurirStatus}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 font-black">
-                      Rp {order.totalBayar.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 text-emerald-600 font-black">
-                      Rp {order.setoran.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 text-center flex justify-center gap-2">
-                      <button
-                        onClick={() => handleShowOrderDetail(order)}
-                        className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition shadow-sm"
-                        title="Lihat Detail"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          // TODO: Implementasi logika edit pesanan
-                          console.log('Edit pesanan:', order.id);
-                        }}
-                        className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition shadow-sm"
-                        title="Edit Pesanan"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </button>
-                      <button
-                        className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-800 hover:text-white transition shadow-sm"
-                        title="Cek Resi Individu"
-                      >
-                        <ScanLine className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b">
-                <tr>
-                  <th className="px-6 py-4">Nama Barang</th>
-                  <th className="px-6 py-4">SKU</th>
-                  <th className="px-6 py-4">Stok</th>
-                  <th className="px-6 py-4 text-right">Harga Setoran</th>
+                  <th className="px-3 py-3 sm:px-6 sm:py-4">Nama Barang</th>
+                  <th className="px-3 py-3 sm:px-6 sm:py-4">SKU</th>
+                  <th className="px-3 py-3 sm:px-6 sm:py-4">Stok</th>
+                  <th className="px-3 py-3 sm:px-6 sm:py-4 text-right">Harga Setoran</th>
                 </tr>
               </thead>
               <tbody className="divide-y text-sm text-slate-900">
                 {products.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50">
-                    <td className="px-6 py-4 font-bold">{p.name}</td>
-                    <td className="px-6 py-4 font-mono text-xs">{p.sku}</td>
-                    <td className="px-6 py-4">{p.stock}</td>
-                    <td className="px-6 py-4 text-right font-black text-blue-600">
-                      Rp {p.hargaSetoran.toLocaleString()}
-                    </td>
+                    <td className="px-3 py-3 sm:px-6 sm:py-4 font-bold">{p.name}</td>
+                    <td className="px-3 py-3 sm:px-6 sm:py-4 font-mono text-xs">{p.sku}</td>
+                    <td className="px-3 py-3 sm:px-6 sm:py-4">{p.stock}</td>
+                    <td className="px-3 py-3 sm:px-6 sm:py-4 text-right font-black text-red-600">Rp {p.hargaSetoran.toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        )}
+         )}
       </div>
     </div>
   );
 
-  const CekResiContent = () => (
-    <div className="max-w-xl mx-auto space-y-8 py-10">
-      <div className="text-center space-y-2">
-        <h2 className="text-3xl font-black text-slate-800 tracking-tight uppercase italic">
-          Validasi Resi
-        </h2>
-        <p className="text-slate-500 text-sm font-medium">
-          Scan barcode atau input manual untuk validasi.
-        </p>
+  const CekResi = () => (
+    <div className="max-w-xl mx-auto py-8 animate-in zoom-in-95 duration-300">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-black text-slate-900 uppercase italic">Validasi Resi</h2>
+        <p className="text-slate-500 text-sm font-medium mt-2">Scan barcode paket untuk update status otomatis.</p>
       </div>
 
-      <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
-        {/* Custom Tab Switcher */}
-        <div className="flex p-2 bg-slate-50 m-2 rounded-2xl">
-          <button
-            onClick={() => setScanMode('camera')}
-            className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-              scanMode === 'camera'
-                ? 'bg-white shadow text-blue-600'
-                : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <div className="flex items-center justify-center">
-              <QrCode className="w-4 h-4 mr-2" /> Scanner
-            </div>
-          </button>
-          <button
-            onClick={() => setScanMode('manual')}
-            className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-              scanMode === 'manual'
-                ? 'bg-white shadow text-blue-600'
-                : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <div className="flex items-center justify-center">
-              <Keyboard className="w-4 h-4 mr-2" /> Input Manual
-            </div>
-          </button>
-        </div>
+      <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden">
+         <div className="flex p-2 bg-slate-50 m-2 rounded-2xl">
+            {['camera', 'manual'].map(mode => (
+              <button key={mode} onClick={() => setScanMode(mode)} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${scanMode === mode ? 'bg-white text-red-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                 <div className="flex items-center justify-center gap-2">
+                    {mode === 'camera' ? <QrCode className="w-4 h-4" /> : <Keyboard className="w-4 h-4" />} {mode}
+                 </div>
+              </button>
+            ))}
+         </div>
 
-        <div className="p-2">
-          {scanMode === 'camera' ? (
-            <div
-              className="relative aspect-[3/4] bg-slate-900 rounded-[2rem] overflow-hidden shadow-inner flex flex-col items-center justify-center text-white space-y-4 group cursor-pointer m-2"
-              onClick={() => setIsCameraOpen(!isCameraOpen)}
-            >
-              {isCameraOpen ? (
-                <>
-                  <div className="absolute inset-0 opacity-40 bg-[url('https://images.unsplash.com/photo-1586769852044-692d6e671f85?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80')] bg-cover bg-center grayscale"></div>
-                  <div className="absolute inset-0 bg-black/40"></div>
-                  <div className="absolute left-1/2 -translate-x-1/2 top-0 w-[80%] h-1 bg-blue-500 shadow-[0_0_20px_#3b82f6] animate-[scan_2s_linear_infinite]"></div>
-
-                  <div className="absolute top-8 left-8 w-12 h-12 border-t-4 border-l-4 border-white/80 rounded-tl-lg"></div>
-                  <div className="absolute top-8 right-8 w-12 h-12 border-t-4 border-r-4 border-white/80 rounded-tr-lg"></div>
-                  <div className="absolute bottom-8 left-8 w-12 h-12 border-b-4 border-l-4 border-white/80 rounded-bl-lg"></div>
-                  <div className="absolute bottom-8 right-8 w-12 h-12 border-b-4 border-r-4 border-white/80 rounded-br-lg"></div>
-
-                  <div className="z-10 text-center">
-                    <div className="p-3 bg-white/10 backdrop-blur-md rounded-full mb-3 inline-block">
-                      <Zap className="w-6 h-6 text-yellow-400 animate-pulse" />
-                    </div>
-                    <p className="text-xs font-bold tracking-widest uppercase text-white/80">
-                      Scanning...
-                    </p>
+         <div className="p-4">
+            {scanMode === 'camera' ? (
+               <div onClick={() => setIsCameraOpen(!isCameraOpen)} className="aspect-[3/4] bg-slate-900 rounded-[2rem] overflow-hidden relative cursor-pointer group">
+                  {!isCameraOpen ? (
+                     <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                        <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center backdrop-blur mb-4 group-hover:scale-110 transition-transform">
+                           <Camera className="w-8 h-8" />
+                        </div>
+                        <p className="font-bold text-xs tracking-widest uppercase opacity-60">Ketuk untuk Kamera</p>
+                     </div>
+                  ) : (
+                     <>
+                        <div className="absolute inset-0 bg-slate-800 animate-pulse opacity-20"></div>
+                        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-red-500 shadow-[0_0_20px_rgba(239,68,68,1)] animate-scan"></div>
+                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/50 backdrop-blur rounded-full text-white text-xs font-bold border border-white/10">Scanning...</div>
+                     </>
+                  )}
+               </div>
+            ) : (
+               <div className="py-12 px-6 space-y-6">
+                  <div className="space-y-2">
+                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nomor Resi</label>
+                     <input type="text" placeholder="SPX..." className="w-full px-6 py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xl font-mono font-bold text-center uppercase outline-none focus:border-red-500 focus:bg-white transition-colors" />
                   </div>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsCameraOpen(false);
-                    }}
-                    className="absolute bottom-8 px-6 py-2 bg-slate-800/80 backdrop-blur text-white rounded-full text-xs font-bold border border-white/10 hover:bg-red-600/80 transition"
-                  >
-                    Stop Camera
+                  <button className="w-full py-5 bg-red-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-red-200 hover:bg-red-700 transition active:scale-95">
+                     Cek Sekarang
                   </button>
-                </>
-              ) : (
-                <>
-                  <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md group-hover:scale-110 transition border border-white/20 shadow-lg">
-                    <Camera className="w-8 h-8 text-white" />
-                  </div>
-                  <p className="font-bold text-xs tracking-widest uppercase opacity-70">
-                    Ketuk untuk Membuka Kamera
-                  </p>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="py-12 px-6 space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                  Nomor Resi
-                </label>
-                <input
-                  type="text"
-                  placeholder="Contoh: SPXID09988..."
-                  className="w-full px-6 py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl text-lg font-mono font-bold focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none text-center transition placeholder:text-slate-300 uppercase"
-                />
-              </div>
-              <button className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-blue-200 hover:bg-blue-700 transition transform active:scale-95">
-                Validasi Sekarang
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-      <style>{`@keyframes scan { 0% { top: 10%; } 50% { top: 90%; } 100% { top: 10%; } }`}</style>
-    </div>
-  );
-
-  // --- COMPONENT BARU: StatusPengirimanContent ---
-  const StatusPengirimanContent = () => {
-    // New states for selection within this component
-    const [selectedShippingIds, setSelectedShippingIds] = useState([]);
-
-    const toggleSelectShipping = (id) => {
-      if (selectedShippingIds.includes(id)) {
-        setSelectedShippingIds(selectedShippingIds.filter((i) => i !== id));
-      } else {
-        setSelectedShippingIds([...selectedShippingIds, id]);
-      }
-    };
-
-    const toggleSelectAllShipping = () => {
-      if (selectedShippingIds.length === filteredOrders.length) {
-        setSelectedShippingIds([]);
-      } else {
-        setSelectedShippingIds(filteredOrders.map((o) => o.id));
-      }
-    };
-
-    const handleBulkCheckPengirimanLocal = () => {
-      setLastBulkCheckPengiriman(new Date());
-      // TODO: Implementasi logika cek resi massal
-      console.log('Cek resi massal untuk pengiriman:', selectedShippingIds);
-    };
-
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div>
-              <h3 className="text-xl font-black text-slate-800 tracking-tight italic uppercase">
-                Status Pengiriman
-              </h3>
-              <p className="text-xs text-slate-500 font-medium">
-                Pantau pergerakan paket secara real-time.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
-          <div className="relative flex-1 md:w-auto">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Cari Resi / Order ID..."
-                className="w-full md:w-64 pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            {selectedShippingIds.length > 0 && (
-              <button
-                onClick={handleBulkCheckPengirimanLocal}
-                className="flex items-center px-4 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl animate-in fade-in zoom-in shadow-lg shadow-blue-200 hover:bg-blue-700 transition"
-              >
-                <RefreshCw className="w-3 h-3 mr-2" /> Cek Resi Masal (
-                {selectedShippingIds.length})
-              </button>
+               </div>
             )}
-            <span className="text-[10px] text-slate-500 font-medium px-3 py-1.5 bg-slate-100 rounded-lg border border-slate-200">
-              {lastBulkCheckPengiriman ? (
-                <>
-                  Terakhir cek: {formatLastCheckTime(lastBulkCheckPengiriman)}
-                </>
-              ) : (
-                <>Belum pernah dicek</>
-              )}
-            </span>
-            
-          </div>
-        </div>
-
-        {/* FilterBar untuk Status Pengiriman */}
-        <FilterBar
-          filterStore={filterStore}
-          setFilterStore={setFilterStore}
-          filterMarketplace={filterMarketplace}
-          setFilterMarketplace={setFilterMarketplace}
-          startDate={startDate}
-          setStartDate={setStartDate}
-          endDate={endDate}
-          setEndDate={setEndDate}
-          stores={stores}
-        />
-
-        <div className="bg-white rounded-2xl border shadow-sm overflow-hidden border-slate-200">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b">
-                <tr>
-                  <th className="px-4 py-4 w-10 text-center">
-                    <button
-                      onClick={toggleSelectAllShipping}
-                      className="hover:text-blue-600"
-                    >
-                      {selectedShippingIds.length > 0 &&
-                      selectedShippingIds.length === filteredOrders.length ? (
-                        <CheckSquare className="w-4 h-4" />
-                      ) : (
-                        <Square className="w-4 h-4" />
-                      )}
-                    </button>
-                  </th>
-                  <th className="px-6 py-4">No. Pesanan</th>
-                  <th className="px-6 py-4">Waktu</th>
-                  <th className="px-6 py-4">Barang</th>
-                  <th className="px-6 py-4">Jasa Kirim</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-center">Detail</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y text-sm text-slate-900 font-bold">
-                {filteredOrders.map((order) => (
-                  <tr
-                    key={order.id}
-                    className={`hover:bg-slate-50 transition ${
-                      selectedShippingIds.includes(order.id)
-                        ? 'bg-blue-50/50'
-                        : ''
-                    }`}
-                  >
-                    <td className="px-4 py-4 text-center">
-                      <button
-                        onClick={() => toggleSelectShipping(order.id)}
-                        className={
-                          selectedShippingIds.includes(order.id)
-                            ? 'text-blue-600'
-                            : 'text-slate-300'
-                        }
-                      >
-                        {selectedShippingIds.includes(order.id) ? (
-                          <CheckSquare className="w-4 h-4" />
-                        ) : (
-                          <Square className="w-4 h-4" />
-                        )}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 font-mono text-xs">{order.id}</td>
-                    <td className="px-6 py-4 text-xs text-slate-500">
-                      {order.waktuDibuat}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col max-w-[200px]">
-                        <span className="truncate" title={order.produk}>
-                          {order.produk}
-                        </span>
-                        <span className="text-[10px] text-slate-400 italic">
-                          {order.variasi}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-xs">
-                      <div className="flex items-center">
-                        <Truck className="w-3 h-3 mr-1 text-slate-400" />
-                        {order.jasaKirim}
-                      </div>
-                      <span className="text-[10px] font-mono text-slate-400 ml-4 block">
-                        {order.resi}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`text-[10px] uppercase px-2 py-1 rounded-md border ${
-                          order.kurirStatus.includes('Tiba')
-                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                            : 'bg-blue-50 text-blue-600 border-blue-100'
-                        }`}
-                      >
-                        {order.kurirStatus}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => handleShowOrderDetail(order)}
-                        className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-blue-600 hover:text-white transition shadow-sm"
-                      >
-                        <FileText className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {filteredOrders.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan="7"
-                      className="px-6 py-8 text-center text-slate-400 text-xs italic"
-                    >
-                      Tidak ada data pengiriman yang sesuai dengan filter.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+         </div>
       </div>
-    );
-  };
-
-  const PengaturanContent = () => (
-    <div className="max-w-4xl mx-auto space-y-6 pb-20 lg:pb-0">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <button
-          onClick={() => setShowModal('integrasi-api')}
-          className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group flex items-start space-x-4 p-6"
-        >
-          <div className="p-4 bg-slate-50 text-slate-400 rounded-2xl group-hover:bg-blue-50 group-hover:text-blue-600 transition shadow-sm shrink-0">
-            <Key className="w-6 h-6" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="font-black text-slate-800 tracking-tight uppercase italic group-hover:text-blue-600 transition">
-              Integrasi API Resi
-            </h4>
-            <p className="text-xs text-slate-500 mt-1 font-medium">
-              Hubungkan layanan pelacakan Binderbyte
-            </p>
-          </div>
-          <ChevronRight className="w-5 h-5 text-slate-300 self-center group-hover:text-blue-600 group-hover:translate-x-1 transition shrink-0" />
-        </button>
-
-        <div
-          onClick={() => setShowModal('setting-profil')}
-          className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group flex items-start space-x-4 p-6"
-        >
-          <div className="p-4 bg-slate-50 text-slate-400 rounded-2xl group-hover:bg-blue-50 group-hover:text-blue-600 transition shadow-sm shrink-0">
-            <User className="w-6 h-6" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="font-black text-slate-800 tracking-tight uppercase italic group-hover:text-blue-600 transition">
-              Setting Profil
-            </h4>
-            <p className="text-xs text-slate-500 mt-1 font-medium">
-              Ubah logo, nama, dan alamat pusat.
-            </p>
-          </div>
-          <ChevronRight className="w-5 h-5 text-slate-300 self-center group-hover:text-blue-600 group-hover:translate-x-1 transition shrink-0" />
-        </div>
-      </div>
+      <style>{`@keyframes scan { 0% { top: 10%; } 50% { top: 90%; } 100% { top: 10%; } } .animate-scan { animation: scan 2s linear infinite; }`}</style>
     </div>
   );
 
-  const RekapSetoranContent = () => (
-    <div className="space-y-6">
+  const StatusPengiriman = () => (
+    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div className="flex items-center gap-4">
           <div>
-            <h3 className="text-xl font-black text-slate-800 tracking-tight italic uppercase">
-              Rekap Setoran
-            </h3>
-            <p className="text-xs text-slate-500 font-medium">
-              Pantau dana wajib setor dari semua toko.
-            </p>
+            <h3 className="text-xl font-black text-slate-800 tracking-tight italic uppercase">Status Pengiriman</h3>
+            <p className="text-xs text-slate-500 font-medium">Pantau pergerakan paket secara real-time.</p>
           </div>
         </div>
-
         <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
-        <div className="relative flex-1 md:w-auto">
+          <div className="relative flex-1 md:w-auto">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Cari Toko / Marketplace..."
-              className="w-full md:w-64 pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <input type="text" placeholder="Cari Resi / Order ID..." className="w-full md:w-64 pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-red-500" />
           </div>
-          {/* <div className="bg-emerald-50 border border-emerald-100 px-4 py-2.5 rounded-xl">
-            <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-0.5">
-              Dana Wajib Setor
-            </p>
-            <p className="text-lg font-black text-emerald-600 tracking-tight">
-              Rp {totalSetoranGlobal.toLocaleString()}
-            </p>
-          </div> */}
-          <button
-            onClick={() => setShowModal('export')}
-            className="flex items-center px-4 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition"
-          >
-            <Share2 className="w-3.5 h-3.5 mr-2" /> Export
-          </button>
-          
+          {selectedShippingIds.length > 0 && (
+            <button onClick={handleBulkCheckPengiriman} className="flex items-center px-4 py-2.5 bg-red-600 text-white text-xs font-bold rounded-xl animate-in fade-in zoom-in shadow-lg shadow-red-200 hover:bg-red-700 transition">
+              <RefreshCw className="w-3 h-3 mr-2" /> Cek Resi Masal ({selectedShippingIds.length})
+            </button>
+          )}
+          <span className="text-[10px] text-slate-500 font-medium px-3 py-1.5 bg-slate-100 rounded-lg border border-slate-200">
+            {lastBulkCheckPengiriman ? `Terakhir cek: ${formatLastCheckTime(lastBulkCheckPengiriman)}` : 'Belum pernah dicek'}
+          </span>
         </div>
       </div>
 
-      {/* FilterBar untuk Rekap Setoran */}
       <FilterBar
-        filterStore={filterStore}
-        setFilterStore={setFilterStore}
-        filterMarketplace={filterMarketplace}
-        setFilterMarketplace={setFilterMarketplace}
-        startDate={startDate}
-        setStartDate={setStartDate}
-        endDate={endDate}
-        setEndDate={setEndDate}
+        filterStore={filterStore} setFilterStore={setFilterStore}
+        startDate={startDate} setStartDate={setStartDate}
+        endDate={endDate} setEndDate={setEndDate}
+        dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
         stores={stores}
       />
 
       <div className="bg-white rounded-2xl border shadow-sm overflow-hidden border-slate-200">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left whitespace-nowrap min-w-max">
             <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b">
               <tr>
-                <th className="px-6 py-4">Nama Toko</th>
-                <th className="px-6 py-4">Marketplace</th>
-                <th className="px-6 py-4">Total Setoran</th>
-                <th className="px-6 py-4 text-right">Detail</th>
+                <th className="px-4 py-4 w-10 text-center">
+                  <button onClick={() => setSelectedShippingIds(selectedShippingIds.length === filteredOrders.length ? [] : filteredOrders.map(o => o.id))}>
+                    {selectedShippingIds.length > 0 && selectedShippingIds.length === filteredOrders.length ? <CheckSquare className="w-4 h-4 text-red-600" /> : <Square className="w-4 h-4" />}
+                  </button>
+                </th>
+                <th className="px-4 py-4">No. Pesanan</th>
+                <th className="px-4 py-4">Waktu</th>
+                <th className="px-4 py-4">Barang</th>
+                <th className="px-4 py-4">Jasa Kirim</th>
+                <th className="px-4 py-4">Status</th>
+                <th className="px-4 py-4 text-center">Detail</th>
               </tr>
             </thead>
             <tbody className="divide-y text-sm text-slate-900 font-bold">
-              {filteredData.map((t) => (
-                <tr
-                  key={t.id}
-                  className="hover:bg-slate-50 transition cursor-pointer"
-                >
-                  <td className="px-6 py-4 font-black uppercase tracking-tight">
-                    {t.name}
-                  </td>
-                  <td className="px-6 py-4 uppercase font-black tracking-tighter">
-                    {t.platform}
-                  </td>
-                  <td className="px-6 py-4 font-black text-emerald-600 tracking-tight">
-                    Rp {t.totalSetoran.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => setShowModal('store-orders')}
-                      className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-blue-100 shadow-sm hover:bg-blue-100 transition"
-                    >
-                      Lihat List
+              {filteredOrders.map((order) => (
+                <tr key={order.id} className={`hover:bg-slate-50 transition ${selectedShippingIds.includes(order.id) ? 'bg-red-50/50' : ''}`}>
+                  <td className="px-4 py-4 text-center">
+                    <button onClick={() => setSelectedShippingIds(prev => prev.includes(order.id) ? prev.filter(id => id !== order.id) : [...prev, order.id])}>
+                      {selectedShippingIds.includes(order.id) ? <CheckSquare className="w-4 h-4 text-red-600" /> : <Square className="w-4 h-4 text-slate-300" />}
                     </button>
+                  </td>
+                  <td className="px-4 py-4 font-mono text-xs">{order.id}</td>
+                  <td className="px-4 py-4 text-xs text-slate-500">{order.waktuDibuat}</td>
+                  <td className="px-4 py-4">
+                    <div className="flex flex-col max-w-[200px]">
+                      <span className="truncate" title={order.produk}>{order.produk}</span>
+                      <span className="text-[10px] text-slate-400 italic">{order.variasi}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 text-xs">
+                    <div className="flex items-center"><Truck className="w-3 h-3 mr-1 text-slate-400" /> {order.jasaKirim}</div>
+                    <span className="text-[10px] font-mono text-slate-400 ml-4 block">{order.resi}</span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className={`text-[10px] uppercase px-2 py-1 rounded-md border ${order.kurirStatus.includes('Tiba') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>{order.kurirStatus}</span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <button onClick={() => { setSelectedOrder(order); setShowModal('order-detail'); }} className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-red-600 hover:text-white transition shadow-sm"><FileText className="w-4 h-4" /></button>
                   </td>
                 </tr>
               ))}
-              {filteredData.length === 0 && (
-                <tr>
-                  <td
-                    colSpan="4"
-                    className="px-6 py-8 text-center text-slate-400 text-xs italic"
-                  >
-                    Tidak ada data setoran yang sesuai dengan filter.
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
@@ -1703,139 +1065,147 @@ const App = () => {
     </div>
   );
 
-  const TokoContent = ({ stores, onStoreClick, onAddStore }) => (
-    <div className="space-y-6 text-slate-900 font-bold">
-      <div className="flex justify-between items-center">
-        <h3 className="text-xl font-black tracking-tight italic uppercase text-slate-800">
-          Daftar Toko
-        </h3>
-        <button
-          onClick={onAddStore}
-          className="flex items-center px-5 py-3 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:bg-blue-700 transition"
-        >
-          <Plus className="w-4 h-4 mr-2" /> Tambah Toko
-        </button>
+  const RekapSetoran = () => (
+    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm min-w-0">
+        <div className="flex items-center gap-4">
+          <div>
+            <h3 className="text-xl font-black text-slate-800 tracking-tight italic uppercase">Rekap Setoran</h3>
+            <p className="text-xs text-slate-500 font-medium">Pantau dana wajib setor dari semua toko.</p>
+          </div>
+        </div>
+        <div className="w-full mt-4 md:mt-0 md:w-auto flex-1 md:ml-8">
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Setoran</p>
+              <h3 className="text-2xl font-black text-slate-900 mt-2">Rp {totalSetoran.toLocaleString()}</h3>
+            </div>
+            <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sudah Dibayar</p>
+              <h3 className="text-2xl font-black text-emerald-600 mt-2">Rp {totalSudahDibayar.toLocaleString()}</h3>
+            </div>
+            <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sisa Tagihan</p>
+              <h3 className="text-2xl font-black text-amber-500 mt-2">Rp {sisaTagihan.toLocaleString()}</h3>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {stores.map((toko) => (
-          <div
-            key={toko.id}
-            onClick={() => onStoreClick(toko)}
-            className="bg-white rounded-[2rem] border border-slate-200 p-6 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer relative overflow-hidden group border-b-4 border-b-transparent hover:border-b-blue-600"
-          >
-            <div
-              className={`absolute top-0 right-0 p-1 px-4 text-[10px] font-black uppercase rounded-bl-2xl shadow-sm ${
-                toko.platform === 'Shopee'
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-black text-white'
-              }`}
-            >
-              {toko.platform}
-            </div>
-            <div className="flex items-center space-x-4 mb-6">
-              <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center group-hover:bg-blue-50 transition shadow-sm">
-                <Store className="w-6 h-6 text-slate-400 group-hover:text-blue-600 transition" />
-              </div>
-              <div>
-                <h4 className="font-black text-slate-800 tracking-tight uppercase italic group-hover:text-blue-600 transition">
-                  {toko.name}
-                </h4>
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 tracking-widest border border-emerald-100">
-                  {toko.status}
-                </span>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 group-hover:bg-white transition shadow-inner">
-                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
-                  Order
-                </p>
-                <p className="text-xl font-black text-slate-800 tracking-tighter">
-                  {toko.totalOrders}
-                </p>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 group-hover:bg-white transition shadow-inner">
-                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
-                  Setoran
-                </p>
-                <p className="text-xl font-black text-emerald-600 tracking-tighter">
-                  Rp {(toko.totalSetoran / 1000000).toFixed(1)}M
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
+      <FilterBar
+        filterStore={filterStore} setFilterStore={setFilterStore}
+        startDate={startDate} setStartDate={setStartDate}
+        endDate={endDate} setEndDate={setEndDate}
+        dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
+        stores={stores}
+      />
 
-        {/* Card Tambah Toko */}
-        <button
-          onClick={onAddStore}
-          className="bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-300 p-6 shadow-sm hover:shadow-md hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer group flex flex-col items-center justify-center min-h-[200px]"
-        >
-          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 transition border border-slate-100">
-            <Plus className="w-8 h-8 text-slate-400 group-hover:text-blue-600" />
+      <div className="bg-white rounded-2xl border shadow-sm overflow-hidden border-slate-200">
+        <div className="overflow-x-auto w-full">
+            <table className="w-full text-left whitespace-nowrap min-w-max">
+              <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b">
+                <tr>
+                  <th className="px-6 py-4">Nama Toko</th>
+                  <th className="px-6 py-4">Marketplace</th>
+                  <th className="px-6 py-4">Total Setoran</th>
+                  <th className="px-6 py-4">Setoran Belum Dibayar</th>
+                  <th className="px-6 py-4 text-right">Detail</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y text-sm text-slate-900 font-bold">
+                {filteredStores.map((t) => (
+                  <tr key={t.id} className="hover:bg-slate-50 transition cursor-pointer">
+                    <td className="px-6 py-4 font-black uppercase tracking-tight">{t.name}</td>
+                    <td className="px-6 py-4 uppercase font-black tracking-tighter">{t.platform}</td>
+                    <td className="px-6 py-4 font-black text-emerald-600 tracking-tight">Rp {(perStoreSummary[t.name]?.totalSetoran ?? t.totalSetoran).toLocaleString()}</td>
+                    <td className="px-6 py-4 font-black text-amber-500 tracking-tight">Rp {(((perStoreSummary[t.name]?.totalSetoran ?? t.totalSetoran) - (perStoreSummary[t.name]?.sudahDibayar ?? 0)) || 0).toLocaleString()}</td>
+                    <td className="px-6 py-4 text-right">
+                      <button onClick={() => { setSelectedStore(t); setShowModal('store-orders'); }} className="px-3 py-1 bg-red-50 text-red-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-red-100 shadow-sm hover:bg-red-100 transition">Lihat List</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <h4 className="font-black text-slate-400 tracking-tight uppercase group-hover:text-blue-600 transition text-sm tracking-widest">
-            Tambah Toko Baru
-          </h4>
+      </div>
+    </div>
+  );
+
+  const Pengaturan = () => (
+    <div className="max-w-4xl mx-auto space-y-6 pb-20 lg:pb-0 animate-in fade-in zoom-in duration-300">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <button onClick={() => setShowModal('integrasi-api')} className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group flex items-start space-x-4 p-6 text-left">
+          <div className="p-4 bg-slate-50 text-slate-400 rounded-2xl group-hover:bg-red-50 group-hover:text-red-600 transition shadow-sm shrink-0">
+            <Key className="w-6 h-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-black text-slate-800 tracking-tight uppercase italic group-hover:text-red-600 transition">Integrasi API Resi</h4>
+            <p className="text-xs text-slate-500 mt-1 font-medium">Hubungkan layanan pelacakan Binderbyte</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-slate-300 self-center group-hover:text-red-600 group-hover:translate-x-1 transition shrink-0" />
+        </button>
+
+        <button onClick={() => setShowModal('setting-profil')} className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group flex items-start space-x-4 p-6 text-left">
+          <div className="p-4 bg-slate-50 text-slate-400 rounded-2xl group-hover:bg-red-50 group-hover:text-red-600 transition shadow-sm shrink-0">
+            <User className="w-6 h-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-black text-slate-800 tracking-tight uppercase italic group-hover:text-red-600 transition">Setting Profil</h4>
+            <p className="text-xs text-slate-500 mt-1 font-medium">Ubah logo, nama, dan alamat pusat.</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-slate-300 self-center group-hover:text-red-600 group-hover:translate-x-1 transition shrink-0" />
         </button>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-900 selection:bg-blue-100">
+    <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-900 selection:bg-red-100">
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .pb-safe-area { padding-bottom: env(safe-area-inset-bottom); }
+      `}</style>
+      
       <Sidebar activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
-      <div className="flex-1 lg:ml-64 min-h-screen flex flex-col relative">
-        <TopBar
-          activeMenu={activeMenu}
-          activeView={activeView}
-          setActiveView={setActiveView}
-        />
-        <main className="p-6 md:p-8 flex-1 pb-24 lg:pb-8 max-w-[1600px] mx-auto w-full">
-          {activeMenu === 'dashboard' && <DashboardContent />}
-          {activeMenu === 'toko' && (
-            <TokoContent
-              stores={stores}
-              onStoreClick={handleStoreClick}
-              onAddStore={handleAddStore}
-            />
-          )}
-          {activeMenu === 'toko-detail' && <TokoDetailContent />}
-          {activeMenu === 'status-pengiriman' && <StatusPengirimanContent />}
-          {activeMenu === 'cek-resi' && <CekResiContent />}
-          {activeMenu === 'rekap-setoran' && <RekapSetoranContent />}
-          {activeMenu === 'pengaturan' && <PengaturanContent />}
+      
+      <div className="flex-1 lg:ml-64 min-h-screen flex flex-col relative w-full">
+        <TopBar activeMenu={activeMenu} activeView={activeView} setActiveView={setActiveView} />
+        
+        <main className="flex-1 p-4 md:p-8 pb-24 lg:pb-8 max-w-[1600px] mx-auto w-full overflow-x-hidden">
+          {activeMenu === 'dashboard' && <Dashboard />}
+          {activeMenu === 'toko' && <TokoList />}
+          {activeMenu === 'toko-detail' && <TokoDetail />}
+          {activeMenu === 'cek-resi' && <CekResi />}
+          {activeMenu === 'status-pengiriman' && <StatusPengiriman />}
+          {activeMenu === 'rekap-setoran' && <RekapSetoran />}
+          {activeMenu === 'pengaturan' && <Pengaturan />}
         </main>
       </div>
+
       <BottomNavbar activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
+
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className="fixed bottom-24 lg:bottom-10 right-4 lg:right-10 z-[70] animate-in slide-in-from-bottom-5 fade-in duration-300">
+           <div className="bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 border border-slate-700">
+              <span className="font-bold text-sm">{toast.message}</span>
+              {toast.undoData && (
+                <button onClick={undoAction} className="text-xs font-black text-red-400 hover:text-red-300 uppercase tracking-wider underline decoration-2 underline-offset-2">Undo</button>
+              )}
+              <button onClick={() => setToast({ ...toast, show: false })} className="text-slate-500 hover:text-white"><X className="w-4 h-4" /></button>
+           </div>
+        </div>
+      )}
 
       {showModal && (
         <Modal
-          title={
-            showModal === 'import'
-              ? 'Import Data Shopee'
-              : showModal === 'export'
-              ? 'Ekspor Laporan'
-              : showModal === 'harga-setoran'
-              ? 'Update Harga Setoran'
-              : showModal === 'store-orders'
-              ? 'List Pesanan Toko'
-              : showModal === 'add-store'
-              ? 'Tambah Toko Baru'
-              : showModal === 'integrasi-api'
-              ? 'Integrasi API Resi'
-              : showModal === 'setting-profil'
-              ? 'Setting Profil'
-              : 'Detail Pesanan Lengkap'
-          }
+          title={showModal.replace('-', ' ')}
           type={showModal}
           data={selectedOrder}
           products={products}
-          onClose={() => {
-            setShowModal(null);
-            setSelectedOrder(null);
-          }}
+          onClose={() => { setShowModal(null); setSelectedOrder(null); }}
         />
       )}
     </div>
