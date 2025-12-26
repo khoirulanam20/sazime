@@ -169,76 +169,94 @@ const FilterBar = ({
   endDate, setEndDate,
   dateFilterMode, setDateFilterMode,
   stores,
-}) => (
-  <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 items-center">
-    {showStore && (
-      <div className="space-y-1.5">
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center">
-          <Store className="w-3 h-3 mr-1" /> Pilih Toko
-        </label>
-        <div className="relative group">
-          <select
-            value={filterStore}
-            onChange={(e) => setFilterStore(e.target.value)}
-            className="w-full bg-slate-50 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-xl text-xs font-bold py-3 pl-4 pr-10 outline-none focus:ring-2 focus:ring-red-500 transition-all appearance-none cursor-pointer text-slate-700"
-          >
-            <option value="All">Semua Toko</option>
-            {stores.map((s) => (
-              <option key={s.id} value={s.name}>{s.name}</option>
-            ))}
-          </select>
-          <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-red-500 transition-colors" />
-        </div>
-      </div>
-    )}
-    {showDate && (
-      <div className="space-y-1.5 lg:col-span-2">
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center">
-          <Calendar className="w-3 h-3 mr-1" /> Periode Laporan
-        </label>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-100">
-            {[{ k: 'day', l: 'Hari' }, { k: 'month', l: 'Bulan' }, { k: 'year', l: 'Tahun' }].map((m) => (
-              <button
-                key={m.k}
-                onClick={() => {
-                  setDateFilterMode(m.k);
-                  const now = new Date();
-                  if (m.k === 'day') {
-                    const d = now.toISOString().slice(0, 10);
-                    setStartDate(d); setEndDate(d);
-                  } else if (m.k === 'month') {
-                    const y = now.getFullYear();
-                    const mm = String(now.getMonth() + 1).padStart(2, '0');
-                    setStartDate(`${y}-${mm}-01`);
-                    setEndDate(`${y}-${mm}-${String(new Date(y, now.getMonth() + 1, 0).getDate()).padStart(2, '0')}`);
-                  } else {
-                    const y = now.getFullYear();
-                    setStartDate(`${y}-01-01`); setEndDate(`${y}-12-31`);
-                  }
-                }}
-                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                  dateFilterMode === m.k ? 'bg-white shadow-sm text-red-600 ring-1 ring-slate-100' : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                {m.l}
-              </button>
-            ))}
-          </div>
-          <div className="relative flex-1">
-            {dateFilterMode === 'day' ? (
-              <input type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setEndDate(e.target.value); }} className="w-full bg-slate-50 rounded-xl text-xs font-bold py-2.5 px-4 outline-none focus:ring-2 focus:ring-red-500 border border-slate-100" />
-            ) : dateFilterMode === 'month' ? (
-              <input type="month" value={startDate.slice(0, 7)} onChange={(e) => { const [y, m] = e.target.value.split('-'); setStartDate(`${y}-${m}-01`); setEndDate(`${y}-${m}-${new Date(y, m, 0).getDate()}`); }} className="w-full bg-slate-50 rounded-xl text-xs font-bold py-2.5 px-4 outline-none focus:ring-2 focus:ring-red-500 border border-slate-100" />
-            ) : (
-              <input type="number" min="2000" max="2099" value={startDate.slice(0, 4)} onChange={(e) => { const y = e.target.value; setStartDate(`${y}-01-01`); setEndDate(`${y}-12-31`); }} className="w-full bg-slate-50 rounded-xl text-xs font-bold py-2.5 px-4 outline-none focus:ring-2 focus:ring-red-500 border border-slate-100" />
-            )}
+}) => {
+  // Generate Year Options (e.g., 2020 - 2030)
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
+
+  return (
+    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 items-center">
+      {showStore && (
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center">
+            <Store className="w-3 h-3 mr-1" /> Pilih Toko
+          </label>
+          <div className="relative group">
+            <select
+              value={filterStore}
+              onChange={(e) => setFilterStore(e.target.value)}
+              className="w-full bg-slate-50 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-xl text-xs font-bold py-3 pl-4 pr-10 outline-none focus:ring-2 focus:ring-red-500 transition-all appearance-none cursor-pointer text-slate-700"
+            >
+              <option value="All">Semua Toko</option>
+              {stores.map((s) => (
+                <option key={s.id} value={s.name}>{s.name}</option>
+              ))}
+            </select>
+            <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-red-500 transition-colors" />
           </div>
         </div>
-      </div>
-    )}
-  </div>
-);
+      )}
+      {showDate && (
+        <div className="space-y-1.5 lg:col-span-2">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center">
+            <Calendar className="w-3 h-3 mr-1" /> Periode Laporan
+          </label>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-100">
+              {[{ k: 'day', l: 'Hari' }, { k: 'month', l: 'Bulan' }, { k: 'year', l: 'Tahun' }].map((m) => (
+                <button
+                  key={m.k}
+                  onClick={() => {
+                    setDateFilterMode(m.k);
+                    const now = new Date();
+                    if (m.k === 'day') {
+                      const d = now.toISOString().slice(0, 10);
+                      setStartDate(d); setEndDate(d);
+                    } else if (m.k === 'month') {
+                      const y = now.getFullYear();
+                      const mm = String(now.getMonth() + 1).padStart(2, '0');
+                      setStartDate(`${y}-${mm}-01`);
+                      setEndDate(`${y}-${mm}-${String(new Date(y, now.getMonth() + 1, 0).getDate()).padStart(2, '0')}`);
+                    } else {
+                      const y = now.getFullYear();
+                      setStartDate(`${y}-01-01`); setEndDate(`${y}-12-31`);
+                    }
+                  }}
+                  className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                    dateFilterMode === m.k ? 'bg-white shadow-sm text-red-600 ring-1 ring-slate-100' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  {m.l}
+                </button>
+              ))}
+            </div>
+            <div className="relative flex-1">
+              {dateFilterMode === 'day' ? (
+                <input type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setEndDate(e.target.value); }} className="w-full bg-slate-50 rounded-xl text-xs font-bold py-2.5 px-4 outline-none focus:ring-2 focus:ring-red-500 border border-slate-100" />
+              ) : dateFilterMode === 'month' ? (
+                <input type="month" value={startDate.slice(0, 7)} onChange={(e) => { const [y, m] = e.target.value.split('-'); setStartDate(`${y}-${m}-01`); setEndDate(`${y}-${m}-${new Date(y, m, 0).getDate()}`); }} className="w-full bg-slate-50 rounded-xl text-xs font-bold py-2.5 px-4 outline-none focus:ring-2 focus:ring-red-500 border border-slate-100" />
+              ) : (
+                // MODE TAHUN: Menggunakan Select Option
+                <div className="relative group">
+                  <select
+                    value={startDate.slice(0, 4)}
+                    onChange={(e) => { const y = e.target.value; setStartDate(`${y}-01-01`); setEndDate(`${y}-12-31`); }}
+                    className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl text-xs font-bold py-2.5 px-4 outline-none focus:ring-2 focus:ring-red-500 appearance-none cursor-pointer"
+                  >
+                    {yearOptions.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-red-500 transition-colors" />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Modal = ({ title, type, onClose, data, products }) => (
   <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/80 backdrop-blur-sm sm:p-4">
@@ -720,63 +738,97 @@ const App = () => {
 
   // --- CONTENT PAGES ---
 
-  const Dashboard = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <FilterBar
-        filterStore={filterStore} setFilterStore={setFilterStore}
-        startDate={startDate} setStartDate={setStartDate}
-        endDate={endDate} setEndDate={setEndDate}
-        dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
-        stores={stores}
-      />
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {[
-           { label: 'Total Setoran', val: `Rp ${totalSetoran.toLocaleString()}`, icon: Wallet, color: 'text-slate-900', bg: 'bg-white' },
-           { label: 'Total Pesanan', val: filteredOrders.length, icon: Package, color: 'text-slate-900', bg: 'bg-white' },
-           { label: 'Toko Aktif', val: stores.length, icon: Store, color: 'text-red-600', bg: 'bg-white' },
-           { label: 'Rata-rata Keranjang', val: 'Rp 145.000', icon: ShoppingBag, color: 'text-slate-900', bg: 'bg-white' }
-        ].map((stat, idx) => (
-          <div key={idx} className={`${stat.bg} p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group`}>
-             <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-xl ${stat.color === 'text-red-600' ? 'bg-red-50' : 'bg-slate-50'} group-hover:scale-110 transition-transform`}>
-                   <stat.icon className={`w-6 h-6 ${stat.color}`} />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-md">
-                   Filtered
-                </span>
-             </div>
-             <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">{stat.label}</p>
-             <h3 className={`text-2xl lg:text-3xl font-black ${stat.color} tracking-tight`}>{stat.val}</h3>
-          </div>
-        ))}
-      </div>
+  const Dashboard = () => {
+    // GENERATE DYNAMIC CHART DATA
+    const chartData = useMemo(() => {
+      let data = [];
+      if (dateFilterMode === 'day') {
+        // Data per jam (00:00 - 23:00)
+        for (let i = 0; i < 24; i++) {
+          data.push({
+            name: `${String(i).padStart(2, '0')}:00`,
+            v: Math.floor(Math.random() * 500000), // Random data
+          });
+        }
+      } else if (dateFilterMode === 'month') {
+         // Data per tanggal (1 - 30)
+         const daysInMonth = 30; // Simplifikasi
+         for (let i = 1; i <= daysInMonth; i++) {
+           data.push({
+             name: `${i}`,
+             v: Math.floor(Math.random() * 2000000),
+           });
+         }
+      } else {
+        // Data per bulan (Jan - Des)
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        data = months.map(m => ({
+          name: m,
+          v: Math.floor(Math.random() * 10000000),
+        }));
+      }
+      return data;
+    }, [dateFilterMode, startDate]);
 
-      <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-black text-slate-800 mb-6 uppercase tracking-tight italic flex items-center">
-          <TrendingUp className="w-5 h-5 mr-2 text-red-600" />
-          Grafik Pertumbuhan
-        </h3>
-        <div className="h-[250px] sm:h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={[{n:'Mg 1',v:4000000},{n:'Mg 2',v:3000000},{n:'Mg 3',v:5000000},{n:'Mg 4',v:4500000}]}>
-              <defs>
-                <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#dc2626" stopOpacity={0.1} />
-                  <stop offset="95%" stopColor="#dc2626" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="n" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} dy={10} />
-              <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} tickFormatter={(v) => `${v/1000}k`} />
-              <Tooltip contentStyle={{borderRadius:'12px', border:'none', boxShadow:'0 10px 15px -3px rgba(0,0,0,0.1)'}} cursor={{stroke:'#dc2626', strokeWidth:1}} />
-              <Area type="monotone" dataKey="v" stroke="#dc2626" strokeWidth={3} fillOpacity={1} fill="url(#colorVal)" />
-            </AreaChart>
-          </ResponsiveContainer>
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <FilterBar
+          filterStore={filterStore} setFilterStore={setFilterStore}
+          startDate={startDate} setStartDate={setStartDate}
+          endDate={endDate} setEndDate={setEndDate}
+          dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
+          stores={stores}
+        />
+        
+        {/* Compact Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-4">
+          {[
+             { label: 'Total Setoran', val: `Rp ${(totalSetoran/1000000).toFixed(1)}jt`, fullVal: `Rp ${totalSetoran.toLocaleString()}`, icon: Wallet, color: 'text-slate-900', bg: 'bg-white' },
+             { label: 'Total Pesanan', val: filteredOrders.length, fullVal: filteredOrders.length, icon: Package, color: 'text-slate-900', bg: 'bg-white' },
+             { label: 'Toko Aktif', val: stores.length, fullVal: stores.length, icon: Store, color: 'text-red-600', bg: 'bg-white' },
+             { label: 'Avg Keranjang', val: '145rb', fullVal: 'Rp 145.000', icon: ShoppingBag, color: 'text-slate-900', bg: 'bg-white' }
+          ].map((stat, idx) => (
+            <div key={idx} className={`${stat.bg} p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group`}>
+               <div className="flex justify-between items-start mb-2">
+                  <div className={`p-2 rounded-lg ${stat.color === 'text-red-600' ? 'bg-red-50' : 'bg-slate-50'} group-hover:scale-110 transition-transform`}>
+                     <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                  </div>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">
+                     Filtered
+                  </span>
+               </div>
+               <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-0.5">{stat.label}</p>
+               <h3 className={`text-xl font-black ${stat.color} tracking-tight`} title={stat.fullVal}>{stat.val}</h3>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 className="text-lg font-black text-slate-800 mb-6 uppercase tracking-tight italic flex items-center">
+            <TrendingUp className="w-5 h-5 mr-2 text-red-600" />
+            Grafik Pertumbuhan ({dateFilterMode === 'day' ? 'Per Jam' : dateFilterMode === 'month' ? 'Harian' : 'Bulanan'})
+          </h3>
+          <div className="h-[250px] sm:h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#dc2626" stopOpacity={0.1} />
+                    <stop offset="95%" stopColor="#dc2626" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} tickFormatter={(v) => `${v/1000}k`} />
+                <Tooltip contentStyle={{borderRadius:'12px', border:'none', boxShadow:'0 10px 15px -3px rgba(0,0,0,0.1)'}} cursor={{stroke:'#dc2626', strokeWidth:1}} />
+                <Area type="monotone" dataKey="v" stroke="#dc2626" strokeWidth={3} fillOpacity={1} fill="url(#colorVal)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const TokoList = () => (
     <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
