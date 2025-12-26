@@ -274,6 +274,8 @@ const Modal = ({ title, type, onClose, data, products }) => (
       className={`bg-white rounded-[2.5rem] w-full ${
         type === 'order-detail' || type === 'store-orders'
           ? 'max-w-2xl'
+          : type === 'integrasi-api' || type === 'setting-profil'
+          ? 'max-w-lg'
           : 'max-w-md'
       } shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col`}
     >
@@ -492,6 +494,108 @@ const Modal = ({ title, type, onClose, data, products }) => (
               Simpan Toko Baru
             </button>
           </div>
+        ) : type === 'integrasi-api' ? (
+          <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-start space-x-3">
+              <Key className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[11px] text-blue-700 leading-relaxed font-bold">
+                  Masukkan API Key dari Binderbyte untuk mengaktifkan fitur pelacakan resi otomatis.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                Binderbyte API Key
+              </label>
+              <input
+                type="password"
+                placeholder="Masukkan API Key 64 karakter..."
+                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-mono focus:ring-2 focus:ring-blue-500 outline-none font-bold"
+              />
+              <p className="text-[10px] text-slate-400 font-medium ml-1">
+                API Key dapat diperoleh dari dashboard Binderbyte
+              </p>
+            </div>
+            <button className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg hover:bg-blue-700 transition uppercase tracking-widest">
+              Simpan API Key
+            </button>
+          </div>
+        ) : type === 'setting-profil' ? (
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="w-24 h-24 bg-slate-100 rounded-2xl flex items-center justify-center border-2 border-dashed border-slate-300 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition group">
+                  <Camera className="w-8 h-8 text-slate-400 group-hover:text-blue-600" />
+                </div>
+                <button className="text-xs font-bold text-blue-600 hover:text-blue-700 uppercase tracking-widest">
+                  Upload Logo
+                </button>
+              </div>
+              
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  Nama Perusahaan / Toko
+                </label>
+                <input
+                  type="text"
+                  placeholder="Masukkan nama perusahaan..."
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  Alamat Pusat
+                </label>
+                <textarea
+                  placeholder="Masukkan alamat lengkap..."
+                  rows="3"
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                    Kota
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Kota"
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                    Provinsi
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Provinsi"
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  Nomor Telepon
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="tel"
+                    placeholder="081234567890"
+                    className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+            <button className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg hover:bg-blue-700 transition uppercase tracking-widest">
+              Simpan Perubahan
+            </button>
+          </div>
         ) : (
           <div className="text-center py-4 space-y-4">
             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
@@ -504,7 +608,9 @@ const Modal = ({ title, type, onClose, data, products }) => (
         )}
         {type !== 'order-detail' &&
           type !== 'harga-setoran' &&
-          type !== 'add-store' && (
+          type !== 'add-store' &&
+          type !== 'integrasi-api' &&
+          type !== 'setting-profil' && (
             <button
               onClick={onClose}
               className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase shadow-lg shadow-slate-200 hover:bg-slate-800 transition tracking-widest"
@@ -1233,6 +1339,14 @@ const App = () => {
           </div>
 
           <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+          <div className="relative flex-1 md:w-auto">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari Resi / Order ID..."
+                className="w-full md:w-64 pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
             {selectedShippingIds.length > 0 && (
               <button
                 onClick={handleBulkCheckPengirimanLocal}
@@ -1251,14 +1365,7 @@ const App = () => {
                 <>Belum pernah dicek</>
               )}
             </span>
-            <div className="relative flex-1 md:w-auto">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Cari Resi / Order ID..."
-                className="w-full md:w-64 pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+            
           </div>
         </div>
 
@@ -1390,164 +1497,110 @@ const App = () => {
   };
 
   const PengaturanContent = () => (
-    <div className="max-w-4xl mx-auto space-y-8 pb-20 lg:pb-0">
-      <div className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm">
-        <div className="p-8 border-b bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-blue-100 text-blue-600 rounded-2xl shadow-sm">
-              <Key className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-xl font-black text-slate-800 tracking-tight uppercase italic">
-                Integrasi API Resi
-              </h3>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                Hubungkan layanan pelacakan Binderbyte
-              </p>
-            </div>
-          </div>
-          <button className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-black shadow-lg shadow-blue-200 hover:bg-blue-700 transition uppercase tracking-widest">
-            Simpan API Key
-          </button>
-        </div>
-        <div className="p-8">
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                Binderbyte API Key
-              </label>
-              <input
-                type="password"
-                placeholder="Masukkan API Key 64 karakter..."
-                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-mono focus:ring-2 focus:ring-blue-500 outline-none font-bold"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="max-w-4xl mx-auto space-y-6 pb-20 lg:pb-0">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {[
-          {
-            icon: User,
-            label: 'Setting Profil',
-            desc: 'Ubah logo, nama, dan alamat pusat.',
-          },
-        ].map((item, i) => (
-          <div
-            key={i}
-            className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group flex items-start space-x-4"
-          >
-            <div className="p-4 bg-slate-50 text-slate-400 rounded-2xl group-hover:bg-blue-50 group-hover:text-blue-600 transition shadow-sm">
-              <item.icon className="w-6 h-6" />
-            </div>
-            <div className="flex-1">
-              <h4 className="font-black text-slate-800 tracking-tight uppercase italic">
-                {item.label}
-              </h4>
-              <p className="text-xs text-slate-500 mt-1 font-medium">
-                {item.desc}
-              </p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-slate-300 self-center group-hover:translate-x-1 transition" />
+        <button
+          onClick={() => setShowModal('integrasi-api')}
+          className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group flex items-start space-x-4 p-6"
+        >
+          <div className="p-4 bg-slate-50 text-slate-400 rounded-2xl group-hover:bg-blue-50 group-hover:text-blue-600 transition shadow-sm shrink-0">
+            <Key className="w-6 h-6" />
           </div>
-        ))}
+          <div className="flex-1 min-w-0">
+            <h4 className="font-black text-slate-800 tracking-tight uppercase italic group-hover:text-blue-600 transition">
+              Integrasi API Resi
+            </h4>
+            <p className="text-xs text-slate-500 mt-1 font-medium">
+              Hubungkan layanan pelacakan Binderbyte
+            </p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-slate-300 self-center group-hover:text-blue-600 group-hover:translate-x-1 transition shrink-0" />
+        </button>
+
+        <div
+          onClick={() => setShowModal('setting-profil')}
+          className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group flex items-start space-x-4 p-6"
+        >
+          <div className="p-4 bg-slate-50 text-slate-400 rounded-2xl group-hover:bg-blue-50 group-hover:text-blue-600 transition shadow-sm shrink-0">
+            <User className="w-6 h-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-black text-slate-800 tracking-tight uppercase italic group-hover:text-blue-600 transition">
+              Setting Profil
+            </h4>
+            <p className="text-xs text-slate-500 mt-1 font-medium">
+              Ubah logo, nama, dan alamat pusat.
+            </p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-slate-300 self-center group-hover:text-blue-600 group-hover:translate-x-1 transition shrink-0" />
+        </div>
       </div>
     </div>
   );
 
   const RekapSetoranContent = () => (
-    <div className="space-y-6 text-slate-900 font-medium">
-      <div className="bg-slate-900 text-white p-8 rounded-[3rem] relative overflow-hidden transition-all shadow-xl shadow-slate-200">
-        <div className="relative z-10 space-y-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-            <div className="space-y-1">
-              <p className="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2">
-                Pusat Informasi Dana
-              </p>
-              <h3 className="text-4xl font-black tracking-tighter uppercase italic">
-                Rekap Setoran
-              </h3>
-            </div>
-            <div className="bg-white/5 p-6 rounded-[2rem] backdrop-blur-md border border-white/10 text-right shadow-inner">
-              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">
-                Dana Wajib Setor
-              </p>
-              <h4 className="text-4xl font-black text-emerald-400 tracking-tight">
-                Rp {totalSetoranGlobal.toLocaleString()}
-              </h4>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white/5 p-4 rounded-3xl border border-white/5">
-            <div className="md:col-span-1">
-              <label className="text-[9px] font-black text-slate-500 uppercase ml-2">
-                Pilih Toko
-              </label>
-              <select
-                value={filterStore}
-                onChange={(e) => setFilterStore(e.target.value)}
-                className="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-2xl outline-none border-none text-xs mt-1 appearance-none cursor-pointer"
-              >
-                <option value="All">Semua Toko</option>
-                {stores.map((s) => (
-                  <option key={s.id} value={s.name}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="md:col-span-2 flex flex-col sm:flex-row gap-2">
-              <div className="flex-1">
-                <label className="text-[9px] font-black text-slate-500 uppercase ml-2">
-                  Dari Waktu
-                </label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-2xl outline-none border-none text-xs mt-1"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="text-[9px] font-black text-slate-500 uppercase ml-2">
-                  Sampai Waktu
-                </label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-2xl outline-none border-none text-xs mt-1"
-                />
-              </div>
-            </div>
-            <div className="flex items-end">
-              <button
-                onClick={() => setShowModal('export')}
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 px-4 rounded-2xl transition flex items-center justify-center uppercase text-[10px] tracking-widest shadow-lg shadow-blue-900/50"
-              >
-                <Share2 className="w-4 h-4 mr-2" /> Export
-              </button>
-            </div>
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div>
+            <h3 className="text-xl font-black text-slate-800 tracking-tight italic uppercase">
+              Rekap Setoran
+            </h3>
+            <p className="text-xs text-slate-500 font-medium">
+              Pantau dana wajib setor dari semua toko.
+            </p>
           </div>
         </div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px] -translate-y-32 translate-x-32"></div>
+
+        <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+        <div className="relative flex-1 md:w-auto">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cari Toko / Marketplace..."
+              className="w-full md:w-64 pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          {/* <div className="bg-emerald-50 border border-emerald-100 px-4 py-2.5 rounded-xl">
+            <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-0.5">
+              Dana Wajib Setor
+            </p>
+            <p className="text-lg font-black text-emerald-600 tracking-tight">
+              Rp {totalSetoranGlobal.toLocaleString()}
+            </p>
+          </div> */}
+          <button
+            onClick={() => setShowModal('export')}
+            className="flex items-center px-4 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition"
+          >
+            <Share2 className="w-3.5 h-3.5 mr-2" /> Export
+          </button>
+          
+        </div>
       </div>
 
-      <div className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm">
-        <div className="p-8 border-b bg-slate-50/50">
-          <h4 className="font-black text-slate-800 tracking-tight italic uppercase">
-            Detail Performa Setoran
-          </h4>
-        </div>
+      {/* FilterBar untuk Rekap Setoran */}
+      <FilterBar
+        filterStore={filterStore}
+        setFilterStore={setFilterStore}
+        filterMarketplace={filterMarketplace}
+        setFilterMarketplace={setFilterMarketplace}
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        stores={stores}
+      />
+
+      <div className="bg-white rounded-2xl border shadow-sm overflow-hidden border-slate-200">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] border-b">
+            <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b">
               <tr>
-                <th className="px-8 py-5">Nama Toko</th>
-                <th className="px-8 py-5">Marketplace</th>
-                <th className="px-8 py-5">Total Setoran</th>
-                <th className="px-8 py-5 text-right">Detail</th>
+                <th className="px-6 py-4">Nama Toko</th>
+                <th className="px-6 py-4">Marketplace</th>
+                <th className="px-6 py-4">Total Setoran</th>
+                <th className="px-6 py-4 text-right">Detail</th>
               </tr>
             </thead>
             <tbody className="divide-y text-sm text-slate-900 font-bold">
@@ -1556,16 +1609,16 @@ const App = () => {
                   key={t.id}
                   className="hover:bg-slate-50 transition cursor-pointer"
                 >
-                  <td className="px-8 py-5 font-black uppercase tracking-tight">
+                  <td className="px-6 py-4 font-black uppercase tracking-tight">
                     {t.name}
                   </td>
-                  <td className="px-8 py-5 uppercase font-black tracking-tighter">
+                  <td className="px-6 py-4 uppercase font-black tracking-tighter">
                     {t.platform}
                   </td>
-                  <td className="px-8 py-5 font-black text-emerald-600 tracking-tight">
+                  <td className="px-6 py-4 font-black text-emerald-600 tracking-tight">
                     Rp {t.totalSetoran.toLocaleString()}
                   </td>
-                  <td className="px-8 py-5 text-right">
+                  <td className="px-6 py-4 text-right">
                     <button
                       onClick={() => setShowModal('store-orders')}
                       className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-blue-100 shadow-sm hover:bg-blue-100 transition"
@@ -1579,9 +1632,9 @@ const App = () => {
                 <tr>
                   <td
                     colSpan="4"
-                    className="p-20 text-center text-slate-400 font-black uppercase italic tracking-widest opacity-30"
+                    className="px-6 py-8 text-center text-slate-400 text-xs italic"
                   >
-                    Tidak ada data ditemukan
+                    Tidak ada data setoran yang sesuai dengan filter.
                   </td>
                 </tr>
               )}
@@ -1712,6 +1765,10 @@ const App = () => {
               ? 'List Pesanan Toko'
               : showModal === 'add-store'
               ? 'Tambah Toko Baru'
+              : showModal === 'integrasi-api'
+              ? 'Integrasi API Resi'
+              : showModal === 'setting-profil'
+              ? 'Setting Profil'
               : 'Detail Pesanan Lengkap'
           }
           type={showModal}
