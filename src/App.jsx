@@ -57,6 +57,8 @@ import {
   QrCode,
   Keyboard,
   Phone,
+  Printer,
+  MoreVertical,
 } from 'lucide-react';
 
 // --- SUB-KOMPONEN UI ---
@@ -650,11 +652,23 @@ const App = () => {
   const [lastBulkCheckToko, setLastBulkCheckToko] = useState(null);
   const [lastBulkCheckPengiriman, setLastBulkCheckPengiriman] = useState(null);
 
+  // State untuk dropdown menu aksi
+  const [showActionDropdown, setShowActionDropdown] = useState(false);
+
   // Handler untuk cek resi massal di halaman detail toko
   const handleBulkCheckToko = () => {
     setLastBulkCheckToko(new Date());
+    setShowActionDropdown(false);
     // TODO: Implementasi logika cek resi massal
     console.log('Cek resi massal untuk toko:', selectedOrderIds);
+  };
+
+  // Handler untuk cetak resi massal
+  const handlePrintResi = () => {
+    setShowActionDropdown(false);
+    // TODO: Implementasi logika cetak resi
+    console.log('Cetak resi untuk toko:', selectedOrderIds);
+    window.print(); // Temporary: trigger print dialog
   };
 
   // Handler untuk cek resi massal di halaman pengiriman
@@ -983,6 +997,15 @@ const App = () => {
             <p className="text-sm text-slate-500 uppercase font-black text-[10px] tracking-widest">
               {selectedStore?.platform}
             </p>
+            {detailTab === 'pesanan' && (
+              <p className="text-[10px] text-slate-400 font-medium mt-1">
+                {lastBulkCheckToko ? (
+                  <>Terakhir cek: {formatLastCheckTime(lastBulkCheckToko)}</>
+                ) : (
+                  <>Belum pernah dicek resi</>
+                )}
+              </p>
+            )}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -1036,23 +1059,48 @@ const App = () => {
             </button>
           </div>
           <div className="flex items-center gap-2">
-            {selectedOrderIds.length > 0 && detailTab === 'pesanan' && (
-              <button
-                onClick={handleBulkCheckToko}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl animate-in fade-in zoom-in hover:bg-blue-700 transition"
-              >
-                <RefreshCw className="w-3 h-3 mr-2" /> Cek Resi Massal (
-                {selectedOrderIds.length})
-              </button>
-            )}
             {detailTab === 'pesanan' && (
-              <span className="text-[10px] text-slate-500 font-medium px-3 py-1.5 bg-slate-100 rounded-lg border border-slate-200">
-                {lastBulkCheckToko ? (
-                  <>Terakhir cek: {formatLastCheckTime(lastBulkCheckToko)}</>
-                ) : (
-                  <>Belum pernah dicek</>
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    if (selectedOrderIds.length > 0) {
+                      setShowActionDropdown(!showActionDropdown);
+                    }
+                  }}
+                  disabled={selectedOrderIds.length === 0}
+                  className={`flex items-center px-4 py-2 text-xs font-bold rounded-xl transition shadow-lg ${
+                    selectedOrderIds.length > 0
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200 cursor-pointer'
+                      : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                  }`}
+                >
+                 Aksi
+                  {selectedOrderIds.length > 0 && ` (${selectedOrderIds.length})`}
+                  <ChevronDown className="w-3.5 h-3.5 ml-2" />
+                </button>
+                {showActionDropdown && selectedOrderIds.length > 0 && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowActionDropdown(false)}
+                    ></div>
+                    <div className="absolute right-0 top-full mt-2 bg-white rounded-xl border border-slate-200 shadow-xl z-20 min-w-[200px] overflow-hidden">
+                      <button
+                        onClick={handleBulkCheckToko}
+                        className="w-full flex items-center px-4 py-3 text-left text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition"
+                      >
+                        <RefreshCw className="w-4 h-4 mr-3" /> Cek Resi
+                      </button>
+                      <button
+                        onClick={handlePrintResi}
+                        className="w-full flex items-center px-4 py-3 text-left text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition border-t border-slate-100"
+                      >
+                        <Printer className="w-4 h-4 mr-3" /> Cetak Resi
+                      </button>
+                    </div>
+                  </>
                 )}
-              </span>
+              </div>
             )}
           </div>
         </div>
@@ -1144,6 +1192,16 @@ const App = () => {
                         title="Lihat Detail"
                       >
                         <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          // TODO: Implementasi logika edit pesanan
+                          console.log('Edit pesanan:', order.id);
+                        }}
+                        className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition shadow-sm"
+                        title="Edit Pesanan"
+                      >
+                        <Edit3 className="w-4 h-4" />
                       </button>
                       <button
                         className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-800 hover:text-white transition shadow-sm"
