@@ -9,7 +9,7 @@ import {
   Download, ArrowLeft, Package, ShoppingBag, ExternalLink, ChevronDown,
   Wallet, FileSpreadsheet, Edit3, X, Eye, Calendar, Share2, RefreshCw,
   Camera, Zap, Key, User, Truck, MapPin, CreditCard, Clock, FileText,
-  CheckSquare, Square, QrCode, Keyboard, Phone, Printer, Menu
+  CheckSquare, Square, QrCode, Keyboard, Phone, Printer, Menu, Save
 } from 'lucide-react';
 
 // --- KONFIGURASI TEMA ---
@@ -32,7 +32,7 @@ const Sidebar = ({ activeMenu, setActiveMenu }) => (
   <aside className={`hidden lg:flex w-64 ${THEME.secondary} text-white h-screen fixed left-0 top-0 flex-col z-30 shadow-2xl`}>
     <div className="p-6 border-b border-slate-700/50">
       <h1 className="text-2xl font-black tracking-tighter flex items-center">
-        <span className="text-red-500 mr-1">SALES</span>
+        <span className="text-red-500 mr-1">SAZIME</span>
         <span className="text-white italic">HUB</span>
       </h1>
       <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-bold opacity-80">
@@ -244,7 +244,7 @@ const Modal = ({ title, type, onClose, data, products }) => (
   <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/80 backdrop-blur-sm sm:p-4">
     <div
       className={`bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full ${
-        ['order-detail', 'store-orders'].includes(type) ? 'max-w-2xl' : 'max-w-md'
+        ['order-detail', 'store-orders', 'edit-order'].includes(type) ? 'max-w-2xl' : 'max-w-md'
       } shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300 max-h-[90vh] flex flex-col`}
     >
       <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
@@ -327,6 +327,45 @@ const Modal = ({ title, type, onClose, data, products }) => (
                   <p className="font-black text-red-600 text-base">Rp {data.totalBayar.toLocaleString()}</p>
                 </div>
               </div>
+            </div>
+          </div>
+        ) : type === 'edit-order' && data ? (
+          <div className="space-y-6">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Order ID</p>
+              <p className="font-mono font-black text-lg text-slate-800">{data.id}</p>
+              <p className="text-xs text-slate-500 mt-1">{data.produk}</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status Order</label>
+                <select defaultValue={data.status} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500">
+                  <option value="Proses">Proses</option>
+                  <option value="Selesai">Selesai</option>
+                  <option value="Batal">Batal</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status Kurir</label>
+                <input type="text" defaultValue={data.kurirStatus} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nominal Setoran (Rp)</label>
+              <input type="number" defaultValue={data.setoran} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sudah Dibayar (Rp)</label>
+              <input type="number" defaultValue={data.sudahDibayar} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" />
+            </div>
+
+            <div className="pt-4">
+              <button onClick={onClose} className="w-full py-4 bg-red-600 text-white rounded-2xl font-black shadow-lg shadow-red-200 hover:bg-red-700 transition uppercase tracking-widest text-sm flex items-center justify-center">
+                <Save className="w-4 h-4 mr-2" /> Simpan Perubahan
+              </button>
             </div>
           </div>
         ) : type === 'store-orders' ? (
@@ -778,153 +817,172 @@ const App = () => {
     </div>
   );
 
-  const TokoDetail = () => (
-    <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-      <button onClick={() => setActiveMenu('toko')} className="flex items-center text-slate-500 hover:text-red-600 font-bold text-sm transition-colors group">
-        <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" /> Kembali
-      </button>
+  const TokoDetail = () => {
+    // Memastikan hanya pesanan dari toko yang dipilih yang ditampilkan
+    const storeOrders = filteredOrders.filter(o => o.storeName === selectedStore?.name);
 
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-         <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center border border-red-100">
-               <ShoppingBag className="w-8 h-8 text-red-600" />
-            </div>
-            <div>
-               <h3 className="text-2xl font-black text-slate-900 tracking-tight">{selectedStore?.name}</h3>
-               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{selectedStore?.platform}</p>
-                {detailTab === 'pesanan' && (
-                  <p className="text-[10px] text-slate-400 font-medium mt-1">
-                    {lastBulkCheckToko ? `Terakhir cek: ${formatLastCheckTime(lastBulkCheckToko)}` : 'Belum pernah dicek resi'}
-                  </p>
-                )}
-            </div>
-         </div>
-         <div className="flex gap-2 w-full md:w-auto">
-            <button onClick={() => setShowModal('import')} className="flex-1 md:flex-none items-center justify-center px-4 py-3 bg-slate-50 text-slate-700 rounded-xl text-xs font-black hover:bg-slate-100 border border-slate-200 transition">
-              <FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-600" /> Import
-            </button>
-            <button onClick={() => setShowModal('harga-setoran')} className="flex-1 md:flex-none items-center justify-center px-4 py-3 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-slate-800 shadow-lg transition">
-              <Edit3 className="w-4 h-4 mr-2 text-red-400" /> Harga Setoran
-            </button>
-         </div>
-      </div>
+    return (
+      <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
+        <button onClick={() => setActiveMenu('toko')} className="flex items-center text-slate-500 hover:text-red-600 font-bold text-sm transition-colors group">
+          <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" /> Kembali
+        </button>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-         <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-wrap gap-4 justify-between items-center">
-            <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg">
-               {['pesanan', 'barang'].map(tab => (
-                 <button key={tab} onClick={() => setDetailTab(tab)} className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${detailTab === tab ? 'bg-white text-red-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                   {tab}
-                 </button>
-               ))}
-            </div>
-            {detailTab === 'pesanan' && (
-              <div className="relative">
-                <button
-                  disabled={selectedOrderIds.length === 0}
-                  onClick={() => setShowActionDropdown(!showActionDropdown)}
-                  className={`flex items-center px-4 py-2 text-xs font-bold rounded-xl transition shadow-sm ${selectedOrderIds.length > 0 ? 'bg-red-600 text-white shadow-red-200' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
-                >
-                  Aksi Masal ({selectedOrderIds.length}) <ChevronDown className="w-3 h-3 ml-2" />
-                </button>
-                {showActionDropdown && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setShowActionDropdown(false)} />
-                    <div className="absolute right-0 top-full mt-2 bg-white rounded-xl border border-slate-200 shadow-xl z-20 w-48 py-1 overflow-hidden">
-                       <button onClick={handleBulkMarkPaid} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center"><CheckCircle2 className="w-4 h-4 mr-2" /> Tandai Lunas</button>
-                       <button onClick={handleBulkCheckToko} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center border-t border-slate-50"><RefreshCw className="w-4 h-4 mr-2" /> Cek Resi</button>
-                       <button onClick={handlePrintResi} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center border-t border-slate-50"><Printer className="w-4 h-4 mr-2" /> Cetak Resi</button>
-                    </div>
-                  </>
-                )}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center border border-red-100">
+                <ShoppingBag className="w-8 h-8 text-red-600" />
               </div>
-            )}
-         </div>
-
-         {detailTab === 'pesanan' ? (
-           <div className="overflow-x-auto w-full">
-             <table className="w-full text-left whitespace-nowrap">
-               <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-100">
-                 <tr>
-                    <th className="p-4 w-10 text-center">
-                      <button onClick={() => setSelectedOrderIds(selectedOrderIds.length === orders.length ? [] : orders.map(o => o.id))}>
-                        {selectedOrderIds.length === orders.length && orders.length > 0 ? <CheckSquare className="w-4 h-4 text-red-600" /> : <Square className="w-4 h-4" />}
-                      </button>
-                    </th>
-                    <th className="p-4">Info Pesanan</th>
-                    <th className="p-4">Status & Resi</th>
-                    <th className="p-4 text-right">Nominal</th>
-                    <th className="p-4 text-center">Aksi</th>
-                 </tr>
-               </thead>
-               <tbody className="divide-y divide-slate-50">
-                 {filteredOrders.map(order => (
-                   <tr key={order.id} className={`hover:bg-slate-50 transition-colors ${selectedOrderIds.includes(order.id) ? 'bg-red-50/30' : ''}`}>
-                      <td className="p-4 text-center">
-                        <button onClick={() => setSelectedOrderIds(prev => prev.includes(order.id) ? prev.filter(id => id !== order.id) : [...prev, order.id])}>
-                          {selectedOrderIds.includes(order.id) ? <CheckSquare className="w-4 h-4 text-red-600" /> : <Square className="w-4 h-4 text-slate-300" />}
-                        </button>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex flex-col">
-                           <span className="font-mono text-[10px] text-slate-400">{order.id}</span>
-                           <span className="font-bold text-sm text-slate-800 truncate max-w-[200px]">{order.produk}</span>
-                           <span className="text-[10px] text-slate-500 italic">{order.variasi}</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                         <div className="flex flex-col items-start">
-                            <span className={`text-[10px] px-2 py-0.5 rounded font-black uppercase ${order.kurirStatus.includes('Tiba') ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>{order.kurirStatus}</span>
-                            <span className="text-[10px] font-mono mt-1 text-slate-400">{order.resi}</span>
-                         </div>
-                      </td>
-                      <td className="p-4 text-right">
-                         <div className="flex flex-col">
-                           <span className="font-black text-slate-900 text-sm">Rp {order.setoran.toLocaleString()}</span>
-                           {order.sudahDibayar > 0 ? (
-                             <span className="text-[10px] font-bold text-emerald-600 flex items-center justify-end"><CheckCircle2 className="w-3 h-3 mr-1" /> Lunas</span>
-                           ) : (
-                             <span className="text-[10px] font-bold text-amber-500">Belum Setor</span>
-                           )}
-                         </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex justify-center gap-2">
-                           <button onClick={() => { setSelectedOrder(order); setShowModal('order-detail'); }} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"><Eye className="w-4 h-4" /></button>
-                        </div>
-                      </td>
-                   </tr>
-                 ))}
-               </tbody>
-             </table>
-           </div>
-         ) : (
-            <div className="w-full overflow-x-auto table-scroll pb-2">
-            <table className="w-full text-left whitespace-nowrap min-w-max">
-              <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b">
-                <tr>
-                  <th className="px-3 py-3 sm:px-6 sm:py-4">Nama Barang</th>
-                  <th className="px-3 py-3 sm:px-6 sm:py-4">SKU</th>
-                  <th className="px-3 py-3 sm:px-6 sm:py-4">Stok</th>
-                  <th className="px-3 py-3 sm:px-6 sm:py-4 text-right">Harga Setoran</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y text-sm text-slate-900">
-                {products.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50">
-                    <td className="px-3 py-3 sm:px-6 sm:py-4 font-bold">{p.name}</td>
-                    <td className="px-3 py-3 sm:px-6 sm:py-4 font-mono text-xs">{p.sku}</td>
-                    <td className="px-3 py-3 sm:px-6 sm:py-4">{p.stock}</td>
-                    <td className="px-3 py-3 sm:px-6 sm:py-4 text-right font-black text-red-600">Rp {p.hargaSetoran.toLocaleString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              <div>
+                <h3 className="text-2xl font-black text-slate-900 tracking-tight">{selectedStore?.name}</h3>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{selectedStore?.platform}</p>
+                  {detailTab === 'pesanan' && (
+                    <p className="text-[10px] text-slate-400 font-medium mt-1">
+                      {lastBulkCheckToko ? `Terakhir cek: ${formatLastCheckTime(lastBulkCheckToko)}` : 'Belum pernah dicek resi'}
+                    </p>
+                  )}
+              </div>
           </div>
-         )}
+          <div className="flex gap-2 w-full md:w-auto">
+              <button onClick={() => setShowModal('import')} className="flex-1 md:flex-none items-center justify-center px-4 py-3 bg-slate-50 text-slate-700 rounded-xl text-xs font-black hover:bg-slate-100 border border-slate-200 transition">
+                <FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-600" /> Import
+              </button>
+              <button onClick={() => setShowModal('harga-setoran')} className="flex-1 md:flex-none items-center justify-center px-4 py-3 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-slate-800 shadow-lg transition">
+                <Edit3 className="w-4 h-4 mr-2 text-red-400" /> Harga Setoran
+              </button>
+          </div>
+        </div>
+
+        {/* Menambahkan FilterBar khusus untuk TokoDetail (tanpa pemilihan toko) */}
+        <FilterBar
+          showStore={false}
+          startDate={startDate} setStartDate={setStartDate}
+          endDate={endDate} setEndDate={setEndDate}
+          dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
+        />
+
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-wrap gap-4 justify-between items-center">
+              <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg">
+                {['pesanan', 'barang'].map(tab => (
+                  <button key={tab} onClick={() => setDetailTab(tab)} className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${detailTab === tab ? 'bg-white text-red-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                    {tab}
+                  </button>
+                ))}
+              </div>
+              {detailTab === 'pesanan' && (
+                <div className="relative">
+                  <button
+                    disabled={selectedOrderIds.length === 0}
+                    onClick={() => setShowActionDropdown(!showActionDropdown)}
+                    className={`flex items-center px-4 py-2 text-xs font-bold rounded-xl transition shadow-sm ${selectedOrderIds.length > 0 ? 'bg-red-600 text-white shadow-red-200' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+                  >
+                    Aksi Masal ({selectedOrderIds.length}) <ChevronDown className="w-3 h-3 ml-2" />
+                  </button>
+                  {showActionDropdown && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setShowActionDropdown(false)} />
+                      <div className="absolute right-0 top-full mt-2 bg-white rounded-xl border border-slate-200 shadow-xl z-20 w-48 py-1 overflow-hidden">
+                        <button onClick={handleBulkMarkPaid} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center"><CheckCircle2 className="w-4 h-4 mr-2" /> Tandai Lunas</button>
+                        <button onClick={handleBulkCheckToko} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center border-t border-slate-50"><RefreshCw className="w-4 h-4 mr-2" /> Cek Resi</button>
+                        <button onClick={handlePrintResi} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center border-t border-slate-50"><Printer className="w-4 h-4 mr-2" /> Cetak Resi</button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+          </div>
+
+          {detailTab === 'pesanan' ? (
+            <div className="overflow-x-auto w-full table-scroll pb-2">
+              <table className="w-full text-left whitespace-nowrap min-w-max">
+                <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-100">
+                  <tr>
+                      <th className="p-4 w-10 text-center">
+                        <button onClick={() => setSelectedOrderIds(selectedOrderIds.length === storeOrders.length ? [] : storeOrders.map(o => o.id))}>
+                          {selectedOrderIds.length === storeOrders.length && storeOrders.length > 0 ? <CheckSquare className="w-4 h-4 text-red-600" /> : <Square className="w-4 h-4" />}
+                        </button>
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 sm:py-4">No. Pesanan</th>
+                      <th className="px-4 py-3 sm:px-6 sm:py-4">Nama Produk</th>
+                      <th className="px-4 py-3 sm:px-6 sm:py-4">Status Kurir</th>
+                      <th className="px-4 py-3 sm:px-6 sm:py-4">Setoran</th>
+                      <th className="px-4 py-3 sm:px-6 sm:py-4">Sudah Dibayar</th>
+                      <th className="px-4 py-3 sm:px-6 sm:py-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50 text-sm font-bold text-slate-900">
+                  {storeOrders.map(order => (
+                    <tr key={order.id} className={`hover:bg-slate-50 transition-colors ${selectedOrderIds.includes(order.id) ? 'bg-red-50/30' : ''}`}>
+                        <td className="p-4 text-center">
+                          <button onClick={() => setSelectedOrderIds(prev => prev.includes(order.id) ? prev.filter(id => id !== order.id) : [...prev, order.id])}>
+                            {selectedOrderIds.includes(order.id) ? <CheckSquare className="w-4 h-4 text-red-600" /> : <Square className="w-4 h-4 text-slate-300" />}
+                          </button>
+                        </td>
+                        <td className="px-4 py-3 sm:px-6 sm:py-4 font-mono text-xs">{order.id}</td>
+                        <td className="px-4 py-3 sm:px-6 sm:py-4">
+                          <div className="flex flex-col max-w-[200px]">
+                            <span className="truncate" title={order.produk}>{order.produk}</span>
+                            <span className="text-[10px] text-slate-500 italic">{order.variasi}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 sm:px-6 sm:py-4">
+                          <div className="flex flex-col items-start">
+                              <span className={`text-[10px] px-2 py-0.5 rounded font-black uppercase ${order.kurirStatus.includes('Tiba') ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>{order.kurirStatus}</span>
+                              <span className="text-[10px] font-mono mt-1 text-slate-400">{order.resi}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 sm:px-6 sm:py-4 text-emerald-600">Rp {order.setoran.toLocaleString()}</td>
+                        <td className="px-4 py-3 sm:px-6 sm:py-4 text-emerald-600">
+                          {order.sudahDibayar > 0 ? (
+                            <span className="flex items-center"><CheckCircle2 className="w-3 h-3 mr-1" /> Rp {order.sudahDibayar.toLocaleString()}</span>
+                          ) : (
+                            <span className="text-amber-500 text-[10px] uppercase font-bold">Belum Setor</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 sm:px-6 sm:py-4 text-center">
+                          <div className="flex justify-center gap-2">
+                            <button onClick={() => { setSelectedOrder(order); setShowModal('order-detail'); }} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Lihat Detail"><Eye className="w-4 h-4" /></button>
+                            <button onClick={() => { setSelectedOrder(order); setShowModal('edit-order'); }} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Edit Pesanan"><Edit3 className="w-4 h-4" /></button>
+                          </div>
+                        </td>
+                    </tr>
+                  ))}
+                  {storeOrders.length === 0 && (
+                    <tr>
+                      <td colSpan="8" className="text-center py-8 text-slate-400 italic text-xs">Tidak ada data pesanan pada periode ini.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="w-full overflow-x-auto table-scroll pb-2">
+              <table className="w-full text-left whitespace-nowrap min-w-max">
+                <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b">
+                  <tr>
+                    <th className="px-3 py-3 sm:px-6 sm:py-4">Nama Barang</th>
+                    <th className="px-3 py-3 sm:px-6 sm:py-4">SKU</th>
+                    <th className="px-3 py-3 sm:px-6 sm:py-4">Stok</th>
+                    <th className="px-3 py-3 sm:px-6 sm:py-4 text-right">Harga Setoran</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y text-sm text-slate-900">
+                  {products.map((p) => (
+                    <tr key={p.id} className="hover:bg-slate-50">
+                      <td className="px-3 py-3 sm:px-6 sm:py-4 font-bold">{p.name}</td>
+                      <td className="px-3 py-3 sm:px-6 sm:py-4 font-mono text-xs">{p.sku}</td>
+                      <td className="px-3 py-3 sm:px-6 sm:py-4">{p.stock}</td>
+                      <td className="px-3 py-3 sm:px-6 sm:py-4 text-right font-black text-red-600">Rp {p.hargaSetoran.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const CekResi = () => (
     <div className="max-w-xl mx-auto py-8 animate-in zoom-in-95 duration-300">
