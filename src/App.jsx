@@ -647,6 +647,142 @@ const App = () => {
       metodePembayaran: 'Transfer', waktuDibuat: '2025-11-26 10:40', sudahDibayar: 0,
       catatan: 'Warna campur gan'
     },
+    // Data Dummy Pesanan Tahun 2026
+    {
+      id: '260101A4BXZYQW', storeName: 'Sazime Official Store', platform: 'Shopee', status: 'Selesai',
+      resi: 'SPXID01234567890A', jasaKirim: 'Reguler (Cashless)-SPX Standard', kurirStatus: 'Tiba di Tujuan',
+      produk: 'Sangkar Murai No 1 - Sazime Original', variasi: 'No. 2 - (8cm)', jumlah: 1,
+      totalBayar: 265000, setoran: 220000, username: 'bird_lover_2026', namaPenerima: 'A*****i',
+      noTelepon: '******89', alamat: 'Jl. Sudirman No 123', kota: 'JAKARTA SELATAN',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-01 08:30', sudahDibayar: 220000,
+      catatan: 'Paket untuk ulang tahun'
+    },
+    {
+      id: '260102C7DYXWVU', storeName: 'Sazime Woodwork', platform: 'TikTok Shop', status: 'Proses',
+      resi: 'SPXID01234567891B', jasaKirim: 'Hemat Kargo-SPX Hemat', kurirStatus: 'Sedang Dipacking',
+      produk: 'Sangkar Kotak Jati - Premium', variasi: 'Medium (40x30x25cm)', jumlah: 2,
+      totalBayar: 420000, setoran: 380000, username: 'cage_collector', namaPenerima: 'Citra Dewi',
+      noTelepon: '08134567890', alamat: 'Jl. Malioboro No 56', kota: 'YOGYAKARTA',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-02 14:15', sudahDibayar: 0,
+      catatan: 'Cat kayu jati asli'
+    },
+    {
+      id: '260103E9FZYTWS', storeName: 'Sazime Official Store', platform: 'Shopee', status: 'Selesai',
+      resi: 'SPXID01234567892C', jasaKirim: 'Express-SPX Express', kurirStatus: 'Dalam Perjalanan',
+      produk: 'Sangkar Murai No 1 - Sazime Original', variasi: 'No. 3 - (10cm)', jumlah: 1,
+      totalBayar: 285000, setoran: 240000, username: 'shopee_customer_001', namaPenerima: 'D*****o',
+      noTelepon: '******45', alamat: 'Jl. Gatot Subroto Kav 45', kota: 'JAKARTA PUSAT',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-03 11:20', sudahDibayar: 240000,
+      catatan: 'Kirim sebelum tanggal 5 Januari'
+    },
+    {
+      id: '260104G2HAVURQ', storeName: 'Sazime Woodwork', platform: 'TikTok Shop', status: 'Selesai',
+      resi: 'SPXID01234567893D', jasaKirim: 'Reguler (Cashless)-SPX Standard', kurirStatus: 'Tiba di Tujuan',
+      produk: 'Cangkir Cepuk Pakan Mika', variasi: 'Segi 6 Hitam', jumlah: 5,
+      totalBayar: 250000, setoran: 210000, username: 'bird_shop_owner', namaPenerima: 'Eko Prasetyo',
+      noTelepon: '08234567891', alamat: 'Jl. Ahmad Yani No 78', kota: 'SEMARANG',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-04 16:45', sudahDibayar: 180000,
+      catatan: 'Untuk toko burung grosir'
+    },
+    {
+      id: '260105I5JBWTPM', storeName: 'Sazime Official Store', platform: 'Shopee', status: 'Proses',
+      resi: 'SPXID01234567894E', jasaKirim: 'Hemat Kargo-SPX Hemat', kurirStatus: 'Sedang Dipacking',
+      produk: 'Sangkar Kotak Jati - Premium', variasi: 'Large (50x40x35cm)', jumlah: 1,
+      totalBayar: 380000, setoran: 320000, username: 'premium_customer', namaPenerima: 'F*****a',
+      noTelepon: '******67', alamat: 'Jl. Diponegoro No 234', kota: 'BANDUNG',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-05 09:30', sudahDibayar: 0,
+      catatan: 'Pakai bubble wrap ekstra'
+    },
+    {
+      id: '260106K8LCXQON', storeName: 'Sazime Woodwork', platform: 'TikTok Shop', status: 'Selesai',
+      resi: 'SPXID01234567895F', jasaKirim: 'Express-SPX Express', kurirStatus: 'Tiba di Tujuan',
+      produk: 'Sangkar Murai No 1 - Sazime Original', variasi: 'No. 1 - (6cm)', jumlah: 3,
+      totalBayar: 690000, setoran: 570000, username: 'reseller_bird', namaPenerima: 'Gita Sari',
+      noTelepon: '08345678901', alamat: 'Jl. Pahlawan No 89', kota: 'MALANG',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-06 13:10', sudahDibayar: 570000,
+      catatan: 'Reseller - diskon khusus'
+    },
+    {
+      id: '260107M1MDYRNL', storeName: 'Sazime Official Store', platform: 'Shopee', status: 'Selesai',
+      resi: 'SPXID01234567896G', jasaKirim: 'Reguler (Cashless)-SPX Standard', kurirStatus: 'Dalam Perjalanan',
+      produk: 'Cangkir Cepuk Pakan Mika', variasi: 'Segi 8 Bening', jumlah: 2,
+      totalBayar: 140000, setoran: 120000, username: 'shopee_regular', namaPenerima: 'H*****i',
+      noTelepon: '******23', alamat: 'Jl. Veteran No 156', kota: 'PALEMBANG',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-07 15:25', sudahDibayar: 120000,
+      catatan: 'Customer tetap'
+    },
+    {
+      id: '260108O4NEZQMK', storeName: 'Sazime Woodwork', platform: 'TikTok Shop', status: 'Proses',
+      resi: 'SPXID01234567897H', jasaKirim: 'Hemat Kargo-SPX Hemat', kurirStatus: 'Dalam Proses',
+      produk: 'Sangkar Kotak Jati - Premium', variasi: 'Small (30x25x20cm)', jumlah: 4,
+      totalBayar: 720000, setoran: 600000, username: 'bulk_buyer', namaPenerima: 'Indah Permata',
+      noTelepon: '08456789012', alamat: 'Jl. Sudirman No 345', kota: 'MEDAN',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-08 10:45', sudahDibayar: 0,
+      catatan: 'Pembelian grosir'
+    },
+    {
+      id: '260109Q7OFARLJ', storeName: 'Sazime Official Store', platform: 'Shopee', status: 'Selesai',
+      resi: 'SPXID01234567898I', jasaKirim: 'Express-SPX Express', kurirStatus: 'Tiba di Tujuan',
+      produk: 'Sangkar Murai No 1 - Sazime Original', variasi: 'No. 2 - (8cm)', jumlah: 1,
+      totalBayar: 265000, setoran: 220000, username: 'loyal_customer', namaPenerima: 'J*****a',
+      noTelepon: '******78', alamat: 'Jl. Thamrin No 67', kota: 'JAKARTA BARAT',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-09 12:15', sudahDibayar: 220000,
+      catatan: 'Repeat order'
+    },
+    {
+      id: '260110S0PGZTKI', storeName: 'Sazime Woodwork', platform: 'TikTok Shop', status: 'Selesai',
+      resi: 'SPXID01234567899J', jasaKirim: 'Reguler (Cashless)-SPX Standard', kurirStatus: 'Dalam Perjalanan',
+      produk: 'Cangkir Cepuk Pakan Mika', variasi: 'Segi 6 Hitam', jumlah: 1,
+      totalBayar: 65000, setoran: 55000, username: 'first_time', namaPenerima: 'Kartika Sari',
+      noTelepon: '08567890123', alamat: 'Jl. Gajah Mada No 89', kota: 'DENPASAR',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-10 14:30', sudahDibayar: 55000,
+      catatan: 'Pertama kali beli'
+    },
+    {
+      id: '260111U3QHBYJH', storeName: 'Sazime Official Store', platform: 'Shopee', status: 'Proses',
+      resi: 'SPXID01234567900K', jasaKirim: 'Hemat Kargo-SPX Hemat', kurirStatus: 'Sedang Dipacking',
+      produk: 'Sangkar Kotak Jati - Premium', variasi: 'Medium (40x30x25cm)', jumlah: 1,
+      totalBayar: 210000, setoran: 180000, username: 'woodwork_fan', namaPenerima: 'L*****o',
+      noTelepon: '******34', alamat: 'Jl. Hasanuddin No 123', kota: 'MAKASSAR',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-11 16:20', sudahDibayar: 0,
+      catatan: 'Untuk hadiah ulang tahun'
+    },
+    {
+      id: '260112W6RIAXIG', storeName: 'Sazime Woodwork', platform: 'TikTok Shop', status: 'Selesai',
+      resi: 'SPXID01234567901L', jasaKirim: 'Express-SPX Express', kurirStatus: 'Tiba di Tujuan',
+      produk: 'Sangkar Murai No 1 - Sazime Original', variasi: 'No. 3 - (10cm)', jumlah: 2,
+      totalBayar: 520000, setoran: 440000, username: 'premium_shop', namaPenerima: 'Mega Putri',
+      noTelepon: '08678901234', alamat: 'Jl. Sudirman No 456', kota: 'BALIKPAPAN',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-12 11:45', sudahDibayar: 440000,
+      catatan: 'Untuk toko premium'
+    },
+    {
+      id: '260113Y9SJZWIF', storeName: 'Sazime Official Store', platform: 'Shopee', status: 'Selesai',
+      resi: 'SPXID01234567902M', jasaKirim: 'Reguler (Cashless)-SPX Standard', kurirStatus: 'Dalam Perjalanan',
+      produk: 'Cangkir Cepuk Pakan Mika', variasi: 'Segi 8 Bening', jumlah: 4,
+      totalBayar: 240000, setoran: 200000, username: 'bulk_shopper', namaPenerima: 'N*****i',
+      noTelepon: '******56', alamat: 'Jl. Pahlawan No 234', kota: 'PEKANBARU',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-13 13:30', sudahDibayar: 200000,
+      catatan: 'Stock untuk bulan depan'
+    },
+    {
+      id: '260114A2TKYVHE', storeName: 'Sazime Woodwork', platform: 'TikTok Shop', status: 'Proses',
+      resi: 'SPXID01234567903N', jasaKirim: 'Hemat Kargo-SPX Hemat', kurirStatus: 'Dalam Proses',
+      produk: 'Sangkar Kotak Jati - Premium', variasi: 'Large (50x40x35cm)', jumlah: 1,
+      totalBayar: 380000, setoran: 320000, username: 'luxury_buyer', namaPenerima: 'Olivia Grace',
+      noTelepon: '08789012345', alamat: 'Jl. Malioboro No 78', kota: 'YOGYAKARTA',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-14 15:15', sudahDibayar: 0,
+      catatan: 'Premium quality only'
+    },
+    {
+      id: '260115C5ULXUHD', storeName: 'Sazime Official Store', platform: 'Shopee', status: 'Selesai',
+      resi: 'SPXID01234567904O', jasaKirim: 'Express-SPX Express', kurirStatus: 'Tiba di Tujuan',
+      produk: 'Sangkar Murai No 1 - Sazime Original', variasi: 'No. 1 - (6cm)', jumlah: 1,
+      totalBayar: 245000, setoran: 200000, username: 'fast_delivery', namaPenerima: 'P*****a',
+      noTelepon: '******78', alamat: 'Jl. Sudirman No 567', kota: 'SURABAYA',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-15 10:00', sudahDibayar: 200000,
+      catatan: 'Express delivery please'
+    }
   ]);
 
   // Effects & Helpers
