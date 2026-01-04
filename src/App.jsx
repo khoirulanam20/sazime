@@ -44,6 +44,7 @@ const Sidebar = ({ activeMenu, setActiveMenu }) => (
       {[
         { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { id: 'toko', icon: Store, label: 'Toko & Pesanan' },
+        { id: 'database-produk', icon: Package, label: 'Database Produk' },
         { id: 'status-pengiriman', icon: Truck, label: 'Status Pengiriman' },
         { id: 'cek-resi', icon: ScanLine, label: 'Cek Resi' },
         { id: 'rekap-setoran', icon: Wallet, label: 'Rekap Setoran' },
@@ -78,6 +79,7 @@ const BottomNavbar = ({ activeMenu, setActiveMenu }) => (
     {[
       { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
       { id: 'toko', icon: Store, label: 'Toko' },
+      { id: 'database-produk', icon: Package, label: 'Produk' },
       { id: 'status-pengiriman', icon: Truck, label: 'Kirim' },
       { id: 'cek-resi', icon: ScanLine, label: 'Scan' },
       { id: 'rekap-setoran', icon: Wallet, label: 'Setor' },
@@ -412,6 +414,56 @@ const Modal = ({ title, type, onClose, data, products }) => (
               </table>
             </div>
           </div>
+        ) : type === 'import' ? (
+          <div className="space-y-5">
+             <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex gap-3">
+              <FileSpreadsheet className="w-5 h-5 text-emerald-500 shrink-0" />
+              <p className="text-xs text-emerald-800 font-medium leading-relaxed">
+                Upload file Excel (.xlsx atau .xls) untuk mengimport data pesanan. Pastikan format kolom sesuai dengan template.
+              </p>
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pilih File Excel</label>
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium ml-1">
+                  Format: .xlsx atau .xls, maksimal 10MB
+                </p>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Template Kolom:</p>
+                <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-600 font-medium">
+                  <span>• No. Pesanan</span>
+                  <span>• Tanggal Pesanan</span>
+                  <span>• Nama Produk</span>
+                  <span>• Variasi</span>
+                  <span>• Jumlah</span>
+                  <span>• Harga Total</span>
+                  <span>• Nama Penerima</span>
+                  <span>• No. Telepon</span>
+                  <span>• Alamat</span>
+                  <span>• Kota</span>
+                  <span>• Metode Pembayaran</span>
+                  <span>• Jasa Kirim</span>
+                  <span>• No. Resi</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button onClick={onClose} className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 transition">
+                Batal
+              </button>
+              <button className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-black shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition uppercase tracking-widest text-sm">
+                Import Data
+              </button>
+            </div>
+          </div>
         ) : type === 'harga-setoran' ? (
           <div className="space-y-5">
              <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl flex gap-3">
@@ -616,17 +668,49 @@ const App = () => {
   const [lastBulkCheckToko, setLastBulkCheckToko] = useState(null);
   const [lastBulkCheckPengiriman, setLastBulkCheckPengiriman] = useState(null);
 
+  // Global Product Prices Management
+  const [globalProductPrices, setGlobalProductPrices] = useState({});
+
   // Mock Data
   const stores = [
     { id: 1, name: 'Sazime Official Store', platform: 'Shopee', totalOrders: 450, totalSetoran: 12500000, omset: 65000000, status: 'Active' },
     { id: 2, name: 'Sazime Woodwork', platform: 'TikTok Shop', totalOrders: 320, totalSetoran: 8200000, omset: 42000000, status: 'Active' },
     { id: 3, name: 'Sazime Second Store', platform: 'Shopee', totalOrders: 110, totalSetoran: 2100000, omset: 12000000, status: 'Inactive' },
+    { id: 4, name: 'Sazime Bird Paradise', platform: 'Tokopedia', totalOrders: 285, totalSetoran: 6800000, omset: 35000000, status: 'Active' },
+    { id: 5, name: 'Sazime Premium Cages', platform: 'Lazada', totalOrders: 195, totalSetoran: 5200000, omset: 28000000, status: 'Active' },
+    { id: 6, name: 'Sazime Grosir', platform: 'Shopee', totalOrders: 620, totalSetoran: 18500000, omset: 95000000, status: 'Active' },
+    { id: 7, name: 'Sazime Mini Store', platform: 'TikTok Shop', totalOrders: 85, totalSetoran: 1200000, omset: 6500000, status: 'Active' },
+    { id: 8, name: 'Sazime Bird Accessories', platform: 'Tokopedia', totalOrders: 175, totalSetoran: 4100000, omset: 22000000, status: 'Active' },
+    { id: 9, name: 'Sazime Luxury Woodwork', platform: 'Shopee', totalOrders: 95, totalSetoran: 2800000, omset: 15000000, status: 'Inactive' },
+    { id: 10, name: 'Sazime Express Store', platform: 'Lazada', totalOrders: 245, totalSetoran: 7200000, omset: 38000000, status: 'Active' },
   ];
 
   const products = [
-    { id: 1, name: 'Sangkar Murai No 1', sku: 'SKR-M01', stock: 45, hargaSetoran: 350000 },
-    { id: 2, name: 'Sangkar Kotak Jati', sku: 'SKR-K02', stock: 12, hargaSetoran: 210000 },
+    { id: 1, name: 'Sangkar Murai No 1 - Sazime Original', sku: 'SMNSO', stock: 45, hargaSetoran: 350000 },
+    { id: 2, name: 'Sangkar Kotak Jati - Premium', sku: 'SKJP', stock: 12, hargaSetoran: 210000 },
+    { id: 3, name: 'Cangkir Cepuk Pakan Mika', sku: 'CCPM', stock: 120, hargaSetoran: 25000 },
+    { id: 4, name: 'Sangkar Kenari Deluxe', sku: 'SKD', stock: 28, hargaSetoran: 180000 },
+    { id: 5, name: 'Tempat Makan Burung Otomatis', sku: 'TMBO', stock: 85, hargaSetoran: 75000 },
+    { id: 6, name: 'Sarang Buatan Lovebird', sku: 'SBL', stock: 65, hargaSetoran: 45000 },
+    { id: 7, name: 'Kandang Ayam Hias', sku: 'KAH', stock: 18, hargaSetoran: 280000 },
+    { id: 8, name: 'Mainan Burung Kayu', sku: 'MBK', stock: 95, hargaSetoran: 15000 },
+    { id: 9, name: 'Sangkar Cages Parrot', sku: 'SCP', stock: 22, hargaSetoran: 420000 },
+    { id: 10, name: 'Botol Minum Burung Stainless', sku: 'BMBS', stock: 150, hargaSetoran: 35000 },
+    { id: 11, name: 'Lampu Pemanas Kandang', sku: 'LPK', stock: 40, hargaSetoran: 95000 },
+    { id: 12, name: 'Batu Gosok Paruh', sku: 'BGP', stock: 200, hargaSetoran: 8000 },
+    { id: 13, name: 'Vitamin Burung Cair', sku: 'VBC', stock: 75, hargaSetoran: 55000 },
+    { id: 14, name: 'Pakan Burung Premium', sku: 'PBP', stock: 300, hargaSetoran: 120000 },
+    { id: 15, name: 'Sangkar Lovebird Elegan', sku: 'SLE', stock: 35, hargaSetoran: 195000 },
   ];
+
+  // Initialize global product prices after products are defined
+  useEffect(() => {
+    const prices = {};
+    products.forEach(product => {
+      prices[product.name] = product.hargaSetoran;
+    });
+    setGlobalProductPrices(prices);
+  }, []);
 
   const [orders, setOrders] = useState([
     {
@@ -782,6 +866,187 @@ const App = () => {
       noTelepon: '******78', alamat: 'Jl. Sudirman No 567', kota: 'SURABAYA',
       metodePembayaran: 'Transfer', waktuDibuat: '2026-01-15 10:00', sudahDibayar: 200000,
       catatan: 'Express delivery please'
+    },
+    // Data Dummy Tambahan - Lebih Banyak Variasi Produk dan Toko
+    {
+      id: '260116E8VMYVIE', storeName: 'Sazime Bird Paradise', platform: 'Tokopedia', status: 'Proses',
+      resi: 'JNE01234567905P', jasaKirim: 'YES Regular', kurirStatus: 'Sedang Dipacking',
+      produk: 'Sangkar Kenari Deluxe', variasi: 'Medium - 30x20x15cm', jumlah: 1,
+      totalBayar: 195000, setoran: 165000, username: 'bird_enthusiast', namaPenerima: 'Q*****i',
+      noTelepon: '******12', alamat: 'Jl. Malioboro No 123', kota: 'YOGYAKARTA',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-16 14:30', sudahDibayar: 0,
+      catatan: 'Pakai kotak ekstra kuat'
+    },
+    {
+      id: '260117G1WNZWJD', storeName: 'Sazime Premium Cages', platform: 'Lazada', status: 'Selesai',
+      resi: 'LEX01234567906Q', jasaKirim: 'Lazada Express', kurirStatus: 'Tiba di Tujuan',
+      produk: 'Tempat Makan Burung Otomatis', variasi: '500ml - Putih', jumlah: 2,
+      totalBayar: 165000, setoran: 130000, username: 'premium_shopper', namaPenerima: 'R*****a',
+      noTelepon: '******34', alamat: 'Jl. Thamrin No 456', kota: 'JAKARTA PUSAT',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-17 09:15', sudahDibayar: 130000,
+      catatan: 'Customer premium'
+    },
+    {
+      id: '260118I4XOYXKC', storeName: 'Sazime Grosir', platform: 'Shopee', status: 'Selesai',
+      resi: 'SPXID01234567907R', jasaKirim: 'Hemat Kargo-SPX Hemat', kurirStatus: 'Dalam Perjalanan',
+      produk: 'Cangkir Cepuk Pakan Mika', variasi: 'Segi 6 Hitam', jumlah: 10,
+      totalBayar: 275000, setoran: 225000, username: 'grosir_customer', namaPenerima: 'S*****o',
+      noTelepon: '******56', alamat: 'Jl. Sudirman No 789', kota: 'BANDUNG',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-18 16:45', sudahDibayar: 200000,
+      catatan: 'Grosir murah untuk toko burung'
+    },
+    {
+      id: '260119K7YPZYLB', storeName: 'Sazime Mini Store', platform: 'TikTok Shop', status: 'Proses',
+      resi: 'TTK01234567908S', jasaKirim: 'TikTok Standard', kurirStatus: 'Sedang Dipacking',
+      produk: 'Mainan Burung Kayu', variasi: 'Set Lengkap - 5pcs', jumlah: 1,
+      totalBayar: 45000, setoran: 35000, username: 'mini_store_buyer', namaPenerima: 'T*****i',
+      noTelepon: '******78', alamat: 'Jl. Veteran No 234', kota: 'SEMARANG',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-19 11:20', sudahDibayar: 0,
+      catatan: 'Toko kecil tapi loyal'
+    },
+    {
+      id: '260120M0ZQAXMA', storeName: 'Sazime Bird Accessories', platform: 'Tokopedia', status: 'Selesai',
+      resi: 'JNE01234567909T', jasaKirim: 'YES Express', kurirStatus: 'Tiba di Tujuan',
+      produk: 'Botol Minum Burung Stainless', variasi: '250ml - Silver', jumlah: 5,
+      totalBayar: 195000, setoran: 160000, username: 'accessories_shop', namaPenerima: 'U*****a',
+      noTelepon: '******90', alamat: 'Jl. Pahlawan No 567', kota: 'SURABAYA',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-20 13:10', sudahDibayar: 160000,
+      catatan: 'Toko aksesoris burung'
+    },
+    {
+      id: '260121O3ARBWLZ', storeName: 'Sazime Express Store', platform: 'Lazada', status: 'Selesai',
+      resi: 'LEX01234567910U', jasaKirim: 'Lazada Express', kurirStatus: 'Dalam Perjalanan',
+      produk: 'Lampu Pemanas Kandang', variasi: '25W - Infrared', jumlah: 1,
+      totalBayar: 125000, setoran: 95000, username: 'express_customer', namaPenerima: 'V*****o',
+      noTelepon: '******12', alamat: 'Jl. Diponegoro No 890', kota: 'MEDAN',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-21 15:30', sudahDibayar: 95000,
+      catatan: 'Kirim hari ini juga'
+    },
+    {
+      id: '260122Q6BSCVMY', storeName: 'Sazime Official Store', platform: 'Shopee', status: 'Proses',
+      resi: 'SPXID01234567911V', jasaKirim: 'Reguler (Cashless)-SPX Standard', kurirStatus: 'Sedang Dipacking',
+      produk: 'Batu Gosok Paruh', variasi: 'Natural Stone - Large', jumlah: 3,
+      totalBayar: 27000, setoran: 21000, username: 'natural_stone', namaPenerima: 'W*****i',
+      noTelepon: '******34', alamat: 'Jl. Hasanuddin No 123', kota: 'MAKASSAR',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-22 10:45', sudahDibayar: 0,
+      catatan: 'Batu alami untuk paruh'
+    },
+    {
+      id: '260123S9CTDUNX', storeName: 'Sazime Woodwork', platform: 'TikTok Shop', status: 'Selesai',
+      resi: 'TTK01234567912W', jasaKirim: 'TikTok Express', kurirStatus: 'Tiba di Tujuan',
+      produk: 'Vitamin Burung Cair', variasi: '500ml - Complete Formula', jumlah: 2,
+      totalBayar: 125000, setoran: 100000, username: 'vitamin_buyer', namaPenerima: 'X*****a',
+      noTelepon: '******56', alamat: 'Jl. Sudirman No 456', kota: 'PALEMBANG',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-23 12:15', sudahDibayar: 100000,
+      catatan: 'Vitamin lengkap untuk burung'
+    },
+    {
+      id: '260124U2DUEVOW', storeName: 'Sazime Bird Paradise', platform: 'Tokopedia', status: 'Selesai',
+      resi: 'JNE01234567913X', jasaKirim: 'YES Regular', kurirStatus: 'Dalam Perjalanan',
+      produk: 'Pakan Burung Premium', variasi: '5kg - Campuran Premium', jumlah: 1,
+      totalBayar: 145000, setoran: 120000, username: 'premium_feed', namaPenerima: 'Y*****o',
+      noTelepon: '******78', alamat: 'Jl. Thamrin No 789', kota: 'PEKANBARU',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-24 14:20', sudahDibayar: 110000,
+      catatan: 'Pakan premium untuk burung kesayangan'
+    },
+    {
+      id: '260125W5EVFWNV', storeName: 'Sazime Premium Cages', platform: 'Lazada', status: 'Proses',
+      resi: 'LEX01234567914Y', jasaKirim: 'Lazada Standard', kurirStatus: 'Sedang Dipacking',
+      produk: 'Sangkar Lovebird Elegan', variasi: 'Luxury - Gold Frame', jumlah: 1,
+      totalBayar: 225000, setoran: 190000, username: 'luxury_buyer', namaPenerima: 'Z*****i',
+      noTelepon: '******90', alamat: 'Jl. Malioboro No 345', kota: 'YOGYAKARTA',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-25 16:30', sudahDibayar: 0,
+      catatan: 'Frame emas untuk lovebird'
+    },
+    {
+      id: '260126Y8FWGXMU', storeName: 'Sazime Grosir', platform: 'Shopee', status: 'Selesai',
+      resi: 'SPXID01234567915Z', jasaKirim: 'Hemat Kargo-SPX Hemat', kurirStatus: 'Tiba di Tujuan',
+      produk: 'Kandang Ayam Hias', variasi: 'Large - 100x80x60cm', jumlah: 1,
+      totalBayar: 320000, setoran: 270000, username: 'ayam_hias_grosir', namaPenerima: 'A*****a',
+      noTelepon: '******11', alamat: 'Jl. Sudirman No 567', kota: 'JAKARTA SELATAN',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-26 11:45', sudahDibayar: 270000,
+      catatan: 'Kandang besar untuk ayam hias'
+    },
+    {
+      id: '260127A1GXHYLT', storeName: 'Sazime Mini Store', platform: 'TikTok Shop', status: 'Selesai',
+      resi: 'TTK01234567916A', jasaKirim: 'TikTok Standard', kurirStatus: 'Dalam Perjalanan',
+      produk: 'Sarang Buatan Lovebird', variasi: 'Premium - Kayu Jati', jumlah: 2,
+      totalBayar: 105000, setoran: 85000, username: 'sarang_lovebird', namaPenerima: 'B*****o',
+      noTelepon: '******22', alamat: 'Jl. Pahlawan No 890', kota: 'BALIKPAPAN',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-27 13:20', sudahDibayar: 85000,
+      catatan: 'Sarang kayu jati untuk lovebird'
+    },
+    {
+      id: '260128C4HYIZKS', storeName: 'Sazime Bird Accessories', platform: 'Tokopedia', status: 'Proses',
+      resi: 'JNE01234567917B', jasaKirim: 'YES Express', kurirStatus: 'Sedang Dipacking',
+      produk: 'Sangkar Cages Parrot', variasi: 'Extra Large - 80x60x100cm', jumlah: 1,
+      totalBayar: 480000, setoran: 400000, username: 'parrot_owner', namaPenerima: 'C*****i',
+      noTelepon: '******33', alamat: 'Jl. Veteran No 123', kota: 'DENPASAR',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-28 15:10', sudahDibayar: 0,
+      catatan: 'Sangkar besar untuk parrot'
+    },
+    {
+      id: '260129E7IZJAJR', storeName: 'Sazime Express Store', platform: 'Lazada', status: 'Selesai',
+      resi: 'LEX01234567918C', jasaKirim: 'Lazada Express', kurirStatus: 'Tiba di Tujuan',
+      produk: 'Sangkar Murai No 1 - Sazime Original', variasi: 'No. 2 - (8cm)', jumlah: 2,
+      totalBayar: 520000, setoran: 420000, username: 'murai_lover', namaPenerima: 'D*****a',
+      noTelepon: '******44', alamat: 'Jl. Diponegoro No 456', kota: 'MANADO',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-29 10:30', sudahDibayar: 420000,
+      catatan: 'Dua sangkar murai sekaligus'
+    },
+    {
+      id: '260130G0JAKBIQ', storeName: 'Sazime Official Store', platform: 'Shopee', status: 'Selesai',
+      resi: 'SPXID01234567919D', jasaKirim: 'Express-SPX Express', kurirStatus: 'Dalam Perjalanan',
+      produk: 'Tempat Makan Burung Otomatis', variasi: '750ml - Hitam', jumlah: 1,
+      totalBayar: 95000, setoran: 75000, username: 'auto_feeder', namaPenerima: 'E*****o',
+      noTelepon: '******55', alamat: 'Jl. Hasanuddin No 789', kota: 'PALANGKARAYA',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-30 12:45', sudahDibayar: 70000,
+      catatan: 'Tempat makan otomatis praktis'
+    },
+    {
+      id: '260131I3KBLCHP', storeName: 'Sazime Woodwork', platform: 'TikTok Shop', status: 'Proses',
+      resi: 'TTK01234567920E', jasaKirim: 'TikTok Express', kurirStatus: 'Sedang Dipacking',
+      produk: 'Sangkar Kotak Jati - Premium', variasi: 'Small (30x25x20cm)', jumlah: 3,
+      totalBayar: 690000, setoran: 570000, username: 'jati_lover', namaPenerima: 'F*****i',
+      noTelepon: '******66', alamat: 'Jl. Sudirman No 234', kota: 'BANJARMASIN',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-31 14:15', sudahDibayar: 0,
+      catatan: 'Sangkar jati premium'
+    },
+    {
+      id: '260201K6LCNIGO', storeName: 'Sazime Bird Paradise', platform: 'Tokopedia', status: 'Selesai',
+      resi: 'JNE01234567921F', jasaKirim: 'YES Regular', kurirStatus: 'Tiba di Tujuan',
+      produk: 'Cangkir Cepuk Pakan Mika', variasi: 'Segi 8 Bening', jumlah: 4,
+      totalBayar: 120000, setoran: 100000, username: 'cepuk_specialist', namaPenerima: 'G*****a',
+      noTelepon: '******77', alamat: 'Jl. Thamrin No 567', kota: 'MATARAM',
+      metodePembayaran: 'COD', waktuDibuat: '2026-02-01 16:30', sudahDibayar: 100000,
+      catatan: 'Cepuk bening berkualitas'
+    },
+    {
+      id: '260202M9MDQJFN', storeName: 'Sazime Premium Cages', platform: 'Lazada', status: 'Selesai',
+      resi: 'LEX01234567922G', jasaKirim: 'Lazada Standard', kurirStatus: 'Dalam Perjalanan',
+      produk: 'Botol Minum Burung Stainless', variasi: '500ml - Gold', jumlah: 1,
+      totalBayar: 55000, setoran: 45000, username: 'gold_bottle', namaPenerima: 'H*****o',
+      noTelepon: '******88', alamat: 'Jl. Malioboro No 890', kota: 'PONTIANAK',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-02-02 11:20', sudahDibayar: 45000,
+      catatan: 'Botol minum stainless gold'
+    },
+    {
+      id: '260203O2NERKEM', storeName: 'Sazime Grosir', platform: 'Shopee', status: 'Proses',
+      resi: 'SPXID01234567923H', jasaKirim: 'Hemat Kargo-SPX Hemat', kurirStatus: 'Sedang Dipacking',
+      produk: 'Mainan Burung Kayu', variasi: 'Single - Bell Toy', jumlah: 20,
+      totalBayar: 350000, setoran: 280000, username: 'toy_grosir', namaPenerima: 'I*****i',
+      noTelepon: '******99', alamat: 'Jl. Pahlawan No 123', kota: 'AMBON',
+      metodePembayaran: 'COD', waktuDibuat: '2026-02-03 13:45', sudahDibayar: 0,
+      catatan: 'Grosir mainan burung'
+    },
+    {
+      id: '260204Q5OFSLDL', storeName: 'Sazime Mini Store', platform: 'TikTok Shop', status: 'Selesai',
+      resi: 'TTK01234567924I', jasaKirim: 'TikTok Standard', kurirStatus: 'Tiba di Tujuan',
+      produk: 'Lampu Pemanas Kandang', variasi: '50W - Ceramic', jumlah: 1,
+      totalBayar: 145000, setoran: 115000, username: 'heater_mini', namaPenerima: 'J*****a',
+      noTelepon: '******10', alamat: 'Jl. Veteran No 456', kota: 'KUPANG',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-02-04 15:30', sudahDibayar: 115000,
+      catatan: 'Lampu pemanas keramik'
     }
   ]);
 
@@ -803,8 +1068,6 @@ const App = () => {
     return filterStore === 'All' ? stores : stores.filter(s => s.name === filterStore);
   }, [filterStore, stores]);
 
-  const totalSetoran = useMemo(() => filteredStores.reduce((acc, s) => acc + s.totalSetoran, 0), [filteredStores]);
-
   const perStoreSummary = useMemo(() => {
     const map = {};
     stores.forEach((s) => {
@@ -812,12 +1075,16 @@ const App = () => {
     });
     orders.forEach((o) => {
       if (!map[o.storeName]) map[o.storeName] = { totalSetoran: 0, sudahDibayar: 0 };
-      map[o.storeName].totalSetoran += o.setoran || 0;
+      // Gunakan harga setoran global jika tersedia, jika tidak gunakan o.setoran
+      const setoranPrice = globalProductPrices[o.produk] !== undefined ? globalProductPrices[o.produk] : o.setoran;
+      map[o.storeName].totalSetoran += setoranPrice || 0;
       map[o.storeName].sudahDibayar += o.sudahDibayar || 0;
     });
     return map;
-  }, [orders, stores]);
-  
+  }, [orders, stores, globalProductPrices]);
+
+  const totalSetoran = useMemo(() => filteredStores.reduce((acc, s) => acc + (perStoreSummary[s.name]?.totalSetoran || s.totalSetoran), 0), [filteredStores, perStoreSummary]);
+
   const totalSudahDibayar = useMemo(
     () => orders.reduce((acc, curr) => acc + (curr.sudahDibayar || 0), 0),
     [orders]
@@ -1031,11 +1298,8 @@ const App = () => {
               </div>
           </div>
           <div className="flex gap-2 w-full md:w-auto">
-              <button onClick={() => setShowModal('import')} className="flex-1 md:flex-none items-center justify-center px-4 py-3 bg-slate-50 text-slate-700 rounded-xl text-xs font-black hover:bg-slate-100 border border-slate-200 transition">
-                <FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-600" /> Import
-              </button>
-              <button onClick={() => setShowModal('harga-setoran')} className="flex-1 md:flex-none items-center justify-center px-4 py-3 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-slate-800 shadow-lg transition">
-                <Edit3 className="w-4 h-4 mr-2 text-red-400" /> Harga Setoran
+              <button onClick={() => setShowModal('import')} className="flex-1 md:flex-none items-center justify-center px-4 py-3 bg-emerald-600 text-white rounded-xl text-xs font-black hover:bg-emerald-700 shadow-lg transition">
+                <FileSpreadsheet className="w-4 h-4 mr-2" /> Import Excel
               </button>
           </div>
         </div>
@@ -1119,7 +1383,9 @@ const App = () => {
                               <span className="text-[10px] font-mono mt-1 text-slate-400">{order.resi}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 sm:px-6 sm:py-4 text-emerald-600">Rp {order.setoran.toLocaleString()}</td>
+                        <td className="px-4 py-3 sm:px-6 sm:py-4 text-emerald-600">
+                          Rp {(globalProductPrices[order.produk] || order.setoran).toLocaleString()}
+                        </td>
                         <td className="px-4 py-3 sm:px-6 sm:py-4 text-emerald-600">
                           {order.sudahDibayar > 0 ? (
                             <span className="flex items-center"><CheckCircle2 className="w-3 h-3 mr-1" /> Rp {order.sudahDibayar.toLocaleString()}</span>
@@ -1160,13 +1426,251 @@ const App = () => {
                       <td className="px-3 py-3 sm:px-6 sm:py-4 font-bold">{p.name}</td>
                       <td className="px-3 py-3 sm:px-6 sm:py-4 font-mono text-xs">{p.sku}</td>
                       <td className="px-3 py-3 sm:px-6 sm:py-4">{p.stock}</td>
-                      <td className="px-3 py-3 sm:px-6 sm:py-4 text-right font-black text-red-600">Rp {p.hargaSetoran.toLocaleString()}</td>
+                      <td className="px-3 py-3 sm:px-6 sm:py-4 text-right font-black text-red-600">
+                        {p.hargaSetoran ? `Rp ${p.hargaSetoran.toLocaleString()}` : '-'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
+        </div>
+      </div>
+    );
+  };
+
+  const DatabaseProduk = () => {
+    const [selectedSku, setSelectedSku] = useState('');
+    const [hargaSetoranInput, setHargaSetoranInput] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showSkuDropdown, setShowSkuDropdown] = useState(false);
+
+    // Filter produk berdasarkan search term
+    const filteredProducts = useMemo(() => {
+      if (!searchTerm) return products;
+      return products.filter(product =>
+        product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }, [products, searchTerm]);
+
+    // Hanya tampilkan produk yang sudah memiliki harga setoran global
+    const productsWithPrices = useMemo(() => {
+      return products.filter(product =>
+        globalProductPrices[product.name] !== undefined &&
+        globalProductPrices[product.name] !== null
+      ).map(product => ({
+        ...product,
+        hargaSetoran: globalProductPrices[product.name]
+      }));
+    }, [products, globalProductPrices]);
+
+    const handleSelectSku = (product) => {
+      setSelectedSku(product.sku);
+      setSearchTerm(product.sku);
+      setShowSkuDropdown(false);
+    };
+
+    const handleSaveHargaSetoran = () => {
+      if (selectedSku && hargaSetoranInput !== '') {
+        const selectedProduct = products.find(p => p.sku === selectedSku);
+        if (selectedProduct) {
+          const newPrice = parseInt(hargaSetoranInput) || 0;
+          setGlobalProductPrices(prev => ({
+            ...prev,
+            [selectedProduct.name]: newPrice
+          }));
+
+          // Reset form
+          setSelectedSku('');
+          setSearchTerm('');
+          setHargaSetoranInput('');
+        }
+      }
+    };
+
+    const handleEditProduct = (product) => {
+      setSelectedSku(product.sku);
+      setSearchTerm(product.sku);
+      setHargaSetoranInput(product.hargaSetoran.toString());
+    };
+
+    const handleDeleteProduct = (product) => {
+      setGlobalProductPrices(prev => {
+        const newPrices = { ...prev };
+        delete newPrices[product.name];
+        return newPrices;
+      });
+    };
+
+    return (
+      <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+        <div className="flex justify-between items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div>
+            <h3 className="text-xl font-black text-slate-800 tracking-tight italic uppercase">Database Produk</h3>
+            <p className="text-xs text-slate-500 font-medium mt-1">Kelola harga setoran produk secara global untuk semua toko.</p>
+          </div>
+          <div className="bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600">
+            Total Produk: {productsWithPrices.length}
+          </div>
+        </div>
+
+        {/* Form Input Harga Setoran */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h4 className="text-lg font-black text-slate-800 mb-4 uppercase tracking-tight">Input Harga Setoran</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* SKU Selector dengan Search */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pilih SKU</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setShowSkuDropdown(true);
+                  }}
+                  onFocus={() => setShowSkuDropdown(true)}
+                  placeholder="Cari SKU atau nama produk..."
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                />
+                {showSkuDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowSkuDropdown(false)} />
+                    <div className="absolute top-full mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-xl z-20 max-h-60 overflow-y-auto">
+                      {filteredProducts.length > 0 ? (
+                        filteredProducts.map((product) => (
+                          <button
+                            key={product.id}
+                            onClick={() => handleSelectSku(product)}
+                            className="w-full text-left px-4 py-3 hover:bg-red-50 hover:text-red-600 transition-colors border-b border-slate-100 last:border-b-0"
+                          >
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <div className="font-mono text-xs text-slate-500">{product.sku}</div>
+                                <div className="font-bold text-sm truncate max-w-[250px]">{product.name}</div>
+                              </div>
+                              <div className="text-xs text-slate-400">
+                                Stok: {product.stock}
+                              </div>
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-slate-400 text-sm italic">
+                          Tidak ada produk ditemukan
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Input Harga Setoran */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Harga Setoran</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rp</span>
+                <input
+                  type="number"
+                  value={hargaSetoranInput}
+                  onChange={(e) => setHargaSetoranInput(e.target.value)}
+                  placeholder="0"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
+            </div>
+
+            {/* Tombol Simpan */}
+            <div className="flex items-end">
+              <button
+                onClick={handleSaveHargaSetoran}
+                disabled={!selectedSku || !hargaSetoranInput}
+                className={`w-full px-6 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition ${
+                  selectedSku && hargaSetoranInput
+                    ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-200'
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                }`}
+              >
+                Simpan Harga
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabel Produk dengan Harga Setoran */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto w-full table-scroll pb-2">
+            <table className="w-full text-left whitespace-nowrap min-w-max">
+              <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-100">
+                <tr>
+                  <th className="p-4 w-16 text-center">No</th>
+                  <th className="px-4 py-3 sm:px-6 sm:py-4">SKU</th>
+                  <th className="px-4 py-3 sm:px-6 sm:py-4">Stok</th>
+                  <th className="px-4 py-3 sm:px-6 sm:py-4">Harga Setoran Global</th>
+                  <th className="px-4 py-3 sm:px-6 sm:py-4 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50 text-sm font-bold text-slate-900">
+                {productsWithPrices.map((product, index) => (
+                  <tr key={product.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-4 text-center font-mono text-slate-500">{index + 1}</td>
+                    <td className="px-4 py-3 sm:px-6 sm:py-4">
+                      <div className="flex flex-col">
+                        <span className="font-mono text-sm font-bold text-slate-800">{product.sku}</span>
+                        <span className="text-xs text-slate-500 truncate max-w-[200px]" title={product.name}>
+                          {product.name}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 sm:px-6 sm:py-4 text-center">
+                      <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-black">
+                        {product.stock}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 sm:px-6 sm:py-4">
+                      <span className="font-black text-red-600">
+                        Rp {product.hargaSetoran.toLocaleString()}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 sm:px-6 sm:py-4 text-center">
+                      <div className="flex justify-center gap-2">
+                        <button
+                          onClick={() => handleEditProduct(product)}
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                          title="Edit Harga Setoran"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(product)}
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                          title="Hapus dari Database"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {productsWithPrices.length === 0 && (
+                  <tr>
+                    <td colSpan="5" className="text-center py-12 text-slate-400 italic text-sm">
+                      <div className="space-y-2">
+                        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
+                          <Package className="w-8 h-8 text-slate-300" />
+                        </div>
+                        <p>Belum ada produk dengan harga setoran</p>
+                        <p className="text-xs">Gunakan form di atas untuk menambah produk</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     );
@@ -1423,6 +1927,7 @@ const App = () => {
           {activeMenu === 'dashboard' && <Dashboard />}
           {activeMenu === 'toko' && <TokoList />}
           {activeMenu === 'toko-detail' && <TokoDetail />}
+          {activeMenu === 'database-produk' && <DatabaseProduk />}
           {activeMenu === 'cek-resi' && <CekResi />}
           {activeMenu === 'status-pengiriman' && <StatusPengiriman />}
           {activeMenu === 'rekap-setoran' && <RekapSetoran />}
