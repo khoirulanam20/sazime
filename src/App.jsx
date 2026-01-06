@@ -45,6 +45,7 @@ const Sidebar = ({ activeMenu, setActiveMenu }) => (
         { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { id: 'toko', icon: Store, label: 'Toko & Pesanan' },
         { id: 'database-produk', icon: Package, label: 'Database Produk' },
+        { id: 'tambah-user', icon: User, label: 'Tambah User' },
         { id: 'status-pengiriman', icon: Truck, label: 'Status Pengiriman' },
         { id: 'cek-resi', icon: ScanLine, label: 'Cek Resi' },
         { id: 'rekap-setoran', icon: Wallet, label: 'Rekap Setoran' },
@@ -80,6 +81,7 @@ const BottomNavbar = ({ activeMenu, setActiveMenu }) => (
       { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
       { id: 'toko', icon: Store, label: 'Toko' },
       { id: 'database-produk', icon: Package, label: 'Produk' },
+      { id: 'tambah-user', icon: User, label: 'User' },
       { id: 'status-pengiriman', icon: Truck, label: 'Kirim' },
       { id: 'cek-resi', icon: ScanLine, label: 'Scan' },
       { id: 'rekap-setoran', icon: Wallet, label: 'Setor' },
@@ -1084,7 +1086,7 @@ const App = () => {
   }, [orders, stores, globalProductPrices]);
 
   const totalSetoran = useMemo(() => filteredStores.reduce((acc, s) => acc + (perStoreSummary[s.name]?.totalSetoran || s.totalSetoran), 0), [filteredStores, perStoreSummary]);
-
+  
   const totalSudahDibayar = useMemo(
     () => orders.reduce((acc, curr) => acc + (curr.sudahDibayar || 0), 0),
     [orders]
@@ -1881,6 +1883,222 @@ const App = () => {
     </div>
   );
 
+  const TambahUser = () => {
+    const [formData, setFormData] = useState({
+      nama: '',
+      email: '',
+      password: '',
+      role: '',
+      noTelepon: '',
+      alamat: ''
+    });
+
+    const roles = [
+      { value: 'owner', label: 'Owner', description: 'Akses penuh ke semua fitur sistem' },
+      { value: 'admin', label: 'Admin', description: 'Mengelola toko, pesanan, dan laporan' }
+    ];
+
+    const handleInputChange = (field, value) => {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    };
+
+    const handleSubmit = (e) => {
+      e.preventDefault();
+
+      // Validasi form
+      if (!formData.nama || !formData.email || !formData.password || !formData.role) {
+        alert('Mohon lengkapi semua field yang wajib diisi');
+        return;
+      }
+
+      // Validasi email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        alert('Format email tidak valid');
+        return;
+      }
+
+      // Validasi password minimal 6 karakter
+      if (formData.password.length < 6) {
+        alert('Password minimal 6 karakter');
+        return;
+      }
+
+      // Simpan user baru (dalam implementasi nyata akan menggunakan API)
+      console.log('User baru:', formData);
+
+      // Reset form
+      setFormData({
+        nama: '',
+        email: '',
+        password: '',
+        role: '',
+        noTelepon: '',
+        alamat: ''
+      });
+
+      alert('User berhasil ditambahkan!');
+    };
+
+    return (
+      <div className="max-w-2xl mx-auto space-y-6 pb-20 lg:pb-0 animate-in slide-in-from-right-4 duration-300">
+        <div className="flex justify-between items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div>
+            <h3 className="text-2xl font-black text-slate-800 tracking-tight italic uppercase">Tambah User Baru</h3>
+            <p className="text-sm text-slate-500 font-medium mt-1">Buat akun untuk anggota tim baru</p>
+          </div>
+          <div className="bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600">
+            Form User
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+          {/* Informasi Dasar */}
+          <div className="space-y-4">
+            <h4 className="text-lg font-black text-slate-800 uppercase tracking-tight">Informasi Dasar</h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  Nama Lengkap *
+                </label>
+                <input
+                  type="text"
+                  value={formData.nama}
+                  onChange={(e) => handleInputChange('nama', e.target.value)}
+                  placeholder="Masukkan nama lengkap..."
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  placeholder="nama@email.com"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                Password *
+              </label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                placeholder="Minimal 6 karakter..."
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                required
+                minLength="6"
+              />
+              <p className="text-[10px] text-slate-400 font-medium ml-1">
+                Password minimal 6 karakter
+              </p>
+            </div>
+          </div>
+
+          {/* Pilih Role */}
+          <div className="space-y-4">
+            <h4 className="text-lg font-black text-slate-800 uppercase tracking-tight">Pilih Role *</h4>
+
+            <div className="grid grid-cols-1 gap-3">
+              {roles.map((role) => (
+                <label
+                  key={role.value}
+                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    formData.role === role.value
+                      ? 'border-red-500 bg-red-50'
+                      : 'border-slate-200 bg-white hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-start space-x-3">
+                    <input
+                      type="radio"
+                      name="role"
+                      value={role.value}
+                      checked={formData.role === role.value}
+                      onChange={(e) => handleInputChange('role', e.target.value)}
+                      className="mt-1 text-red-600 focus:ring-red-500"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-black text-slate-800 text-sm uppercase tracking-wider">
+                          {role.label}
+                        </span>
+                        {formData.role === role.value && (
+                          <CheckCircle2 className="w-4 h-4 text-red-600" />
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium mt-1">
+                        {role.description}
+                      </p>
+                    </div>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Informasi Tambahan */}
+          <div className="space-y-4">
+            <h4 className="text-lg font-black text-slate-800 uppercase tracking-tight">Informasi Tambahan</h4>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                Nomor Telepon
+              </label>
+              <div className="relative">
+                <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="tel"
+                  value={formData.noTelepon}
+                  onChange={(e) => handleInputChange('noTelepon', e.target.value)}
+                  placeholder="081234567890"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                Alamat
+              </label>
+              <textarea
+                value={formData.alamat}
+                onChange={(e) => handleInputChange('alamat', e.target.value)}
+                placeholder="Masukkan alamat lengkap..."
+                rows="3"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500 resize-none"
+              />
+            </div>
+          </div>
+
+          {/* Tombol Submit */}
+          <div className="pt-6 border-t border-slate-200">
+            <button
+              type="submit"
+              className="w-full py-4 bg-red-600 text-white rounded-xl font-black shadow-lg shadow-red-200 hover:bg-red-700 transition uppercase tracking-widest text-sm"
+            >
+              Tambah User Baru
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  };
+
   const Pengaturan = () => (
     <div className="max-w-4xl mx-auto space-y-6 pb-20 lg:pb-0 animate-in fade-in zoom-in duration-300">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1928,6 +2146,7 @@ const App = () => {
           {activeMenu === 'toko' && <TokoList />}
           {activeMenu === 'toko-detail' && <TokoDetail />}
           {activeMenu === 'database-produk' && <DatabaseProduk />}
+          {activeMenu === 'tambah-user' && <TambahUser />}
           {activeMenu === 'cek-resi' && <CekResi />}
           {activeMenu === 'status-pengiriman' && <StatusPengiriman />}
           {activeMenu === 'rekap-setoran' && <RekapSetoran />}
