@@ -354,7 +354,7 @@ const Modal = ({ title, type, onClose, data, products }) => (
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
-                    <p className="font-bold text-slate-800 text-sm">{data.produk}</p>
+                  <p className="font-bold text-slate-800 text-sm">{data.produk}</p>
                     <p className="text-xs text-slate-500 font-medium mt-1">Variasi: {data.variasi}</p>
                     <div className="flex items-center gap-4 mt-2">
                       <div>
@@ -368,12 +368,12 @@ const Modal = ({ title, type, onClose, data, products }) => (
                         </div>
                       )}
                     </div>
-                  </div>
-                  <div className="text-right">
+                </div>
+                <div className="text-right">
                     <p className="text-[10px] text-slate-400 uppercase font-bold">Total Pembayaran</p>
                     <p className="font-black text-red-600 text-base">Rp {data.totalBayar?.toLocaleString() || '0'}</p>
-                  </div>
                 </div>
+              </div>
                 <div className="grid grid-cols-2 gap-4 mb-3">
                   <div className="bg-slate-50 p-3 rounded-lg">
                     <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Jumlah</p>
@@ -1636,7 +1636,7 @@ const App = () => {
                           <div className="flex flex-col max-w-[200px]">
                             <span className="truncate" title={order.produk}>{order.produk}</span>
                             {order.variasi && order.variasi !== 'Default' && (
-                              <span className="text-[10px] text-slate-500 italic">{order.variasi}</span>
+                            <span className="text-[10px] text-slate-500 italic">{order.variasi}</span>
                             )}
                           </div>
                         </td>
@@ -1810,12 +1810,9 @@ const App = () => {
                             className="w-full text-left px-4 py-3 hover:bg-red-50 hover:text-red-600 transition-colors border-b border-slate-100 last:border-b-0"
                           >
                             <div className="flex justify-between items-center">
-                              <div>
-                                <div className="font-mono text-xs text-slate-500">{product.sku}</div>
-                                <div className="font-bold text-sm truncate max-w-[250px]">{product.name}</div>
-                              </div>
+                              <div className="font-mono text-sm font-bold text-slate-800">{product.sku}</div>
                               <div className="text-xs text-slate-400">
-                                Jumlah: {product.stock}
+                                Stok: {product.stock}
                               </div>
                             </div>
                           </button>
@@ -1881,12 +1878,7 @@ const App = () => {
                   <tr key={product.id} className="hover:bg-slate-50 transition-colors">
                     <td className="p-4 text-center font-mono text-slate-500">{index + 1}</td>
                     <td className="px-4 py-3 sm:px-6 sm:py-4">
-                      <div className="flex flex-col">
                         <span className="font-mono text-sm font-bold text-slate-800">{product.sku}</span>
-                        <span className="text-xs text-slate-500 truncate max-w-[200px]" title={product.name}>
-                          {product.name}
-                        </span>
-                      </div>
                     </td>
                     <td className="px-4 py-3 sm:px-6 sm:py-4 text-center">
                       <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-black">
@@ -2154,9 +2146,14 @@ const App = () => {
       alamat: ''
     });
 
+    const [users, setUsers] = useState([
+      { id: 1, nama: 'Owner', email: 'admin@sazime.com', role: 'Owner', noTelepon: '081234567890', alamat: 'Jakarta' },
+      { id: 2, nama: 'Admin', email: 'sales1@sazime.com', role: 'Admin', noTelepon: '081234567891', alamat: 'Jakarta' }
+    ]);
+
     const roles = [
-      { value: 'owner', label: 'Owner', description: 'Akses penuh ke semua fitur sistem' },
-      { value: 'admin', label: 'Admin', description: 'Mengelola toko, pesanan, dan laporan' }
+      { value: 'owner', label: 'Owner' },
+      { value: 'admin', label: 'Admin' }
     ];
 
     const handleInputChange = (field, value) => {
@@ -2168,30 +2165,30 @@ const App = () => {
 
     const handleSubmit = (e) => {
       e.preventDefault();
-
-      // Validasi form
       if (!formData.nama || !formData.email || !formData.password || !formData.role) {
         alert('Mohon lengkapi semua field yang wajib diisi');
         return;
       }
-
-      // Validasi email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
         alert('Format email tidak valid');
         return;
       }
-
-      // Validasi password minimal 6 karakter
       if (formData.password.length < 6) {
         alert('Password minimal 6 karakter');
         return;
       }
 
-      // Simpan user baru (dalam implementasi nyata akan menggunakan API)
-      console.log('User baru:', formData);
+      const newUser = {
+        id: users.length + 1,
+        nama: formData.nama,
+        email: formData.email,
+        role: roles.find(r => r.value === formData.role)?.label || formData.role,
+        noTelepon: formData.noTelepon,
+        alamat: formData.alamat
+      };
+      setUsers(prev => [...prev, newUser]);
 
-      // Reset form
       setFormData({
         nama: '',
         email: '',
@@ -2200,162 +2197,107 @@ const App = () => {
         noTelepon: '',
         alamat: ''
       });
-
       alert('User berhasil ditambahkan!');
     };
 
+    const roleBadgeClass = (role) => {
+      if (!role) return 'bg-slate-100 text-slate-700';
+      if (role.toLowerCase().includes('owner')) return 'bg-pink-100 text-pink-700';
+      if (role.toLowerCase().includes('admin')) return 'bg-blue-100 text-blue-700';
+      if (role.toLowerCase().includes('kasir')) return 'bg-emerald-100 text-emerald-700';
+      return 'bg-slate-100 text-slate-700';
+    };
+
     return (
-      <div className="max-w-2xl mx-auto space-y-6 pb-20 lg:pb-0 animate-in slide-in-from-right-4 duration-300">
-        <div className="flex justify-between items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div>
-            <h3 className="text-2xl font-black text-slate-800 tracking-tight italic uppercase">Tambah User Baru</h3>
-            <p className="text-sm text-slate-500 font-medium mt-1">Buat akun untuk anggota tim baru</p>
-          </div>
-          <div className="bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600">
-            Form User
+      <div className="max-w-6xl mx-auto space-y-6 pb-20 lg:pb-0 animate-in slide-in-from-right-4 duration-300">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="text-center">
+            <h3 className="text-2xl font-black text-slate-800 tracking-tight uppercase">Tambah User Baru</h3>
+            <p className="text-sm text-slate-500 font-medium mt-1">Kelola pengguna sistem SAZIME Print</p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-          {/* Informasi Dasar */}
-          <div className="space-y-4">
-            <h4 className="text-lg font-black text-slate-800 uppercase tracking-tight">Informasi Dasar</h4>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                  Nama Lengkap *
-                </label>
-                <input
-                  type="text"
-                  value={formData.nama}
-                  onChange={(e) => handleInputChange('nama', e.target.value)}
-                  placeholder="Masukkan nama lengkap..."
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
-                  required
-                />
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h4 className="text-lg font-black text-slate-800 uppercase tracking-tight mb-6">Form User Baru</h4>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase">Nama Lengkap *</label>
+                  <input type="text" value={formData.nama} onChange={(e) => handleInputChange('nama', e.target.value)} placeholder="Masukkan nama lengkap" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" required />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase">Email *</label>
+                  <input type="email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="Masukkan email" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" required />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase">Password *</label>
+                  <input type="password" value={formData.password} onChange={(e) => handleInputChange('password', e.target.value)} placeholder="Masukkan password" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" required minLength="6" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase">Role *</label>
+                  <select value={formData.role} onChange={(e) => handleInputChange('role', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" required>
+                    <option value="">Pilih Role</option>
+                    {roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  </select>
+                </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="nama@email.com"
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
-                  required
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase">No. Telepon</label>
+                  <input type="tel" value={formData.noTelepon} onChange={(e) => handleInputChange('noTelepon', e.target.value)} placeholder="Masukkan nomor telepon" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase">Alamat</label>
+                  <input type="text" value={formData.alamat} onChange={(e) => handleInputChange('alamat', e.target.value)} placeholder="Masukkan alamat" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" />
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                Password *
-              </label>
-              <input
-                type="password"
-                value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-                placeholder="Minimal 6 karakter..."
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
-                required
-                minLength="6"
-              />
-              <p className="text-[10px] text-slate-400 font-medium ml-1">
-                Password minimal 6 karakter
-              </p>
-            </div>
-          </div>
-
-          {/* Pilih Role */}
-          <div className="space-y-4">
-            <h4 className="text-lg font-black text-slate-800 uppercase tracking-tight">Pilih Role *</h4>
-
-            <div className="grid grid-cols-1 gap-3">
-              {roles.map((role) => (
-                <label
-                  key={role.value}
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    formData.role === role.value
-                      ? 'border-red-500 bg-red-50'
-                      : 'border-slate-200 bg-white hover:border-slate-300'
-                  }`}
-                >
-                  <div className="flex items-start space-x-3">
-                    <input
-                      type="radio"
-                      name="role"
-                      value={role.value}
-                      checked={formData.role === role.value}
-                      onChange={(e) => handleInputChange('role', e.target.value)}
-                      className="mt-1 text-red-600 focus:ring-red-500"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-black text-slate-800 text-sm uppercase tracking-wider">
-                          {role.label}
-                        </span>
-                        {formData.role === role.value && (
-                          <CheckCircle2 className="w-4 h-4 text-red-600" />
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-500 font-medium mt-1">
-                        {role.description}
-                      </p>
-                    </div>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Informasi Tambahan */}
-          <div className="space-y-4">
-            <h4 className="text-lg font-black text-slate-800 uppercase tracking-tight">Informasi Tambahan</h4>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                Nomor Telepon
-              </label>
-              <div className="relative">
-                <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="tel"
-                  value={formData.noTelepon}
-                  onChange={(e) => handleInputChange('noTelepon', e.target.value)}
-                  placeholder="081234567890"
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
-                />
+              <div className="pt-4 text-right">
+                <button type="submit" className="inline-flex items-center gap-2 px-5 py-3 bg-red-600 text-white rounded-xl font-black shadow-lg hover:bg-red-700 transition">
+                  <Plus className="w-4 h-4" /> Tambah User
+                </button>
               </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                Alamat
-              </label>
-              <textarea
-                value={formData.alamat}
-                onChange={(e) => handleInputChange('alamat', e.target.value)}
-                placeholder="Masukkan alamat lengkap..."
-                rows="3"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500 resize-none"
-              />
-            </div>
+            </form>
           </div>
 
-          {/* Tombol Submit */}
-          <div className="pt-6 border-t border-slate-200">
-            <button
-              type="submit"
-              className="w-full py-4 bg-red-600 text-white rounded-xl font-black shadow-lg shadow-red-200 hover:bg-red-700 transition uppercase tracking-widest text-sm"
-            >
-              Tambah User Baru
-            </button>
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-200">
+              <h4 className="text-lg font-black text-slate-800 uppercase tracking-tight">Daftar User</h4>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Email</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Role</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">No. Telepon</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Alamat</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {users.map((user) => (
+                    <tr key={user.id} className="hover:bg-slate-50">
+                      <td className="px-6 py-4 text-sm font-bold text-slate-800">{user.nama}</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{user.email}</td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-black ${roleBadgeClass(user.role)}`}>{user.role}</span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{user.noTelepon}</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{user.alamat}</td>
+                      <td className="px-6 py-4 text-sm">
+                        <button className="text-slate-400 hover:text-red-600 p-2"><Edit3 className="w-4 h-4" /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </form>
+        </div>
       </div>
     );
   };
