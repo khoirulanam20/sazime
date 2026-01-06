@@ -286,10 +286,22 @@ const Modal = ({ title, type, onClose, data, products }) => (
               <div>
                 <p className="text-[10px] text-red-500 font-black uppercase tracking-widest">No. Pesanan</p>
                 <p className="font-mono font-black text-lg md:text-xl text-slate-900 tracking-tight">{data.id}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={`text-[10px] px-2 py-0.5 rounded font-black uppercase ${data.platform === 'Shopee' ? 'bg-orange-100 text-orange-700' : 'bg-black text-white'}`}>
+                    {data.platform}
+                  </span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded font-black uppercase ${data.status === 'Selesai' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {data.status}
+                  </span>
+                </div>
               </div>
               <div className="text-left sm:text-right">
                  <p className="text-[10px] text-red-500 font-black uppercase tracking-widest">Waktu Pesanan</p>
                  <p className="font-bold text-slate-700">{data.waktuDibuat || '2025-11-01 10:40'}</p>
+                 {data.waktuPembayaran && (
+                   <p className="text-xs text-slate-500 mt-0.5">Dibayar: {data.waktuPembayaran}</p>
+                 )}
+                 <p className="text-xs text-slate-500 mt-0.5">Platform: {data.platform}</p>
               </div>
             </div>
 
@@ -339,14 +351,52 @@ const Modal = ({ title, type, onClose, data, products }) => (
 
             <div className="border-t border-dashed border-slate-200 pt-4">
               <p className="text-[10px] text-slate-400 font-black uppercase mb-3 tracking-widest">Item Pesanan</p>
-              <div className="bg-slate-50 p-4 rounded-xl flex justify-between items-center border border-slate-100">
-                <div>
-                  <p className="font-bold text-slate-800 text-sm">{data.produk}</p>
-                  <p className="text-xs text-slate-500 font-medium mt-1">Variasi: {data.variasi} <span className="mx-1">•</span> Qty: {data.jumlah}</p>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1">
+                    <p className="font-bold text-slate-800 text-sm">{data.produk}</p>
+                    <p className="text-xs text-slate-500 font-medium mt-1">Variasi: {data.variasi}</p>
+                    <div className="flex items-center gap-4 mt-2">
+                      <div>
+                        <p className="text-[10px] text-slate-400 uppercase font-bold">Harga Satuan</p>
+                        <p className="font-bold text-slate-700">Rp {data.hargaAwal?.toLocaleString() || '0'}</p>
+                      </div>
+                      {data.beratProduk && (
+                        <div>
+                          <p className="text-[10px] text-slate-400 uppercase font-bold">Berat</p>
+                          <p className="font-bold text-slate-700">{data.beratProduk}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-slate-400 uppercase font-bold">Total Pembayaran</p>
+                    <p className="font-black text-red-600 text-base">Rp {data.totalBayar?.toLocaleString() || '0'}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-slate-400 uppercase font-bold">Total</p>
-                  <p className="font-black text-red-600 text-base">Rp {data.totalBayar.toLocaleString()}</p>
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div className="bg-slate-50 p-3 rounded-lg">
+                    <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Jumlah</p>
+                    <p className="font-bold text-slate-800 text-lg">{data.jumlah}</p>
+                  </div>
+                  <div className="bg-emerald-50 p-3 rounded-lg">
+                    <p className="text-[10px] text-emerald-600 uppercase font-bold mb-1">Total Bayar</p>
+                    <p className="font-black text-emerald-700 text-lg">Rp {data.totalBayar?.toLocaleString() || '0'}</p>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    {data.totalDiskon > 0 && (
+                      <p className="text-xs text-amber-600 font-medium">Diskon: Rp {data.totalDiskon?.toLocaleString() || '0'}</p>
+                    )}
+                    {data.perkiraanOngkosKirim > 0 && (
+                      <p className="text-xs text-blue-600 font-medium">Ongkir: Rp {data.perkiraanOngkosKirim?.toLocaleString() || '0'}</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-slate-400 uppercase font-bold">Total Akhir</p>
+                    <p className="font-black text-red-600 text-base">Rp {data.totalBayar?.toLocaleString() || '0'}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -717,58 +767,245 @@ const App = () => {
   const [orders, setOrders] = useState([
     {
       id: '251101K28MAGVY', storeName: 'Sazime Official Store', platform: 'Shopee', status: 'Selesai',
+      orderSubstatus: 'Selesai', cancelationReturnType: '',
+      normalOrPreOrder: 'Normal',
       resi: 'SPXID05015085787B', jasaKirim: 'Reguler (Cashless)-SPX Standard', kurirStatus: 'Tiba di Tujuan',
-      produk: 'Sangkar Murai No 1 - Sazime Original', variasi: 'No. 1 - (6cm)', jumlah: 1,
-      totalBayar: 245000, setoran: 200000, username: 'customer_shopee_01', namaPenerima: 'R******h',
-      noTelepon: '******70', alamat: 'Jalan Pendidikan Gang Jawa', kota: 'KAB. SAMBAS',
-      metodePembayaran: 'COD', waktuDibuat: '2025-12-03 23:59', sudahDibayar: 150000,
-      catatan: 'Packing kayu ya kak'
+      produk: 'HITAM - METABOLISME KHUSUS BURUNG PEMAKAN SERANGGA SEPERTI MURAI, KACER, CUCAK IJO, CENDET, ANIS, DLL - SAZIME METASUS OBAT METABOLISME OIL',
+      variasi: 'Default', jumlah: 1, returnedQuantity: 0,
+      skuInduk: '', nomorReferensiSku: '', namaVariasi: 'Default',
+      hargaAwal: 50000, hargaSetelahDiskon: 50000,
+      totalHargaProduk: 50000, totalDiskon: 0, diskonDariPenjual: 0, diskonDariShopee: 0,
+      beratProduk: '100 gr', jumlahProdukDiPesan: 2, totalBerat: '200 gr',
+      voucherDitanggungPenjual: 0, cashbackKoin: 0, voucherDitanggungShopee: 14160,
+      paketDiskon: 'N', paketDiskonShopee: 0, paketDiskonPenjual: 0,
+      potonganKoinShopee: 0, diskonKartuKredit: 0,
+      ongkosKirimDibayarPembeli: 8000, estimasiPotonganBiayaPengiriman: 0, ongkosKirimPengembalian: 0,
+      totalBayar: 106340, perkiraanOngkosKirim: 8000, setoran: 50000,
+      username: 'herypurnomo123', namaPenerima: 'H******o',
+      noTelepon: '******75', alamat: 'Jalan Diman, Cluster Payangan Village No. 5D, RT. 004/07, Kp. Payangan, Jatisari, Jatiasih, Kota Bekasi,, KOTA BEKASI, JATIASIH, JAWA BARAT, ID, 17426',
+      kota: 'KOTA BEKASI', provinsi: 'JAWA BARAT',
+      metodePembayaran: 'Online Payment', waktuDibuat: '2025-11-01 07:15', waktuPembayaran: '2025-11-01 07:14',
+      waktuPengirimanDiatur: '2025-11-01 17:48', waktuPesananDikirimSebelum: '2025-11-03 23:59',
+      waktuPesananSelesai: '2025-11-03 12:23', sudahDibayar: 50000,
+      catatan: '', buyerMessage: '',
+      // Field Tokopedia/TikTok
+      skuId: '', sellerSku: '', variation: 'Default',
+      skuUnitOriginalPrice: 50000, skuSubtotalBeforeDiscount: 50000,
+      skuPlatformDiscount: 0, skuSellerDiscount: 0, skuSubtotalAfterDiscount: 50000,
+      shippingFeeAfterDiscount: 8000, originalShippingFee: 16000,
+      shippingFeeSellerDiscount: 0, shippingFeePlatformDiscount: 8000,
+      paymentPlatformDiscount: 0, buyerServiceFee: 1700, handlingFee: 0,
+      shippingInsurance: 0, itemInsurance: 0,
+      orderRefundAmount: 0, rtsTime: '', shippedTime: '', deliveredTime: '',
+      cancelledTime: '', cancelBy: '', cancelReason: '',
+      fulfillmentType: 'Fulfillment by seller', warehouseName: '',
+      deliveryOption: 'Antar ke Counter', shippingProviderName: 'SPX',
+      zipcode: '17426', country: 'Indonesia',
+      districts: 'JATIASIH', villages: 'JATISARI', detailAddress: 'Jalan Diman, Cluster Payangan Village No. 5D, RT. 004/07, Kp. Payangan',
+      additionalAddress: '', weightKg: 0.1, productCategory: '',
+      packageId: '', purchaseChannel: 'Shopee', sellerNote: '',
+      checkedStatus: 'Unchecked', checkedMarkedBy: '', invoiceNumber: ''
     },
     {
-      id: '251126R2SVSYNX', storeName: 'Sazime Woodwork', platform: 'TikTok Shop', status: 'Selesai',
-      resi: 'SPXID05704205283B', jasaKirim: 'Hemat Kargo-SPX Hemat', kurirStatus: 'Dalam Perjalanan',
-      produk: 'Cangkir Cepuk Pakan Mika', variasi: 'Segi 8 Bening', jumlah: 3,
-      totalBayar: 180000, setoran: 150000, username: 'grosir_bird_shop', namaPenerima: 'Budi Santoso',
-      noTelepon: '08123456789', alamat: 'Jl. Merdeka No 45', kota: 'SURABAYA',
-      metodePembayaran: 'Transfer', waktuDibuat: '2025-11-26 10:40', sudahDibayar: 0,
-      catatan: 'Warna campur gan'
+      id: '581430173941663545', storeName: 'Sazime Woodwork', platform: 'TikTok Shop', status: 'Selesai',
+      orderSubstatus: 'Selesai', cancelationReturnType: '',
+      normalOrPreOrder: 'Normal',
+      resi: 'JX6451529061', jasaKirim: 'Pengiriman standar', kurirStatus: 'Dalam Perjalanan',
+      produk: 'SAZIME GURAH 10 MENIT LANGSUNG PLONG KELUAR SEMUA LENDIRNYA', variasi: 'Default', jumlah: 1, returnedQuantity: 0,
+      skuInduk: '', nomorReferensiSku: '', namaVariasi: 'Default',
+      hargaAwal: 68000, hargaSetelahDiskon: 68000,
+      totalHargaProduk: 68000, totalDiskon: 0, diskonDariPenjual: 0, diskonDariShopee: 0,
+      beratProduk: '0.1 kg', jumlahProdukDiPesan: 1, totalBerat: '0.1 kg',
+      voucherDitanggungPenjual: 0, cashbackKoin: 0, voucherDitanggungShopee: 0,
+      paketDiskon: 'N', paketDiskonShopee: 0, paketDiskonPenjual: 0,
+      potonganKoinShopee: 0, diskonKartuKredit: 0,
+      ongkosKirimDibayarPembeli: 1000, estimasiPotonganBiayaPengiriman: 0, ongkosKirimPengembalian: 0,
+      totalBayar: 70700, perkiraanOngkosKirim: 16000, setoran: 68000,
+      username: 'k***dasepsm286', namaPenerima: 'D**** D*****',
+      noTelepon: '(+62)819******53', alamat: 'Jl. Sudirman No 123',
+      kota: 'BANDUNG', provinsi: 'JAWA BARAT',
+      metodePembayaran: 'PayLater', waktuDibuat: '30/11/2025 23:34:31', waktuPembayaran: '30/11/2025 23:34:44',
+      waktuPengirimanDiatur: '01/12/2025 07:40:22', waktuPesananDikirimSebelum: '',
+      waktuPesananSelesai: '03/12/2025 09:05:42', sudahDibayar: 68000,
+      catatan: '', buyerMessage: '',
+      // Field Tokopedia/TikTok
+      skuId: '1732080356919313617', sellerSku: '', variation: 'Default',
+      skuUnitOriginalPrice: 68000, skuSubtotalBeforeDiscount: 68000,
+      skuPlatformDiscount: 0, skuSellerDiscount: 0, skuSubtotalAfterDiscount: 68000,
+      shippingFeeAfterDiscount: 1000, originalShippingFee: 16000,
+      shippingFeeSellerDiscount: 0, shippingFeePlatformDiscount: 15000,
+      paymentPlatformDiscount: 0, buyerServiceFee: 1700, handlingFee: 0,
+      shippingInsurance: 0, itemInsurance: 0,
+      orderRefundAmount: 0, rtsTime: '01/12/2025 07:40:22', shippedTime: '01/12/2025 20:46:23', deliveredTime: '03/12/2025 09:05:42',
+      cancelledTime: '', cancelBy: '', cancelReason: '',
+      fulfillmentType: 'Fulfillment by seller', warehouseName: 'ID Pickup Warehouse',
+      deliveryOption: 'Pengiriman standar', shippingProviderName: 'J&T Express',
+      zipcode: '', country: 'Indonesia',
+      districts: '*******', villages: '*********', detailAddress: 'Jl. Sudirman No 123',
+      additionalAddress: '*********************************************************************************************', weightKg: 0.1, productCategory: 'Layanan Kesehatan Burung',
+      packageId: '1177653750403139385', purchaseChannel: 'TikTok', sellerNote: '',
+      checkedStatus: 'Unchecked', checkedMarkedBy: '', invoiceNumber: ''
     },
     // Data Dummy Pesanan Tahun 2026
     {
       id: '260101A4BXZYQW', storeName: 'Sazime Official Store', platform: 'Shopee', status: 'Selesai',
+      orderSubstatus: 'Selesai', cancelationReturnType: '',
+      normalOrPreOrder: 'Normal',
       resi: 'SPXID01234567890A', jasaKirim: 'Reguler (Cashless)-SPX Standard', kurirStatus: 'Tiba di Tujuan',
-      produk: 'Sangkar Murai No 1 - Sazime Original', variasi: 'No. 2 - (8cm)', jumlah: 1,
-      totalBayar: 265000, setoran: 220000, username: 'bird_lover_2026', namaPenerima: 'A*****i',
-      noTelepon: '******89', alamat: 'Jl. Sudirman No 123', kota: 'JAKARTA SELATAN',
-      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-01 08:30', sudahDibayar: 220000,
-      catatan: 'Paket untuk ulang tahun'
+      produk: 'Sangkar Murai No 1 - Sazime Original', variasi: 'No. 2 - (8cm)', jumlah: 1, returnedQuantity: 0,
+      skuInduk: '', nomorReferensiSku: '', namaVariasi: 'No. 2 - (8cm)',
+      hargaAwal: 265000, hargaSetelahDiskon: 265000,
+      totalHargaProduk: 265000, totalDiskon: 0, diskonDariPenjual: 0, diskonDariShopee: 0,
+      beratProduk: '500 gr', jumlahProdukDiPesan: 1, totalBerat: '500 gr',
+      voucherDitanggungPenjual: 0, cashbackKoin: 0, voucherDitanggungShopee: 0,
+      paketDiskon: 'N', paketDiskonShopee: 0, paketDiskonPenjual: 0,
+      potonganKoinShopee: 0, diskonKartuKredit: 0,
+      ongkosKirimDibayarPembeli: 0, estimasiPotonganBiayaPengiriman: 0, ongkosKirimPengembalian: 0,
+      totalBayar: 265000, perkiraanOngkosKirim: 0, setoran: 220000,
+      username: 'bird_lover_2026', namaPenerima: 'A*****i',
+      noTelepon: '******89', alamat: 'Jl. Sudirman No 123',
+      kota: 'JAKARTA SELATAN', provinsi: 'DKI JAKARTA',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-01 08:30', waktuPembayaran: '2026-01-01 08:30',
+      waktuPengirimanDiatur: '2026-01-01 09:00', waktuPesananDikirimSebelum: '',
+      waktuPesananSelesai: '2026-01-03 14:30', sudahDibayar: 220000,
+      catatan: 'Paket untuk ulang tahun', buyerMessage: 'Paket untuk ulang tahun',
+      // Field Tokopedia/TikTok
+      skuId: '', sellerSku: '', variation: 'No. 2 - (8cm)',
+      skuUnitOriginalPrice: 265000, skuSubtotalBeforeDiscount: 265000,
+      skuPlatformDiscount: 0, skuSellerDiscount: 0, skuSubtotalAfterDiscount: 265000,
+      shippingFeeAfterDiscount: 0, originalShippingFee: 0,
+      shippingFeeSellerDiscount: 0, shippingFeePlatformDiscount: 0,
+      paymentPlatformDiscount: 0, buyerServiceFee: 0, handlingFee: 0,
+      shippingInsurance: 0, itemInsurance: 0,
+      orderRefundAmount: 0, rtsTime: '2026-01-01 09:00', shippedTime: '2026-01-02 10:00', deliveredTime: '2026-01-03 14:30',
+      cancelledTime: '', cancelBy: '', cancelReason: '',
+      fulfillmentType: 'Fulfillment by seller', warehouseName: '',
+      deliveryOption: 'Reguler (Cashless)', shippingProviderName: 'SPX',
+      zipcode: '', country: 'Indonesia',
+      districts: '', villages: '', detailAddress: 'Jl. Sudirman No 123',
+      additionalAddress: '', weightKg: 0.5, productCategory: 'Kandang Burung',
+      packageId: '', purchaseChannel: 'Shopee', sellerNote: '',
+      checkedStatus: 'Unchecked', checkedMarkedBy: '', invoiceNumber: ''
     },
     {
       id: '260102C7DYXWVU', storeName: 'Sazime Woodwork', platform: 'TikTok Shop', status: 'Proses',
+      orderSubstatus: 'Sedang Diproses', cancelationReturnType: '',
+      normalOrPreOrder: 'Normal',
       resi: 'SPXID01234567891B', jasaKirim: 'Hemat Kargo-SPX Hemat', kurirStatus: 'Sedang Dipacking',
-      produk: 'Sangkar Kotak Jati - Premium', variasi: 'Medium (40x30x25cm)', jumlah: 2,
-      totalBayar: 420000, setoran: 380000, username: 'cage_collector', namaPenerima: 'Citra Dewi',
-      noTelepon: '08134567890', alamat: 'Jl. Malioboro No 56', kota: 'YOGYAKARTA',
-      metodePembayaran: 'COD', waktuDibuat: '2026-01-02 14:15', sudahDibayar: 0,
-      catatan: 'Cat kayu jati asli'
+      produk: 'Sangkar Kotak Jati - Premium', variasi: 'Medium (40x30x25cm)', jumlah: 2, returnedQuantity: 0,
+      skuInduk: '', nomorReferensiSku: '', namaVariasi: 'Medium (40x30x25cm)',
+      hargaAwal: 210000, hargaSetelahDiskon: 210000,
+      totalHargaProduk: 420000, totalDiskon: 0, diskonDariPenjual: 0, diskonDariShopee: 0,
+      beratProduk: '2 kg', jumlahProdukDiPesan: 2, totalBerat: '4 kg',
+      voucherDitanggungPenjual: 0, cashbackKoin: 0, voucherDitanggungShopee: 0,
+      paketDiskon: 'N', paketDiskonShopee: 0, paketDiskonPenjual: 0,
+      potonganKoinShopee: 0, diskonKartuKredit: 0,
+      ongkosKirimDibayarPembeli: 0, estimasiPotonganBiayaPengiriman: 0, ongkosKirimPengembalian: 0,
+      totalBayar: 420000, perkiraanOngkosKirim: 0, setoran: 380000,
+      username: 'cage_collector', namaPenerima: 'Citra Dewi',
+      noTelepon: '08134567890', alamat: 'Jl. Malioboro No 56',
+      kota: 'YOGYAKARTA', provinsi: 'DAERAH ISTIMEWA YOGYAKARTA',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-02 14:15', waktuPembayaran: '',
+      waktuPengirimanDiatur: '', waktuPesananDikirimSebelum: '',
+      waktuPesananSelesai: '', sudahDibayar: 0,
+      catatan: 'Cat kayu jati asli', buyerMessage: 'Cat kayu jati asli',
+      // Field Tokopedia/TikTok
+      skuId: '', sellerSku: '', variation: 'Medium (40x30x25cm)',
+      skuUnitOriginalPrice: 210000, skuSubtotalBeforeDiscount: 420000,
+      skuPlatformDiscount: 0, skuSellerDiscount: 0, skuSubtotalAfterDiscount: 420000,
+      shippingFeeAfterDiscount: 0, originalShippingFee: 0,
+      shippingFeeSellerDiscount: 0, shippingFeePlatformDiscount: 0,
+      paymentPlatformDiscount: 0, buyerServiceFee: 0, handlingFee: 0,
+      shippingInsurance: 0, itemInsurance: 0,
+      orderRefundAmount: 0, rtsTime: '', shippedTime: '', deliveredTime: '',
+      cancelledTime: '', cancelBy: '', cancelReason: '',
+      fulfillmentType: 'Fulfillment by seller', warehouseName: '',
+      deliveryOption: 'Hemat Kargo', shippingProviderName: 'SPX',
+      zipcode: '', country: 'Indonesia',
+      districts: '', villages: '', detailAddress: 'Jl. Malioboro No 56',
+      additionalAddress: '', weightKg: 4.0, productCategory: 'Kandang Burung',
+      packageId: '', purchaseChannel: 'TikTok', sellerNote: '',
+      checkedStatus: 'Unchecked', checkedMarkedBy: '', invoiceNumber: ''
     },
     {
       id: '260103E9FZYTWS', storeName: 'Sazime Official Store', platform: 'Shopee', status: 'Selesai',
+      orderSubstatus: 'Selesai', cancelationReturnType: '',
+      normalOrPreOrder: 'Normal',
       resi: 'SPXID01234567892C', jasaKirim: 'Express-SPX Express', kurirStatus: 'Dalam Perjalanan',
-      produk: 'Sangkar Murai No 1 - Sazime Original', variasi: 'No. 3 - (10cm)', jumlah: 1,
-      totalBayar: 285000, setoran: 240000, username: 'shopee_customer_001', namaPenerima: 'D*****o',
-      noTelepon: '******45', alamat: 'Jl. Gatot Subroto Kav 45', kota: 'JAKARTA PUSAT',
-      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-03 11:20', sudahDibayar: 240000,
-      catatan: 'Kirim sebelum tanggal 5 Januari'
+      produk: 'Sangkar Murai No 1 - Sazime Original', variasi: 'No. 3 - (10cm)', jumlah: 1, returnedQuantity: 0,
+      skuInduk: '', nomorReferensiSku: '', namaVariasi: 'No. 3 - (10cm)',
+      hargaAwal: 285000, hargaSetelahDiskon: 285000,
+      totalHargaProduk: 285000, totalDiskon: 0, diskonDariPenjual: 0, diskonDariShopee: 0,
+      beratProduk: '600 gr', jumlahProdukDiPesan: 1, totalBerat: '600 gr',
+      voucherDitanggungPenjual: 0, cashbackKoin: 0, voucherDitanggungShopee: 0,
+      paketDiskon: 'N', paketDiskonShopee: 0, paketDiskonPenjual: 0,
+      potonganKoinShopee: 0, diskonKartuKredit: 0,
+      ongkosKirimDibayarPembeli: 0, estimasiPotonganBiayaPengiriman: 0, ongkosKirimPengembalian: 0,
+      totalBayar: 285000, perkiraanOngkosKirim: 0, setoran: 240000,
+      username: 'shopee_customer_001', namaPenerima: 'D*****o',
+      noTelepon: '******45', alamat: 'Jl. Gatot Subroto Kav 45',
+      kota: 'JAKARTA PUSAT', provinsi: 'DKI JAKARTA',
+      metodePembayaran: 'Transfer', waktuDibuat: '2026-01-03 11:20', waktuPembayaran: '2026-01-03 11:20',
+      waktuPengirimanDiatur: '2026-01-03 12:00', waktuPesananDikirimSebelum: '',
+      waktuPesananSelesai: '2026-01-05 16:45', sudahDibayar: 240000,
+      catatan: 'Kirim sebelum tanggal 5 Januari', buyerMessage: 'Kirim sebelum tanggal 5 Januari',
+      // Field Tokopedia/TikTok
+      skuId: '', sellerSku: '', variation: 'No. 3 - (10cm)',
+      skuUnitOriginalPrice: 285000, skuSubtotalBeforeDiscount: 285000,
+      skuPlatformDiscount: 0, skuSellerDiscount: 0, skuSubtotalAfterDiscount: 285000,
+      shippingFeeAfterDiscount: 0, originalShippingFee: 0,
+      shippingFeeSellerDiscount: 0, shippingFeePlatformDiscount: 0,
+      paymentPlatformDiscount: 0, buyerServiceFee: 0, handlingFee: 0,
+      shippingInsurance: 0, itemInsurance: 0,
+      orderRefundAmount: 0, rtsTime: '2026-01-03 12:00', shippedTime: '2026-01-04 08:30', deliveredTime: '2026-01-05 16:45',
+      cancelledTime: '', cancelBy: '', cancelReason: '',
+      fulfillmentType: 'Fulfillment by seller', warehouseName: '',
+      deliveryOption: 'Express', shippingProviderName: 'SPX',
+      zipcode: '', country: 'Indonesia',
+      districts: '', villages: '', detailAddress: 'Jl. Gatot Subroto Kav 45',
+      additionalAddress: '', weightKg: 0.6, productCategory: 'Kandang Burung',
+      packageId: '', purchaseChannel: 'Shopee', sellerNote: '',
+      checkedStatus: 'Unchecked', checkedMarkedBy: '', invoiceNumber: ''
     },
     {
       id: '260104G2HAVURQ', storeName: 'Sazime Woodwork', platform: 'TikTok Shop', status: 'Selesai',
+      orderSubstatus: 'Selesai', cancelationReturnType: '',
+      normalOrPreOrder: 'Normal',
       resi: 'SPXID01234567893D', jasaKirim: 'Reguler (Cashless)-SPX Standard', kurirStatus: 'Tiba di Tujuan',
-      produk: 'Cangkir Cepuk Pakan Mika', variasi: 'Segi 6 Hitam', jumlah: 5,
-      totalBayar: 250000, setoran: 210000, username: 'bird_shop_owner', namaPenerima: 'Eko Prasetyo',
-      noTelepon: '08234567891', alamat: 'Jl. Ahmad Yani No 78', kota: 'SEMARANG',
-      metodePembayaran: 'COD', waktuDibuat: '2026-01-04 16:45', sudahDibayar: 180000,
-      catatan: 'Untuk toko burung grosir'
+      produk: 'Cangkir Cepuk Pakan Mika', variasi: 'Segi 6 Hitam', jumlah: 5, returnedQuantity: 0,
+      skuInduk: '', nomorReferensiSku: '', namaVariasi: 'Segi 6 Hitam',
+      hargaAwal: 50000, hargaSetelahDiskon: 50000,
+      totalHargaProduk: 250000, totalDiskon: 0, diskonDariPenjual: 0, diskonDariShopee: 0,
+      beratProduk: '100 gr', jumlahProdukDiPesan: 5, totalBerat: '500 gr',
+      voucherDitanggungPenjual: 0, cashbackKoin: 0, voucherDitanggungShopee: 0,
+      paketDiskon: 'N', paketDiskonShopee: 0, paketDiskonPenjual: 0,
+      potonganKoinShopee: 0, diskonKartuKredit: 0,
+      ongkosKirimDibayarPembeli: 0, estimasiPotonganBiayaPengiriman: 0, ongkosKirimPengembalian: 0,
+      totalBayar: 250000, perkiraanOngkosKirim: 0, setoran: 210000,
+      username: 'bird_shop_owner', namaPenerima: 'Eko Prasetyo',
+      noTelepon: '08234567891', alamat: 'Jl. Ahmad Yani No 78',
+      kota: 'SEMARANG', provinsi: 'JAWA TENGAH',
+      metodePembayaran: 'COD', waktuDibuat: '2026-01-04 16:45', waktuPembayaran: '',
+      waktuPengirimanDiatur: '2026-01-05 08:00', waktuPesananDikirimSebelum: '',
+      waktuPesananSelesai: '2026-01-07 11:30', sudahDibayar: 180000,
+      catatan: 'Untuk toko burung grosir', buyerMessage: 'Untuk toko burung grosir',
+      // Field Tokopedia/TikTok
+      skuId: '', sellerSku: '', variation: 'Segi 6 Hitam',
+      skuUnitOriginalPrice: 50000, skuSubtotalBeforeDiscount: 250000,
+      skuPlatformDiscount: 0, skuSellerDiscount: 0, skuSubtotalAfterDiscount: 250000,
+      shippingFeeAfterDiscount: 0, originalShippingFee: 0,
+      shippingFeeSellerDiscount: 0, shippingFeePlatformDiscount: 0,
+      paymentPlatformDiscount: 0, buyerServiceFee: 0, handlingFee: 0,
+      shippingInsurance: 0, itemInsurance: 0,
+      orderRefundAmount: 0, rtsTime: '2026-01-05 08:00', shippedTime: '2026-01-06 09:15', deliveredTime: '2026-01-07 11:30',
+      cancelledTime: '', cancelBy: '', cancelReason: '',
+      fulfillmentType: 'Fulfillment by seller', warehouseName: '',
+      deliveryOption: 'Reguler (Cashless)', shippingProviderName: 'SPX',
+      zipcode: '', country: 'Indonesia',
+      districts: '', villages: '', detailAddress: 'Jl. Ahmad Yani No 78',
+      additionalAddress: '', weightKg: 0.5, productCategory: 'Peralatan Burung',
+      packageId: '', purchaseChannel: 'TikTok', sellerNote: '',
+      checkedStatus: 'Unchecked', checkedMarkedBy: '', invoiceNumber: ''
     },
     {
       id: '260105I5JBWTPM', storeName: 'Sazime Official Store', platform: 'Shopee', status: 'Proses',
@@ -1278,6 +1515,28 @@ const App = () => {
     // Memastikan hanya pesanan dari toko yang dipilih yang ditampilkan
     const storeOrders = filteredOrders.filter(o => o.storeName === selectedStore?.name);
 
+    // Hitung jumlah barang dari total pesanan untuk setiap produk
+    const productQuantities = useMemo(() => {
+      const quantities = {};
+      storeOrders.forEach(order => {
+        if (!quantities[order.produk]) {
+          quantities[order.produk] = 0;
+        }
+        quantities[order.produk] += order.jumlah;
+      });
+      return quantities;
+    }, [storeOrders]);
+
+    // Filter produk yang hanya ada dalam pesanan toko ini
+    const storeProducts = useMemo(() => {
+      return products
+        .filter(product => productQuantities[product.name])
+        .map(product => ({
+          ...product,
+          totalQuantity: productQuantities[product.name]
+        }));
+    }, [products, productQuantities]);
+
     return (
       <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
         <button onClick={() => setActiveMenu('toko')} className="flex items-center text-slate-500 hover:text-red-600 font-bold text-sm transition-colors group">
@@ -1376,7 +1635,9 @@ const App = () => {
                         <td className="px-4 py-3 sm:px-6 sm:py-4">
                           <div className="flex flex-col max-w-[200px]">
                             <span className="truncate" title={order.produk}>{order.produk}</span>
-                            <span className="text-[10px] text-slate-500 italic">{order.variasi}</span>
+                            {order.variasi && order.variasi !== 'Default' && (
+                              <span className="text-[10px] text-slate-500 italic">{order.variasi}</span>
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3 sm:px-6 sm:py-4">
@@ -1386,7 +1647,7 @@ const App = () => {
                           </div>
                         </td>
                         <td className="px-4 py-3 sm:px-6 sm:py-4 text-emerald-600">
-                          Rp {(globalProductPrices[order.produk] || order.setoran).toLocaleString()}
+                          Rp {order.setoran?.toLocaleString() || '0'}
                         </td>
                         <td className="px-4 py-3 sm:px-6 sm:py-4 text-emerald-600">
                           {order.sudahDibayar > 0 ? (
@@ -1405,7 +1666,7 @@ const App = () => {
                   ))}
                   {storeOrders.length === 0 && (
                     <tr>
-                      <td colSpan="8" className="text-center py-8 text-slate-400 italic text-xs">Tidak ada data pesanan pada periode ini.</td>
+                      <td colSpan="6" className="text-center py-8 text-slate-400 italic text-xs">Tidak ada data pesanan pada periode ini.</td>
                     </tr>
                   )}
                 </tbody>
@@ -1418,16 +1679,16 @@ const App = () => {
                   <tr>
                     <th className="px-3 py-3 sm:px-6 sm:py-4">Nama Barang</th>
                     <th className="px-3 py-3 sm:px-6 sm:py-4">SKU</th>
-                    <th className="px-3 py-3 sm:px-6 sm:py-4">Stok</th>
+                    <th className="px-3 py-3 sm:px-6 sm:py-4">Jumlah</th>
                     <th className="px-3 py-3 sm:px-6 sm:py-4 text-right">Harga Setoran</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y text-sm text-slate-900">
-                  {products.map((p) => (
+                  {storeProducts.map((p) => (
                     <tr key={p.id} className="hover:bg-slate-50">
                       <td className="px-3 py-3 sm:px-6 sm:py-4 font-bold">{p.name}</td>
                       <td className="px-3 py-3 sm:px-6 sm:py-4 font-mono text-xs">{p.sku}</td>
-                      <td className="px-3 py-3 sm:px-6 sm:py-4">{p.stock}</td>
+                      <td className="px-3 py-3 sm:px-6 sm:py-4">{p.totalQuantity}</td>
                       <td className="px-3 py-3 sm:px-6 sm:py-4 text-right font-black text-red-600">
                         {p.hargaSetoran ? `Rp ${p.hargaSetoran.toLocaleString()}` : '-'}
                       </td>
@@ -1554,7 +1815,7 @@ const App = () => {
                                 <div className="font-bold text-sm truncate max-w-[250px]">{product.name}</div>
                               </div>
                               <div className="text-xs text-slate-400">
-                                Stok: {product.stock}
+                                Jumlah: {product.stock}
                               </div>
                             </div>
                           </button>
@@ -1610,7 +1871,7 @@ const App = () => {
                 <tr>
                   <th className="p-4 w-16 text-center">No</th>
                   <th className="px-4 py-3 sm:px-6 sm:py-4">SKU</th>
-                  <th className="px-4 py-3 sm:px-6 sm:py-4">Stok</th>
+                  <th className="px-4 py-3 sm:px-6 sm:py-4">Jumlah</th>
                   <th className="px-4 py-3 sm:px-6 sm:py-4">Harga Setoran Global</th>
                   <th className="px-4 py-3 sm:px-6 sm:py-4 text-center">Aksi</th>
                 </tr>
