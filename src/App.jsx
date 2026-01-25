@@ -5,12 +5,14 @@ import {
 } from 'recharts';
 import {
   LayoutDashboard, Store, ScanLine, Settings, LogOut, ChevronRight,
-  TrendingUp, AlertCircle, CheckCircle2, Search, Filter, Plus,
+  TrendingUp, TrendingDown, AlertCircle, CheckCircle2, Search, Filter, Plus,
   Download, ArrowLeft, Package, ShoppingBag, ExternalLink, ChevronDown,
   Wallet, FileSpreadsheet, Edit3, X, Eye, Calendar, Share2, RefreshCw,
   Camera, Zap, Key, User, Truck, MapPin, CreditCard, Clock, FileText,
-  CheckSquare, Square, QrCode, Keyboard, Phone, Printer, Menu, Save
+  CheckSquare, Square, QrCode, Keyboard, Phone, Printer, Menu, Save,
+  Database, Receipt, BarChart3
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 // --- KONFIGURASI TEMA ---
 const THEME = {
@@ -28,77 +30,111 @@ const THEME = {
 
 // --- SUB-KOMPONEN UI ---
 
-const Sidebar = ({ activeMenu, setActiveMenu }) => (
-  <aside className={`hidden lg:flex w-64 ${THEME.secondary} text-white h-screen fixed left-0 top-0 flex-col z-30 shadow-2xl`}>
-    <div className="p-6 border-b border-slate-700/50">
-      <h1 className="text-2xl font-black tracking-tighter flex items-center">
-        <span className="text-red-500 mr-1">SAZIME</span>
-        <span className="text-white italic">HUB</span>
-      </h1>
-      <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-bold opacity-80">
-        Internal Management System
-      </p>
-    </div>
-
-    <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-      {[
-        { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+const Sidebar = ({ activeMenu, setActiveMenu }) => {
+  const menuGroups = [
+    {
+      title: 'Menu Utama',
+      items: [{ id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' }]
+    },
+    {
+      title: 'Kasir & Toko Fisik',
+      items: [
+        { id: 'pos', icon: Receipt, label: 'POS (Kasir)' },
+        { id: 'database-produk-offline', icon: Database, label: 'Produk Offline' },
+        { id: 'pengeluaran', icon: TrendingDown, label: 'Pengeluaran' }
+      ]
+    },
+    {
+      title: 'Toko Online',
+      items: [
         { id: 'toko', icon: Store, label: 'Toko & Pesanan' },
-        { id: 'database-produk', icon: Package, label: 'Database Produk' },
-        { id: 'tambah-user', icon: User, label: 'Tambah User' },
+        { id: 'database-produk', icon: Package, label: 'Database Online' },
         { id: 'status-pengiriman', icon: Truck, label: 'Status Pengiriman' },
-        { id: 'cek-resi', icon: ScanLine, label: 'Cek Resi' },
-        { id: 'rekap-setoran', icon: Wallet, label: 'Rekap Setoran' },
-        { id: 'pengaturan', icon: Settings, label: 'Pengaturan' },
-      ].map((item) => (
-        <button
-          key={item.id}
-          onClick={() => setActiveMenu(item.id)}
-          className={`flex items-center w-full p-3.5 rounded-xl transition-all duration-200 group ${
-            activeMenu === item.id || (activeMenu === 'toko-detail' && item.id === 'toko')
-              ? `${THEME.primary} text-white shadow-lg shadow-red-900/20`
-              : 'hover:bg-white/10 text-slate-400 hover:text-white'
-          }`}
-        >
-          <item.icon className={`w-5 h-5 mr-3 transition-transform ${activeMenu === item.id ? 'scale-110' : 'group-hover:scale-110'}`} />
-          <span className="font-bold text-sm tracking-wide">{item.label}</span>
-        </button>
-      ))}
-    </nav>
+        { id: 'cek-resi', icon: ScanLine, label: 'Cek Resi' }
+      ]
+    },
+    {
+      title: 'Keuangan',
+      items: [
+        { id: 'rekap-cashflow', icon: BarChart3, label: 'Rekap Cashflow' },
+        { id: 'rekap-setoran', icon: Wallet, label: 'Rekap Setoran' }
+      ]
+    },
+    {
+      title: 'Pengaturan',
+      items: [
+        { id: 'tambah-user', icon: User, label: 'Tambah User' },
+        { id: 'pengaturan', icon: Settings, label: 'Pengaturan' }
+      ]
+    }
+  ];
 
-    <div className="p-4 border-t border-slate-700/50">
-      <button className="flex items-center w-full p-3.5 text-red-400 hover:text-white transition rounded-xl hover:bg-red-600/20 group">
-        <LogOut className="w-5 h-5 mr-3 group-hover:-translate-x-1 transition-transform" />
-        <span className="font-bold">Keluar</span>
-      </button>
-    </div>
-  </aside>
-);
+  return (
+    <aside className={`hidden lg:flex w-64 ${THEME.secondary} text-white h-screen fixed left-0 top-0 flex-col z-30 shadow-2xl`}>
+      <div className="p-6 border-b border-slate-700/50">
+        <h1 className="text-2xl font-black tracking-tighter flex items-center">
+          <span className="text-red-500 mr-1">SAZIME</span>
+          <span className="text-white italic">HUB</span>
+        </h1>
+        <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-bold opacity-80">
+          Internal Management System
+        </p>
+      </div>
+
+      <nav className="flex-1 p-4 space-y-6 overflow-y-auto custom-scrollbar">
+        {menuGroups.map((group, groupIdx) => (
+          <div key={groupIdx} className="space-y-1">
+            <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">{group.title}</p>
+            {group.items.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveMenu(item.id)}
+                className={`flex items-center w-full p-3 rounded-xl transition-all duration-200 group ${activeMenu === item.id || (activeMenu === 'toko-detail' && item.id === 'toko')
+                  ? `${THEME.primary} text-white shadow-lg shadow-red-900/20`
+                  : 'hover:bg-white/10 text-slate-400 hover:text-white'
+                  }`}
+              >
+                <item.icon className={`w-4 h-4 mr-3 transition-transform ${activeMenu === item.id ? 'scale-110' : 'group-hover:scale-110'}`} />
+                <span className="font-bold text-xs tracking-wide">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        ))}
+      </nav>
+
+      <div className="p-4 border-t border-slate-700/50">
+        <button className="flex items-center w-full p-3.5 text-red-400 hover:text-white transition rounded-xl hover:bg-red-600/20 group">
+          <LogOut className="w-5 h-5 mr-3 group-hover:-translate-x-1 transition-transform" />
+          <span className="font-bold">Keluar</span>
+        </button>
+      </div>
+    </aside>
+  );
+};
 
 const BottomNavbar = ({ activeMenu, setActiveMenu }) => (
-  <nav className={`lg:hidden fixed bottom-0 left-0 right-0 ${THEME.bottomNav} text-white flex justify-around p-2 z-[60] pb-safe-area shadow-[0_-4px_20px_rgba(0,0,0,0.15)]`}>
+  <nav className={`lg:hidden fixed bottom-0 left-0 right-0 ${THEME.bottomNav} text-white flex justify-around p-2 z-[60] pb-safe-area shadow-[0_-4px_20px_rgba(0,0,0,0.15)] overflow-x-auto`}>
     {[
       { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
+      { id: 'pos', icon: Receipt, label: 'POS' }, // NEW
+      { id: 'database-produk-offline', icon: Database, label: 'Prd. Off' }, // NEW
       { id: 'toko', icon: Store, label: 'Toko' },
-      { id: 'database-produk', icon: Package, label: 'Produk' },
-      { id: 'tambah-user', icon: User, label: 'User' },
-      { id: 'status-pengiriman', icon: Truck, label: 'Kirim' },
-      { id: 'cek-resi', icon: ScanLine, label: 'Scan' },
+      { id: 'database-produk', icon: Package, label: 'Prd. On' },
+      // { id: 'status-pengiriman', icon: Truck, label: 'Kirim' },
       { id: 'rekap-setoran', icon: Wallet, label: 'Setor' },
     ].map((item) => (
       <button
         key={item.id}
         onClick={() => setActiveMenu(item.id)}
-        className={`flex flex-col items-center p-2 rounded-xl transition-all duration-300 w-1/5 relative ${
-          activeMenu === item.id || (activeMenu === 'toko-detail' && item.id === 'toko')
-            ? 'opacity-100'
-            : 'opacity-60 hover:opacity-100'
-        }`}
+        className={`flex flex-col items-center p-2 rounded-xl transition-all duration-300 min-w-[20%] relative ${activeMenu === item.id || (activeMenu === 'toko-detail' && item.id === 'toko')
+          ? 'opacity-100'
+          : 'opacity-60 hover:opacity-100'
+          }`}
       >
         <div className={`transition-all duration-300 ${activeMenu === item.id ? '-translate-y-1' : ''}`}>
-           <item.icon className={`w-6 h-6 ${activeMenu === item.id ? 'scale-110 drop-shadow-md' : ''}`} />
+          <item.icon className={`w-6 h-6 ${activeMenu === item.id ? 'scale-110 drop-shadow-md' : ''}`} />
         </div>
-        <span className={`text-[9px] font-bold mt-1 uppercase tracking-tight transition-all ${activeMenu === item.id ? 'opacity-100 font-black' : 'opacity-0 h-0 overflow-hidden'}`}>
+        <span className={`text-[9px] font-bold mt-1 uppercase tracking-tight truncate max-w-full transition-all ${activeMenu === item.id ? 'opacity-100 font-black' : 'opacity-0 h-0 overflow-hidden'}`}>
           {item.label}
         </span>
         {activeMenu === item.id && (
@@ -113,10 +149,10 @@ const TopBar = ({ activeMenu, activeView, setActiveView }) => (
   <header className={`h-16 md:h-20 ${THEME.headerMobile} md:bg-white md:backdrop-blur-md md:border-b md:border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 shadow-sm transition-colors duration-300`}>
     {/* Mobile Left */}
     <div className="flex items-center md:hidden">
-       <div className="w-8 h-8 bg-white/10 backdrop-blur rounded-lg flex items-center justify-center mr-3">
-          <span className="font-black text-white text-lg">S</span>
-       </div>
-       <h2 className="font-black text-white tracking-tight text-lg uppercase truncate max-w-[200px]">
+      <div className="w-8 h-8 bg-white/10 backdrop-blur rounded-lg flex items-center justify-center mr-3">
+        <span className="font-black text-white text-lg">S</span>
+      </div>
+      <h2 className="font-black text-white tracking-tight text-lg uppercase truncate max-w-[200px]">
         {activeMenu.replace(/-/g, ' ')}
       </h2>
     </div>
@@ -133,26 +169,24 @@ const TopBar = ({ activeMenu, activeView, setActiveView }) => (
       <div className="flex bg-black/20 md:bg-slate-100 p-1 rounded-xl backdrop-blur-sm">
         <button
           onClick={() => setActiveView('owner')}
-          className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${
-            activeView === 'owner'
-              ? 'bg-white shadow-sm text-red-600'
-              : 'text-white/70 md:text-slate-500 hover:text-white md:hover:text-slate-700'
-          }`}
+          className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${activeView === 'owner'
+            ? 'bg-white shadow-sm text-red-600'
+            : 'text-white/70 md:text-slate-500 hover:text-white md:hover:text-slate-700'
+            }`}
         >
           OWNER
         </button>
         <button
           onClick={() => setActiveView('admin')}
-          className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${
-            activeView === 'admin'
-              ? 'bg-white shadow-sm text-red-600'
-              : 'text-white/70 md:text-slate-500 hover:text-white md:hover:text-slate-700'
-          }`}
+          className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${activeView === 'admin'
+            ? 'bg-white shadow-sm text-red-600'
+            : 'text-white/70 md:text-slate-500 hover:text-white md:hover:text-slate-700'
+            }`}
         >
           ADMIN
         </button>
       </div>
-      
+
       <div className="flex items-center space-x-2 md:border-l md:border-slate-200 md:pl-4">
         <div className="w-8 h-8 md:w-10 md:h-10 bg-white md:bg-red-600 rounded-full md:rounded-xl flex items-center justify-center text-red-600 md:text-white text-xs md:text-sm font-black shadow-sm ring-2 ring-white/20 md:ring-0">
           U
@@ -165,6 +199,752 @@ const TopBar = ({ activeMenu, activeView, setActiveView }) => (
     </div>
   </header>
 );
+
+const OfflineProductView = ({ products, onAddProduct }) => {
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newProduct, setNewProduct] = useState({ name: '', sku: '', stock: 0, unit: 'pcs', price: 0 });
+
+  const handleSave = () => {
+    onAddProduct({ ...newProduct, id: Date.now() });
+    setShowAddModal(false);
+    setNewProduct({ name: '', sku: '', stock: 0, unit: 'pcs', price: 0 });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3 w-full md:w-auto">
+          <div className="p-2 bg-red-50 rounded-lg">
+            <Database className="w-5 h-5 text-red-600" />
+          </div>
+          <div>
+            <h3 className="font-black text-slate-800 text-sm">Database Produk Offline</h3>
+            <p className="text-[10px] text-slate-500 font-bold">Kelola stok produk toko fisik</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="bg-red-600 text-white px-5 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" /> <span className="hidden md:inline">Tambah Produk</span>
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase">
+              <tr>
+                <th className="px-6 py-4">Nama Produk</th>
+                <th className="px-6 py-4">SKU</th>
+                <th className="px-6 py-4 text-center">Stok</th>
+                <th className="px-6 py-4 text-right">Harga Satuan</th>
+                <th className="px-6 py-4 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {products.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-8 text-center text-slate-400 font-bold italic text-xs">
+                    Belum ada data produk offline
+                  </td>
+                </tr>
+              ) : (
+                products.map((p) => (
+                  <tr key={p.id} className="hover:bg-slate-50 transition-colors group">
+                    <td className="px-6 py-4">
+                      <p className="font-bold text-slate-800">{p.name}</p>
+                    </td>
+                    <td className="px-6 py-4 font-mono text-xs font-bold text-slate-500">{p.sku}</td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-[10px] font-black">{p.stock} {p.unit}</span>
+                    </td>
+                    <td className="px-6 py-4 text-right font-black text-slate-700">Rp {Number(p.price).toLocaleString()}</td>
+                    <td className="px-6 py-4 text-center">
+                      <button className="p-2 text-slate-400 hover:text-red-600 transition">
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showAddModal && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-sm sm:p-4">
+          <div className="bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="text-lg text-slate-800 font-black tracking-tight uppercase italic flex items-center">
+                <span className="w-1 h-6 bg-red-600 mr-3 rounded-full"></span>
+                Tambah Produk
+              </h3>
+              <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-full transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Produk</label>
+                <input
+                  type="text"
+                  value={newProduct.name}
+                  onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="Contoh: Pakan Burung Premium"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">SKU / Kode</label>
+                  <input
+                    type="text"
+                    value={newProduct.sku}
+                    onChange={(e) => setNewProduct({ ...newProduct, sku: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                    placeholder="SKU-001"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Satuan</label>
+                  <select
+                    value={newProduct.unit}
+                    onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="pcs">Pcs</option>
+                    <option value="pack">Pack</option>
+                    <option value="dus">Dus</option>
+                    <option value="kg">Kg</option>
+                    <option value="box">Box</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Stok Awal</label>
+                  <input
+                    type="number"
+                    value={newProduct.stock}
+                    onChange={(e) => setNewProduct({ ...newProduct, stock: parseInt(e.target.value) || 0 })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Harga (Rp)</label>
+                  <input
+                    type="number"
+                    value={newProduct.price}
+                    onChange={(e) => setNewProduct({ ...newProduct, price: parseInt(e.target.value) || 0 })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={handleSave}
+                disabled={!newProduct.name || !newProduct.price}
+                className="w-full py-4 bg-red-600 text-white rounded-2xl font-black shadow-lg shadow-red-200 hover:bg-red-700 transition uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              >
+                Simpan Produk
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const POSView = ({ offlineProducts, onAddOrder, orders }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [cart, setCart] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [formData, setFormData] = useState({
+    customerName: '',
+    date: new Date().toISOString().slice(0, 10),
+    paymentMethod: 'Cash',
+    discount: 0,
+    paid: 0
+  });
+
+  const addToCart = (product) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.id === product.id);
+      if (existing) {
+        return prev.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item);
+      }
+      return [...prev, { ...product, qty: 1 }];
+    });
+    setSearchTerm('');
+    setIsSearching(false);
+  };
+
+  const removeFromCart = (id) => {
+    setCart(prev => prev.filter(item => item.id !== id));
+  };
+
+  const updateQty = (id, newQty) => {
+    if (newQty < 1) return;
+    setCart(prev => prev.map(item => item.id === id ? { ...item, qty: newQty } : item));
+  };
+
+  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const total = subtotal - formData.discount;
+  const remaining = total - formData.paid;
+
+  const handleSave = () => {
+    onAddOrder({
+      id: `INV-${Date.now()}`,
+      ...formData,
+      items: cart,
+      total,
+      remaining,
+      status: remaining <= 0 ? 'Lunas' : 'Belum Lunas'
+    });
+    setShowModal(false);
+    setCart([]);
+    setFormData({ customerName: '', date: new Date().toISOString().slice(0, 10), paymentMethod: 'Cash', discount: 0, paid: 0 });
+  };
+
+  const filteredProducts = offlineProducts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.sku.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-red-50 rounded-lg"><Receipt className="w-5 h-5 text-red-600" /></div>
+          <div>
+            <h3 className="font-black text-slate-800 text-sm">Point of Sales (POS)</h3>
+            <p className="text-[10px] text-slate-500 font-bold">Kasir toko offline</p>
+          </div>
+        </div>
+        <button onClick={() => setShowModal(true)} className="bg-red-600 text-white px-5 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition flex items-center gap-2">
+          <Plus className="w-4 h-4" /> Buat Nota
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase">
+              <tr>
+                <th className="px-6 py-4">No.
+                  Nota</th>
+                <th className="px-6 py-4">Tanggal</th>
+                <th className="px-6 py-4">Pelanggan</th>
+                <th className="px-6 py-4 text-center">Item</th>
+                <th className="px-6 py-4 text-right">Total</th>
+                <th className="px-6 py-4 text-center">Status</th>
+                <th className="px-6 py-4 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {orders.length === 0 ? (
+                <tr><td colSpan="7" className="px-6 py-8 text-center text-slate-400 font-bold italic text-xs">Belum ada transaksi</td></tr>
+              ) : (
+                orders.map((order) => (
+                  <tr key={order.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 font-mono font-bold text-slate-700">{order.id}</td>
+                    <td className="px-6 py-4 text-xs font-bold text-slate-500">{order.date}</td>
+                    <td className="px-6 py-4 font-bold text-slate-800">{order.customerName}</td>
+                    <td className="px-6 py-4 text-center"><span className="bg-slate-100 px-2 py-1 rounded text-[10px] font-black">{order.items.length} Item</span></td>
+                    <td className="px-6 py-4 text-right font-black text-red-600">Rp {order.total.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`px-2 py-1 rounded text-[10px] uppercase font-black ${order.status === 'Lunas' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{order.status}</span>
+                    </td>
+                    <td className="px-6 py-4 text-center"><button className="text-slate-400 hover:text-red-600"><FileText className="w-4 h-4" /></button></td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showModal && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-sm sm:p-4">
+          <div className="bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-4xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300 flex flex-col max-h-[90vh]">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="text-lg text-slate-800 font-black tracking-tight uppercase italic flex items-center">
+                <span className="w-1 h-6 bg-red-600 mr-3 rounded-full"></span> Buat Nota Transaksi
+              </h3>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-full transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2 space-y-6">
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Cari Produk</label>
+                  <div className="relative">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => { setSearchTerm(e.target.value); setIsSearching(true); }}
+                      placeholder="Ketik nama produk..."
+                      className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                    {isSearching && searchTerm && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-100 z-10 max-h-60 overflow-y-auto">
+                        {filteredProducts.map(p => (
+                          <button key={p.id} onClick={() => addToCart(p)} className="w-full text-left px-4 py-3 hover:bg-red-50 flex justify-between items-center border-b border-slate-50 last:border-0">
+                            <div><p className="font-bold text-slate-800 text-sm">{p.name}</p><p className="text-[10px] text-slate-500 font-mono">{p.sku}</p></div>
+                            <div className="text-right"><p className="font-black text-red-600 text-xs">Rp {Number(p.price).toLocaleString()}</p><p className="text-[10px] text-emerald-600 font-bold">Stok: {p.stock}</p></div>
+                          </button>
+                        ))}
+                        {filteredProducts.length === 0 && <div className="p-4 text-center text-slate-400 text-xs font-bold italic">Produk tidak ditemukan</div>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Keranjang Belanja</p>
+                  {cart.length === 0 ? (
+                    <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200"><p className="text-slate-400 text-xs font-bold italic">Keranjang kosong</p></div>
+                  ) : (
+                    <div className="space-y-2">
+                      {cart.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100">
+                          <div className="flex-1">
+                            <p className="font-bold text-slate-800 text-sm line-clamp-1">{item.name}</p>
+                            <p className="text-[10px] text-slate-500">{item.unit}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => updateQty(item.id, item.qty - 1)} className="w-6 h-6 bg-slate-100 rounded text-slate-600 flex items-center justify-center font-bold hover:bg-slate-200">-</button>
+                            <span className="font-black text-sm w-6 text-center">{item.qty}</span>
+                            <button onClick={() => updateQty(item.id, item.qty + 1)} className="w-6 h-6 bg-slate-100 rounded text-slate-600 flex items-center justify-center font-bold hover:bg-slate-200">+</button>
+                          </div>
+                          <div className="w-24 text-right">
+                            <p className="font-black text-slate-800 text-sm">Rp {(item.price * item.qty).toLocaleString()}</p>
+                          </div>
+                          <button onClick={() => removeFromCart(item.id)} className="text-slate-300 hover:text-red-600"><X className="w-4 h-4" /></button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                  <div className="space-y-1.5"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Pelanggan</label><input type="text" value={formData.customerName} onChange={e => setFormData({ ...formData, customerName: e.target.value })} className="w-full px-3 py-2 bg-white rounded-lg text-sm font-bold border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Nama..." /></div>
+                  <div className="space-y-1.5"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Metode Bayar</label><select value={formData.paymentMethod} onChange={e => setFormData({ ...formData, paymentMethod: e.target.value })} className="w-full px-3 py-2 bg-white rounded-lg text-sm font-bold border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none"><option>Cash</option><option>Transfer</option><option>QRIS</option></select></div>
+                  <div className="space-y-1.5"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Diskon (Rp)</label><input type="number" value={formData.discount} onChange={e => setFormData({ ...formData, discount: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 bg-white rounded-lg text-sm font-bold border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none text-right" /></div>
+                </div>
+
+                <div className="bg-red-50 p-4 rounded-xl border border-red-100 space-y-2">
+                  <div className="flex justify-between"><span className="text-xs text-red-400 font-bold uppercase">Subtotal</span><span className="font-black text-red-600">Rp {subtotal.toLocaleString()}</span></div>
+                  <div className="flex justify-between"><span className="text-xs text-red-400 font-bold uppercase">Diskon</span><span className="font-black text-red-600">- Rp {formData.discount.toLocaleString()}</span></div>
+                  <div className="h-px bg-red-200 my-2"></div>
+                  <div className="flex justify-between text-lg"><span className="font-black text-red-800 uppercase">Total</span><span className="font-black text-red-600">Rp {total.toLocaleString()}</span></div>
+                </div>
+
+                <div className="space-y-1.5"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Bayar (Rp)</label><input type="number" value={formData.paid} onChange={e => setFormData({ ...formData, paid: parseInt(e.target.value) || 0 })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-lg font-black outline-none focus:ring-2 focus:ring-red-500 text-right" /></div>
+                <div className="flex justify-between px-2"><span className="text-xs font-bold text-slate-400 uppercase">Kembalian / Sisa</span><span className={`font-black ${formData.paid >= total ? 'text-emerald-600' : 'text-amber-500'}`}>Rp {(formData.paid - total).toLocaleString()}</span></div>
+
+                <button onClick={handleSave} disabled={cart.length === 0 || !formData.customerName} className="w-full py-4 bg-red-600 text-white rounded-2xl font-black shadow-lg shadow-red-200 hover:bg-red-700 transition uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed">Proses Transaksi</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ExpenseView = ({ expenses, onAddExpense }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({
+    date: new Date().toISOString().slice(0, 10),
+    category: 'Operasional',
+    description: '',
+    paymentMethod: 'Cash',
+    amount: 0,
+    paid: 0
+  });
+
+  const remaining = formData.amount - formData.paid;
+
+  const handleSave = () => {
+    onAddExpense({
+      id: `EXP-${Date.now()}`,
+      ...formData,
+      remaining
+    });
+    setShowModal(false);
+    setFormData({ date: new Date().toISOString().slice(0, 10), category: 'Operasional', description: '', paymentMethod: 'Cash', amount: 0, paid: 0 });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-red-50 rounded-lg"><TrendingDown className="w-5 h-5 text-red-600" /></div>
+          <div>
+            <h3 className="font-black text-slate-800 text-sm">Pengeluaran</h3>
+            <p className="text-[10px] text-slate-500 font-bold">Catat semua pengeluaran toko</p>
+          </div>
+        </div>
+        <button onClick={() => setShowModal(true)} className="bg-red-600 text-white px-5 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition flex items-center gap-2">
+          <Plus className="w-4 h-4" /> Tambah Pengeluaran
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase">
+              <tr>
+                <th className="px-6 py-4">Tanggal</th>
+                <th className="px-6 py-4">Kategori</th>
+                <th className="px-6 py-4">Keterangan</th>
+                <th className="px-6 py-4 text-right">Nominal Tagihan</th>
+                <th className="px-6 py-4 text-right">Dibayar</th>
+                <th className="px-6 py-4 text-right">Sisa Tagihan</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {expenses.length === 0 ? (
+                <tr><td colSpan="6" className="px-6 py-8 text-center text-slate-400 font-bold italic text-xs">Belum ada data pengeluaran</td></tr>
+              ) : (
+                expenses.map((exp) => (
+                  <tr key={exp.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 text-xs font-bold text-slate-500">{exp.date}</td>
+                    <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-[10px] uppercase font-black ${exp.category === 'Operasional' ? 'bg-blue-100 text-blue-700' : exp.category === 'Luar Biasa' ? 'bg-purple-100 text-purple-700' : exp.category === 'Saving' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>{exp.category}</span></td>
+                    <td className="px-6 py-4 font-bold text-slate-800">{exp.description}</td>
+                    <td className="px-6 py-4 text-right font-black text-slate-700">Rp {(exp.amount || 0).toLocaleString()}</td>
+                    <td className="px-6 py-4 text-right font-black text-emerald-600">Rp {(exp.paid || 0).toLocaleString()}</td>
+                    <td className="px-6 py-4 text-right font-black text-amber-500">Rp {(exp.remaining || 0).toLocaleString()}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showModal && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-sm sm:p-4">
+          <div className="bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="text-lg text-slate-800 font-black tracking-tight uppercase italic flex items-center">
+                <span className="w-1 h-6 bg-red-600 mr-3 rounded-full"></span> Tambah Pengeluaran
+              </h3>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-full transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori</label>
+                <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500">
+                  <option>Operasional</option>
+                  <option>Luar Biasa</option>
+                  <option>Saving</option>
+                  <option>Development</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Keterangan</label>
+                <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" rows="2" placeholder="Contoh: Bayar Listrik"></textarea>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tagihan (Rp)</label><input type="number" value={formData.amount} onChange={e => setFormData({ ...formData, amount: parseInt(e.target.value) || 0 })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" /></div>
+                <div className="space-y-1.5"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Dibayar (Rp)</label><input type="number" value={formData.paid} onChange={e => setFormData({ ...formData, paid: parseInt(e.target.value) || 0 })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" /></div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Metode Bayar</label>
+                <select value={formData.paymentMethod} onChange={e => setFormData({ ...formData, paymentMethod: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500">
+                  <option>Cash</option>
+                  <option>Transfer</option>
+                </select>
+              </div>
+              <button onClick={handleSave} disabled={!formData.description || !formData.amount} className="w-full py-4 bg-red-600 text-white rounded-2xl font-black shadow-lg shadow-red-200 hover:bg-red-700 transition uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed mt-2">
+                Simpan Pengeluaran
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const CashflowRecapView = ({
+  orders, offlineOrders, expenses,
+  stores, allStores, perStoreSummary,
+  setSelectedStore, setShowModal,
+  totalSetoran, totalSudahDibayar, sisaTagihan,
+  filterStore, setFilterStore,
+  startDate, setStartDate,
+  endDate, setEndDate,
+  dateFilterMode, setDateFilterMode
+}) => {
+  const [activeTab, setActiveTab] = useState('online'); // online, offline, expenses
+
+  const handleExportExcel = () => {
+    let data = [];
+    let fileName = '';
+
+    if (activeTab === 'online') {
+      fileName = 'Rekap_Penjualan_Online';
+      data = stores.map(t => ({
+        'Nama Toko': t.name,
+        'Marketplace': t.platform,
+        'Total Setoran': (perStoreSummary[t.name]?.totalSetoran ?? t.totalSetoran) || 0,
+        'Sudah Dibayar': perStoreSummary[t.name]?.sudahDibayar || 0,
+        'Sisa Tagihan': ((perStoreSummary[t.name]?.totalSetoran ?? t.totalSetoran) - (perStoreSummary[t.name]?.sudahDibayar ?? 0)) || 0
+      }));
+    } else if (activeTab === 'offline') {
+      fileName = 'Rekap_Penjualan_Offline';
+      // Group offline orders by ID for detail list or by method for summary? 
+      // The view shows summary by method. Let's export summary by method to match the view.
+      const grouped = offlineOrders.reduce((acc, curr) => {
+        acc[curr.paymentMethod] = acc[curr.paymentMethod] || { total: 0, remaining: 0, count: 0 };
+        acc[curr.paymentMethod].total += curr.total;
+        acc[curr.paymentMethod].remaining += curr.remaining;
+        acc[curr.paymentMethod].count += 1;
+        return acc;
+      }, {});
+      data = Object.entries(grouped).map(([method, stats]) => ({
+        'Metode Bayar': method,
+        'Total Setoran': stats.total,
+        'Setoran Belum Dibayar': stats.remaining,
+        'Jumlah Transaksi': stats.count
+      }));
+    } else if (activeTab === 'expenses') {
+      fileName = 'Rekap_Pengeluaran';
+      data = expenses.map(e => ({
+        'Tanggal': e.date,
+        'Kategori': e.category,
+        'Keterangan': e.description,
+        'Nominal': e.amount,
+        'Status': e.remaining > 0 ? 'Belum Lunas' : 'Lunas'
+      }));
+    }
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+    XLSX.writeFile(wb, `${fileName}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  const renderOnline = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Setoran</p>
+          <h3 className="text-2xl font-black text-slate-900 mt-2">Rp {totalSetoran.toLocaleString()}</h3>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sudah Dibayar</p>
+          <h3 className="text-2xl font-black text-emerald-600 mt-2">Rp {totalSudahDibayar.toLocaleString()}</h3>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sisa Tagihan</p>
+          <h3 className="text-2xl font-black text-amber-500 mt-2">Rp {sisaTagihan.toLocaleString()}</h3>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+          <h3 className="font-black text-slate-800 uppercase tracking-tight">Detail Transaksi</h3>
+          <button onClick={handleExportExcel} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow-md">
+            <FileSpreadsheet className="w-4 h-4" /> Export Excel
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left whitespace-nowrap min-w-max">
+            <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b">
+              <tr>
+                <th className="px-6 py-4">Nama Toko</th>
+                <th className="px-6 py-4">Marketplace</th>
+                <th className="px-6 py-4">Total Setoran</th>
+                <th className="px-6 py-4">Setoran Belum Dibayar</th>
+                <th className="px-6 py-4 text-right">Detail</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y text-sm text-slate-900 font-bold">
+              {stores.map((t) => (
+                <tr key={t.id} className="hover:bg-slate-50 transition cursor-pointer">
+                  <td className="px-6 py-4 font-black uppercase tracking-tight">{t.name}</td>
+                  <td className="px-6 py-4 uppercase font-black tracking-tighter">{t.platform}</td>
+                  <td className="px-6 py-4 font-black text-emerald-600 tracking-tight">Rp {(perStoreSummary[t.name]?.totalSetoran ?? t.totalSetoran).toLocaleString()}</td>
+                  <td className="px-6 py-4 font-black text-amber-500 tracking-tight">Rp {(((perStoreSummary[t.name]?.totalSetoran ?? t.totalSetoran) - (perStoreSummary[t.name]?.sudahDibayar ?? 0)) || 0).toLocaleString()}</td>
+                  <td className="px-6 py-4 text-right">
+                    <button onClick={() => { setSelectedStore(t); setShowModal('store-orders'); }} className="px-3 py-1 bg-red-50 text-red-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-red-100 shadow-sm hover:bg-red-100 transition">Lihat List</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderOffline = () => {
+    // Group Offline Orders by Payment Method (to mimic Rekap Setoran structure)
+    const grouped = offlineOrders.reduce((acc, curr) => {
+      acc[curr.paymentMethod] = acc[curr.paymentMethod] || { total: 0, remaining: 0, count: 0 };
+      acc[curr.paymentMethod].total += curr.total;
+      acc[curr.paymentMethod].remaining += curr.remaining;
+      acc[curr.paymentMethod].count += 1;
+      return acc;
+    }, {});
+
+    const offlineTotals = offlineOrders.reduce((acc, curr) => {
+      acc.total += curr.total;
+      acc.paid += curr.paidAmount;
+      acc.remaining += curr.remaining;
+      return acc;
+    }, { total: 0, paid: 0, remaining: 0 });
+
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Penjualan Offline</p>
+            <h3 className="text-2xl font-black text-slate-900 mt-2">Rp {offlineTotals.total.toLocaleString()}</h3>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Diterima</p>
+            <h3 className="text-2xl font-black text-emerald-600 mt-2">Rp {offlineTotals.paid.toLocaleString()}</h3>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Belum Dibayar</p>
+            <h3 className="text-2xl font-black text-amber-500 mt-2">Rp {offlineTotals.remaining.toLocaleString()}</h3>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+            <h3 className="font-black text-slate-800 uppercase tracking-tight">Data Penjualan Offline (POS)</h3>
+            <button onClick={handleExportExcel} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow-md">
+              <FileSpreadsheet className="w-4 h-4" /> Export Excel
+            </button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase">
+                <tr>
+                  <th className="px-6 py-4">Nama Toko</th>
+                  <th className="px-6 py-4">Metode Bayar</th>
+                  <th className="px-6 py-4">Total Setoran</th>
+                  <th className="px-6 py-4">Setoran Belum Dibayar</th>
+                  <th className="px-6 py-4 text-center">Jumlah Transaksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {Object.keys(grouped).length === 0 ? (
+                  <tr><td colSpan="5" className="px-6 py-8 text-center text-slate-400 font-bold italic text-xs">Belum ada transaksi offline</td></tr>
+                ) : (
+                  Object.entries(grouped).map(([method, stats], idx) => (
+                    <tr key={idx} className="hover:bg-slate-50 transition">
+                      <td className="px-6 py-4 font-black text-slate-800 uppercase">Toko Fisik (Offline)</td>
+                      <td className="px-6 py-4 uppercase font-black tracking-tight">{method}</td>
+                      <td className="px-6 py-4 font-black text-emerald-600">Rp {stats.total.toLocaleString()}</td>
+                      <td className="px-6 py-4 font-black text-amber-500">Rp {stats.remaining.toLocaleString()}</td>
+                      <td className="px-6 py-4 text-center font-bold text-slate-500">{stats.count}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderExpenses = () => {
+    const expenseTotals = expenses.reduce((acc, curr) => {
+      acc.total += curr.amount;
+      acc.paid += curr.paid;
+      acc.remaining += curr.remaining;
+      return acc;
+    }, { total: 0, paid: 0, remaining: 0 });
+
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Pengeluaran</p>
+            <h3 className="text-2xl font-black text-slate-900 mt-2">Rp {expenseTotals.total.toLocaleString()}</h3>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Terbayar</p>
+            <h3 className="text-2xl font-black text-emerald-600 mt-2">Rp {expenseTotals.paid.toLocaleString()}</h3>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sisa Tagihan (Hutang)</p>
+            <h3 className="text-2xl font-black text-red-600 mt-2">Rp {expenseTotals.remaining.toLocaleString()}</h3>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+            <h3 className="font-black text-slate-800 uppercase tracking-tight">Data Pengeluaran</h3>
+            <button onClick={handleExportExcel} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow-md">
+              <FileSpreadsheet className="w-4 h-4" /> Export Excel
+            </button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase">
+                <tr><th className="px-6 py-4">Tanggal</th><th className="px-6 py-4">Kategori</th><th className="px-6 py-4">Keterangan</th><th className="px-6 py-4 text-right">Nominal</th><th className="px-6 py-4 text-center">Status</th></tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {expenses.length === 0 ? <tr><td colSpan="5" className="px-6 py-8 text-center text-slate-400 font-bold italic text-xs">Belum ada data pengeluaran</td></tr> : expenses.map(e => (
+                  <tr key={e.id} className="hover:bg-slate-50 transition">
+                    <td className="px-6 py-4 text-xs font-bold text-slate-500">{e.date}</td>
+                    <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-[10px] uppercase font-black ${e.category === 'Operasional' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>{e.category}</span></td>
+                    <td className="px-6 py-4 font-bold text-slate-800">{e.description}</td>
+                    <td className="px-6 py-4 text-right font-black text-red-600">Rp {e.amount.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-center"><span className={`px-2 py-1 rounded text-[10px] uppercase font-black ${e.remaining > 0 ? 'bg-amber-100 text-amber-500' : 'bg-emerald-100 text-emerald-700'}`}>{e.remaining > 0 ? 'Belum Lunas' : 'Lunas'}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-red-50 rounded-lg"><BarChart3 className="w-5 h-5 text-red-600" /></div>
+          <div><h3 className="font-black text-slate-800 text-sm">Rekap Cashflow</h3><p className="text-[10px] text-slate-500 font-bold">Laporan keuangan terpadu</p></div>
+        </div>
+      </div>
+
+      <div className="flex space-x-2 bg-slate-100 p-1 rounded-xl">
+        {[{ id: 'online', l: 'Penjualan Online' }, { id: 'offline', l: 'Penjualan Offline' }, { id: 'expenses', l: 'Pengeluaran' }].map(tab => (
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex-1 py-3 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-white shadow-sm text-red-600' : 'text-slate-400 hover:text-slate-600'}`}>{tab.l}</button>
+        ))}
+      </div>
+
+      <FilterBar
+        filterStore={filterStore} setFilterStore={setFilterStore}
+        startDate={startDate} setStartDate={setStartDate}
+        endDate={endDate} setEndDate={setEndDate}
+        dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
+        stores={allStores}
+      />
+
+      <div className="animate-in slide-in-from-bottom-2 duration-300">
+        {activeTab === 'online' && renderOnline()}
+        {activeTab === 'offline' && renderOffline()}
+        {activeTab === 'expenses' && renderExpenses()}
+      </div>
+    </div>
+  );
+};
 
 const FilterBar = ({
   showStore = true, showDate = true,
@@ -226,9 +1006,8 @@ const FilterBar = ({
                       setStartDate(`${y}-01-01`); setEndDate(`${y}-12-31`);
                     }
                   }}
-                  className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                    dateFilterMode === m.k ? 'bg-white shadow-sm text-red-600 ring-1 ring-slate-100' : 'text-slate-500 hover:text-slate-700'
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${dateFilterMode === m.k ? 'bg-white shadow-sm text-red-600 ring-1 ring-slate-100' : 'text-slate-500 hover:text-slate-700'
+                    }`}
                 >
                   {m.l}
                 </button>
@@ -263,22 +1042,21 @@ const FilterBar = ({
 };
 
 const Modal = ({ title, type, onClose, data, products }) => (
-  <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/80 backdrop-blur-sm sm:p-4">
+  <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-sm sm:p-4">
     <div
-      className={`bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full ${
-        ['order-detail', 'store-orders', 'edit-order'].includes(type) ? 'max-w-2xl' : 'max-w-md'
-      } shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300 max-h-[90vh] flex flex-col`}
+      className={`bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full ${['order-detail', 'store-orders', 'edit-order'].includes(type) ? 'max-w-2xl' : 'max-w-md'
+        } shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300 max-h-[90vh] flex flex-col`}
     >
       <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
         <h3 className="text-lg text-slate-800 font-black tracking-tight uppercase italic flex items-center">
-           <span className="w-1 h-6 bg-red-600 mr-3 rounded-full"></span>
+          <span className="w-1 h-6 bg-red-600 mr-3 rounded-full"></span>
           {title}
         </h3>
         <button onClick={onClose} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-full transition-colors">
           <X className="w-5 h-5" />
         </button>
       </div>
-      
+
       <div className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
         {type === 'order-detail' && data ? (
           <div className="space-y-6">
@@ -296,12 +1074,12 @@ const Modal = ({ title, type, onClose, data, products }) => (
                 </div>
               </div>
               <div className="text-left sm:text-right">
-                 <p className="text-[10px] text-red-500 font-black uppercase tracking-widest">Waktu Pesanan</p>
-                 <p className="font-bold text-slate-700">{data.waktuDibuat || '2025-11-01 10:40'}</p>
-                 {data.waktuPembayaran && (
-                   <p className="text-xs text-slate-500 mt-0.5">Dibayar: {data.waktuPembayaran}</p>
-                 )}
-                 <p className="text-xs text-slate-500 mt-0.5">Platform: {data.platform}</p>
+                <p className="text-[10px] text-red-500 font-black uppercase tracking-widest">Waktu Pesanan</p>
+                <p className="font-bold text-slate-700">{data.waktuDibuat || '2025-11-01 10:40'}</p>
+                {data.waktuPembayaran && (
+                  <p className="text-xs text-slate-500 mt-0.5">Dibayar: {data.waktuPembayaran}</p>
+                )}
+                <p className="text-xs text-slate-500 mt-0.5">Platform: {data.platform}</p>
               </div>
             </div>
 
@@ -354,7 +1132,7 @@ const Modal = ({ title, type, onClose, data, products }) => (
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
-                  <p className="font-bold text-slate-800 text-sm">{data.produk}</p>
+                    <p className="font-bold text-slate-800 text-sm">{data.produk}</p>
                     <p className="text-xs text-slate-500 font-medium mt-1">Variasi: {data.variasi}</p>
                     <div className="flex items-center gap-4 mt-2">
                       <div>
@@ -368,12 +1146,12 @@ const Modal = ({ title, type, onClose, data, products }) => (
                         </div>
                       )}
                     </div>
-                </div>
-                <div className="text-right">
+                  </div>
+                  <div className="text-right">
                     <p className="text-[10px] text-slate-400 uppercase font-bold">Total Pembayaran</p>
                     <p className="font-black text-red-600 text-base">Rp {data.totalBayar?.toLocaleString() || '0'}</p>
+                  </div>
                 </div>
-              </div>
                 <div className="grid grid-cols-2 gap-4 mb-3">
                   <div className="bg-slate-50 p-3 rounded-lg">
                     <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Jumlah</p>
@@ -468,7 +1246,7 @@ const Modal = ({ title, type, onClose, data, products }) => (
           </div>
         ) : type === 'import' ? (
           <div className="space-y-5">
-             <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex gap-3">
+            <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex gap-3">
               <FileSpreadsheet className="w-5 h-5 text-emerald-500 shrink-0" />
               <p className="text-xs text-emerald-800 font-medium leading-relaxed">
                 Upload file Excel (.xlsx atau .xls) untuk mengimport data pesanan. Pastikan format kolom sesuai dengan template.
@@ -518,7 +1296,7 @@ const Modal = ({ title, type, onClose, data, products }) => (
           </div>
         ) : type === 'harga-setoran' ? (
           <div className="space-y-5">
-             <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl flex gap-3">
+            <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl flex gap-3">
               <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
               <p className="text-xs text-amber-800 font-medium leading-relaxed">
                 Perubahan ini akan memperbarui <b>HARGA SETORAN</b> untuk semua barang dengan nama yang sama secara global.
@@ -580,7 +1358,7 @@ const Modal = ({ title, type, onClose, data, products }) => (
                   Upload Logo
                 </button>
               </div>
-              
+
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   Nama Perusahaan / Toko
@@ -678,12 +1456,12 @@ const Modal = ({ title, type, onClose, data, products }) => (
             </button>
           </div>
         ) : (
-           <div className="text-center py-10">
-             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-               <Settings className="w-8 h-8 text-slate-300" />
-             </div>
-             <p className="text-slate-500 font-bold">Fitur ini sedang dalam pengembangan.</p>
-           </div>
+          <div className="text-center py-10">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Settings className="w-8 h-8 text-slate-300" />
+            </div>
+            <p className="text-slate-500 font-bold">Fitur ini sedang dalam pengembangan.</p>
+          </div>
         )}
       </div>
     </div>
@@ -697,7 +1475,7 @@ const App = () => {
   const [selectedStore, setSelectedStore] = useState(null);
   const [activeView, setActiveView] = useState('owner');
   const [filterStore, setFilterStore] = useState('All');
-  
+
   // Date Handling
   const _now = new Date();
   const [startDate, setStartDate] = useState(`${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-01`);
@@ -722,6 +1500,61 @@ const App = () => {
 
   // Global Product Prices Management
   const [globalProductPrices, setGlobalProductPrices] = useState({});
+
+  // New Features State
+  const [offlineProducts, setOfflineProducts] = useState([
+    { id: 1, name: 'Pakan Burung Lovebird Premium', sku: 'PBLP-001', stock: 50, unit: 'pcs', price: 25000 },
+    { id: 2, name: 'Vitamin Burung Gacor', sku: 'VBG-002', stock: 30, unit: 'btl', price: 45000 },
+  ]);
+  const [offlineOrders, setOfflineOrders] = useState([
+    {
+      id: 'OFF-001',
+      customerName: 'Budi Santoso',
+      date: '2026-01-20',
+      paymentMethod: 'Cash',
+      subtotal: 75000,
+      discount: 5000,
+      total: 70000,
+      paidAmount: 70000,
+      remaining: 0,
+      status: 'Lunas',
+      items: [{ id: 1, name: 'Pakan Burung Lovebird Premium', price: 25000, qty: 3, total: 75000 }]
+    },
+    {
+      id: 'OFF-002',
+      customerName: 'Ani Wijaya',
+      date: '2026-01-24',
+      paymentMethod: 'Transfer',
+      subtotal: 90000,
+      discount: 0,
+      total: 90000,
+      paidAmount: 50000,
+      remaining: 40000,
+      status: 'Belum Lunas',
+      items: [{ id: 2, name: 'Vitamin Burung Gacor', price: 45000, qty: 2, total: 90000 }]
+    }
+  ]);
+  const [expenses, setExpenses] = useState([
+    { id: 1, date: '2026-01-21', category: 'Operasional', description: 'Listrik & Air Januari', amount: 500000, paid: 500000, remaining: 0, paymentMethod: 'Transfer' },
+    { id: 2, date: '2026-01-23', category: 'Saving', description: 'Tabungan Pengembangan', amount: 1000000, paid: 1000000, remaining: 0, paymentMethod: 'Cash' },
+    { id: 3, date: '2026-01-24', category: 'Development', description: 'Renovasi Lantai 2', amount: 2500000, paid: 1000000, remaining: 1500000, paymentMethod: 'Transfer' }
+  ]);
+
+  const handleAddOfflineProduct = (product) => {
+    setOfflineProducts(prev => [...prev, product]);
+  };
+
+  const handleAddOfflineOrder = (order) => {
+    setOfflineOrders(prev => [order, ...prev]);
+    // Decrease stock
+    order.items.forEach(item => {
+      setOfflineProducts(prev => prev.map(p => p.id === item.id ? { ...p, stock: p.stock - item.qty } : p));
+    });
+  };
+
+  const handleAddExpense = (expense) => {
+    setExpenses(prev => [expense, ...prev]);
+  };
 
   // Mock Data
   const stores = [
@@ -1300,8 +2133,18 @@ const App = () => {
   const filteredOrders = useMemo(() => orders.filter(o => {
     const d = o.waktuDibuat.split(' ')[0];
     return (filterStore === 'All' || o.storeName === filterStore) &&
-           (!startDate || d >= startDate) && (!endDate || d <= endDate);
+      (!startDate || d >= startDate) && (!endDate || d <= endDate);
   }), [orders, filterStore, startDate, endDate]);
+
+  const filteredOfflineOrders = useMemo(() => offlineOrders.filter(o => {
+    return (filterStore === 'All') && // Only show if "All" is selected, or we could add a "Toko Fisik" option
+      (!startDate || o.date >= startDate) && (!endDate || o.date <= endDate);
+  }), [offlineOrders, filterStore, startDate, endDate]);
+
+  const filteredExpenses = useMemo(() => expenses.filter(e => {
+    return (filterStore === 'All') &&
+      (!startDate || e.date >= startDate) && (!endDate || e.date <= endDate);
+  }), [expenses, filterStore, startDate, endDate]);
 
   const filteredStores = useMemo(() => {
     return filterStore === 'All' ? stores : stores.filter(s => s.name === filterStore);
@@ -1312,7 +2155,7 @@ const App = () => {
     stores.forEach((s) => {
       map[s.name] = { totalSetoran: 0, sudahDibayar: 0 };
     });
-    orders.forEach((o) => {
+    filteredOrders.forEach((o) => {
       if (!map[o.storeName]) map[o.storeName] = { totalSetoran: 0, sudahDibayar: 0 };
       // Gunakan harga setoran global jika tersedia, jika tidak gunakan o.setoran
       const setoranPrice = globalProductPrices[o.produk] !== undefined ? globalProductPrices[o.produk] : o.setoran;
@@ -1320,13 +2163,13 @@ const App = () => {
       map[o.storeName].sudahDibayar += o.sudahDibayar || 0;
     });
     return map;
-  }, [orders, stores, globalProductPrices]);
+  }, [filteredOrders, stores, globalProductPrices]);
 
   const totalSetoran = useMemo(() => filteredStores.reduce((acc, s) => acc + (perStoreSummary[s.name]?.totalSetoran || s.totalSetoran), 0), [filteredStores, perStoreSummary]);
-  
+
   const totalSudahDibayar = useMemo(
-    () => orders.reduce((acc, curr) => acc + (curr.sudahDibayar || 0), 0),
-    [orders]
+    () => filteredOrders.reduce((acc, curr) => acc + (curr.sudahDibayar || 0), 0),
+    [filteredOrders]
   );
 
   const sisaTagihan = totalSetoran - totalSudahDibayar;
@@ -1336,7 +2179,7 @@ const App = () => {
     const prevOrders = [...orders];
     setOrders(prev => prev.map(o => selectedOrderIds.includes(o.id) ? { ...o, sudahDibayar: o.setoran } : o));
     setShowActionDropdown(false);
-    
+
     // Toast with Undo
     if (toast.timerId) clearTimeout(toast.timerId);
     const tid = setTimeout(() => setToast({ show: false, message: '', undoData: null, timerId: null }), 5000);
@@ -1360,7 +2203,7 @@ const App = () => {
   };
 
   const handleBulkCheckPengiriman = () => {
-     setLastBulkCheckPengiriman(new Date());
+    setLastBulkCheckPengiriman(new Date());
   }
 
   const handlePrintResi = () => {
@@ -1393,14 +2236,14 @@ const App = () => {
           });
         }
       } else if (dateFilterMode === 'month') {
-         // Data per tanggal (1 - 30)
-         const daysInMonth = 30; // Simplifikasi
-         for (let i = 1; i <= daysInMonth; i++) {
-           data.push({
-             name: `${i}`,
-             v: Math.floor(Math.random() * 2000000),
-           });
-         }
+        // Data per tanggal (1 - 30)
+        const daysInMonth = 30; // Simplifikasi
+        for (let i = 1; i <= daysInMonth; i++) {
+          data.push({
+            name: `${i}`,
+            v: Math.floor(Math.random() * 2000000),
+          });
+        }
       } else {
         // Data per bulan (Jan - Des)
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -1410,7 +2253,30 @@ const App = () => {
         }));
       }
       return data;
+      return data;
     }, [dateFilterMode, startDate]);
+
+    // Data Penjualan Online vs Offline
+    const totalOnlineIncome = useMemo(() => filteredOrders.reduce((sum, o) => sum + (o.totalBayar || 0), 0), [filteredOrders]);
+    const totalOfflineIncome = useMemo(() => offlineOrders.reduce((sum, o) => sum + o.total, 0), [offlineOrders]);
+
+    const incomeComparisonData = [
+      { name: 'Online', value: totalOnlineIncome, color: '#dc2626' },
+      { name: 'Offline', value: totalOfflineIncome, color: '#059669' }
+    ];
+
+    // Data Pengeluaran per Kategori
+    const expenseData = useMemo(() => {
+      const groups = expenses.reduce((acc, curr) => {
+        acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
+        return acc;
+      }, {});
+      return Object.keys(groups).map((key, index) => ({
+        name: key,
+        value: groups[key],
+        color: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b'][index % 4]
+      }));
+    }, [expenses]);
 
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
@@ -1421,26 +2287,26 @@ const App = () => {
           dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
           stores={stores}
         />
-        
+
         {/* Compact Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-4">
           {[
-             { label: 'Total Setoran', val: `Rp ${(totalSetoran/1000000).toFixed(1)}jt`, fullVal: `Rp ${totalSetoran.toLocaleString()}`, icon: Wallet, color: 'text-slate-900', bg: 'bg-white' },
-             { label: 'Total Pesanan', val: filteredOrders.length, fullVal: filteredOrders.length, icon: Package, color: 'text-slate-900', bg: 'bg-white' },
-             { label: 'Toko Aktif', val: stores.length, fullVal: stores.length, icon: Store, color: 'text-red-600', bg: 'bg-white' },
-             { label: 'Avg Keranjang', val: '145rb', fullVal: 'Rp 145.000', icon: ShoppingBag, color: 'text-slate-900', bg: 'bg-white' }
+            { label: 'Total Setoran', val: `Rp ${(totalSetoran / 1000000).toFixed(1)}jt`, fullVal: `Rp ${totalSetoran.toLocaleString()}`, icon: Wallet, color: 'text-slate-900', bg: 'bg-white' },
+            { label: 'Total Pesanan', val: filteredOrders.length, fullVal: filteredOrders.length, icon: Package, color: 'text-slate-900', bg: 'bg-white' },
+            { label: 'Toko Aktif', val: stores.length, fullVal: stores.length, icon: Store, color: 'text-red-600', bg: 'bg-white' },
+            { label: 'Avg Keranjang', val: '145rb', fullVal: 'Rp 145.000', icon: ShoppingBag, color: 'text-slate-900', bg: 'bg-white' }
           ].map((stat, idx) => (
             <div key={idx} className={`${stat.bg} p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group`}>
-               <div className="flex justify-between items-start mb-2">
-                  <div className={`p-2 rounded-lg ${stat.color === 'text-red-600' ? 'bg-red-50' : 'bg-slate-50'} group-hover:scale-110 transition-transform`}>
-                     <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                  </div>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">
-                     Filtered
-                  </span>
-               </div>
-               <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-0.5">{stat.label}</p>
-               <h3 className={`text-xl font-black ${stat.color} tracking-tight`} title={stat.fullVal}>{stat.val}</h3>
+              <div className="flex justify-between items-start mb-2">
+                <div className={`p-2 rounded-lg ${stat.color === 'text-red-600' ? 'bg-red-50' : 'bg-slate-50'} group-hover:scale-110 transition-transform`}>
+                  <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">
+                  Filtered
+                </span>
+              </div>
+              <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-0.5">{stat.label}</p>
+              <h3 className={`text-xl font-black ${stat.color} tracking-tight`} title={stat.fullVal}>{stat.val}</h3>
             </div>
           ))}
         </div>
@@ -1460,12 +2326,81 @@ const App = () => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} tickFormatter={(v) => `${v/1000}k`} />
-                <Tooltip contentStyle={{borderRadius:'12px', border:'none', boxShadow:'0 10px 15px -3px rgba(0,0,0,0.1)'}} cursor={{stroke:'#dc2626', strokeWidth:1}} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} tickFormatter={(v) => `${v / 1000}k`} />
+                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} cursor={{ stroke: '#dc2626', strokeWidth: 1 }} />
                 <Area type="monotone" dataKey="v" stroke="#dc2626" strokeWidth={3} fillOpacity={1} fill="url(#colorVal)" />
               </AreaChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* New Charts Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Komposisi Keuangan (Donut Chart) */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center">
+            <h3 className="text-lg font-black text-slate-800 mb-6 uppercase tracking-tight italic w-full text-left">
+              KOMPOSISI KEUANGAN
+            </h3>
+            <div className="h-[300px] w-full relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={incomeComparisonData}
+                    innerRadius={80}
+                    outerRadius={110}
+                    paddingAngle={0}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {incomeComparisonData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => `Rp ${value.toLocaleString()}`} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    iconType="circle"
+                    formatter={(value) => <span className="text-xs font-bold text-slate-600 uppercase ml-1">{value}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Produk Terlaris Style (Expense Breakdown) */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center">
+            <h3 className="text-lg font-black text-slate-800 mb-6 uppercase tracking-tight italic w-full text-left">
+              BREAKDOWN PENGELUARAN
+            </h3>
+            <div className="h-[300px] w-full">
+              {expenseData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={expenseData}
+                      outerRadius={110}
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      labelLine={true}
+                      stroke="white"
+                      strokeWidth={2}
+                    >
+                      {expenseData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => `Rp ${value.toLocaleString()}`} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                  <TrendingDown className="w-8 h-8 mb-2 opacity-50" />
+                  <p className="text-xs font-bold italic">Belum ada data pengeluaran</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -1474,40 +2409,40 @@ const App = () => {
 
   const TokoList = () => (
     <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-       <div className="flex justify-between items-center">
-         <h3 className="text-xl font-black text-slate-900 italic uppercase">Daftar Toko</h3>
-         <button onClick={() => setShowModal('add-store')} className="bg-red-600 text-white px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg hover:bg-red-700 transition flex items-center">
-           <Plus className="w-4 h-4 mr-2" /> Baru
-         </button>
-       </div>
-       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {stores.map((t) => (
-            <div key={t.id} onClick={() => { setSelectedStore(t); setActiveMenu('toko-detail'); }} className="bg-white group cursor-pointer rounded-[2rem] border border-slate-200 p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
-               <div className={`absolute top-0 right-0 px-4 py-1.5 rounded-bl-2xl text-[10px] font-black uppercase text-white ${t.platform === 'Shopee' ? 'bg-orange-500' : 'bg-black'}`}>
-                 {t.platform}
-               </div>
-               <div className="flex items-center space-x-4 mb-6 mt-2">
-                 <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-red-50 transition-colors">
-                    <Store className="w-7 h-7 text-slate-400 group-hover:text-red-600 transition-colors" />
-                 </div>
-                 <div>
-                   <h4 className="font-black text-slate-800 text-lg leading-tight group-hover:text-red-600 transition-colors">{t.name}</h4>
-                   <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 mt-1 inline-block">{t.status}</span>
-                 </div>
-               </div>
-               <div className="grid grid-cols-2 gap-3">
-                 <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Orders</p>
-                    <p className="text-lg font-black text-slate-800">{t.totalOrders}</p>
-                 </div>
-                 <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Setoran</p>
-                    <p className="text-lg font-black text-red-600 truncate">{(t.totalSetoran/1000000).toFixed(1)} jt</p>
-                 </div>
-               </div>
+      <div className="flex justify-between items-center">
+        <h3 className="text-xl font-black text-slate-900 italic uppercase">Daftar Toko</h3>
+        <button onClick={() => setShowModal('add-store')} className="bg-red-600 text-white px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg hover:bg-red-700 transition flex items-center">
+          <Plus className="w-4 h-4 mr-2" /> Baru
+        </button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {stores.map((t) => (
+          <div key={t.id} onClick={() => { setSelectedStore(t); setActiveMenu('toko-detail'); }} className="bg-white group cursor-pointer rounded-[2rem] border border-slate-200 p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
+            <div className={`absolute top-0 right-0 px-4 py-1.5 rounded-bl-2xl text-[10px] font-black uppercase text-white ${t.platform === 'Shopee' ? 'bg-orange-500' : 'bg-black'}`}>
+              {t.platform}
             </div>
-          ))}
-       </div>
+            <div className="flex items-center space-x-4 mb-6 mt-2">
+              <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-red-50 transition-colors">
+                <Store className="w-7 h-7 text-slate-400 group-hover:text-red-600 transition-colors" />
+              </div>
+              <div>
+                <h4 className="font-black text-slate-800 text-lg leading-tight group-hover:text-red-600 transition-colors">{t.name}</h4>
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 mt-1 inline-block">{t.status}</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Orders</p>
+                <p className="text-lg font-black text-slate-800">{t.totalOrders}</p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Setoran</p>
+                <p className="text-lg font-black text-red-600 truncate">{(t.totalSetoran / 1000000).toFixed(1)} jt</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 
@@ -1545,23 +2480,23 @@ const App = () => {
 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center border border-red-100">
-                <ShoppingBag className="w-8 h-8 text-red-600" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight">{selectedStore?.name}</h3>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{selectedStore?.platform}</p>
-                  {detailTab === 'pesanan' && (
-                    <p className="text-[10px] text-slate-400 font-medium mt-1">
-                      {lastBulkCheckToko ? `Terakhir cek: ${formatLastCheckTime(lastBulkCheckToko)}` : 'Belum pernah dicek resi'}
-                    </p>
-                  )}
-              </div>
+            <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center border border-red-100">
+              <ShoppingBag className="w-8 h-8 text-red-600" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-black text-slate-900 tracking-tight">{selectedStore?.name}</h3>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{selectedStore?.platform}</p>
+              {detailTab === 'pesanan' && (
+                <p className="text-[10px] text-slate-400 font-medium mt-1">
+                  {lastBulkCheckToko ? `Terakhir cek: ${formatLastCheckTime(lastBulkCheckToko)}` : 'Belum pernah dicek resi'}
+                </p>
+              )}
+            </div>
           </div>
           <div className="flex gap-2 w-full md:w-auto">
-              <button onClick={() => setShowModal('import')} className="flex-1 md:flex-none items-center justify-center px-4 py-3 bg-emerald-600 text-white rounded-xl text-xs font-black hover:bg-emerald-700 shadow-lg transition">
-                <FileSpreadsheet className="w-4 h-4 mr-2" /> Import Excel
-              </button>
+            <button onClick={() => setShowModal('import')} className="flex-1 md:flex-none items-center justify-center px-4 py-3 bg-emerald-600 text-white rounded-xl text-xs font-black hover:bg-emerald-700 shadow-lg transition">
+              <FileSpreadsheet className="w-4 h-4 mr-2" /> Import Excel
+            </button>
           </div>
         </div>
 
@@ -1575,34 +2510,34 @@ const App = () => {
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-wrap gap-4 justify-between items-center">
-              <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg">
-                {['pesanan', 'barang'].map(tab => (
-                  <button key={tab} onClick={() => setDetailTab(tab)} className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${detailTab === tab ? 'bg-white text-red-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                    {tab}
-                  </button>
-                ))}
+            <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg">
+              {['pesanan', 'barang'].map(tab => (
+                <button key={tab} onClick={() => setDetailTab(tab)} className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${detailTab === tab ? 'bg-white text-red-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                  {tab}
+                </button>
+              ))}
+            </div>
+            {detailTab === 'pesanan' && (
+              <div className="relative">
+                <button
+                  disabled={selectedOrderIds.length === 0}
+                  onClick={() => setShowActionDropdown(!showActionDropdown)}
+                  className={`flex items-center px-4 py-2 text-xs font-bold rounded-xl transition shadow-sm ${selectedOrderIds.length > 0 ? 'bg-red-600 text-white shadow-red-200' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+                >
+                  Aksi Masal ({selectedOrderIds.length}) <ChevronDown className="w-3 h-3 ml-2" />
+                </button>
+                {showActionDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowActionDropdown(false)} />
+                    <div className="absolute right-0 top-full mt-2 bg-white rounded-xl border border-slate-200 shadow-xl z-20 w-48 py-1 overflow-hidden">
+                      <button onClick={handleBulkMarkPaid} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center"><CheckCircle2 className="w-4 h-4 mr-2" /> Tandai Lunas</button>
+                      <button onClick={handleBulkCheckToko} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center border-t border-slate-50"><RefreshCw className="w-4 h-4 mr-2" /> Cek Resi</button>
+                      <button onClick={handlePrintResi} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center border-t border-slate-50"><Printer className="w-4 h-4 mr-2" /> Cetak Resi</button>
+                    </div>
+                  </>
+                )}
               </div>
-              {detailTab === 'pesanan' && (
-                <div className="relative">
-                  <button
-                    disabled={selectedOrderIds.length === 0}
-                    onClick={() => setShowActionDropdown(!showActionDropdown)}
-                    className={`flex items-center px-4 py-2 text-xs font-bold rounded-xl transition shadow-sm ${selectedOrderIds.length > 0 ? 'bg-red-600 text-white shadow-red-200' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
-                  >
-                    Aksi Masal ({selectedOrderIds.length}) <ChevronDown className="w-3 h-3 ml-2" />
-                  </button>
-                  {showActionDropdown && (
-                    <>
-                      <div className="fixed inset-0 z-10" onClick={() => setShowActionDropdown(false)} />
-                      <div className="absolute right-0 top-full mt-2 bg-white rounded-xl border border-slate-200 shadow-xl z-20 w-48 py-1 overflow-hidden">
-                        <button onClick={handleBulkMarkPaid} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center"><CheckCircle2 className="w-4 h-4 mr-2" /> Tandai Lunas</button>
-                        <button onClick={handleBulkCheckToko} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center border-t border-slate-50"><RefreshCw className="w-4 h-4 mr-2" /> Cek Resi</button>
-                        <button onClick={handlePrintResi} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center border-t border-slate-50"><Printer className="w-4 h-4 mr-2" /> Cetak Resi</button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
+            )}
           </div>
 
           {detailTab === 'pesanan' ? (
@@ -1610,58 +2545,58 @@ const App = () => {
               <table className="w-full text-left whitespace-nowrap min-w-max">
                 <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-100">
                   <tr>
-                      <th className="p-4 w-10 text-center">
-                        <button onClick={() => setSelectedOrderIds(selectedOrderIds.length === storeOrders.length ? [] : storeOrders.map(o => o.id))}>
-                          {selectedOrderIds.length === storeOrders.length && storeOrders.length > 0 ? <CheckSquare className="w-4 h-4 text-red-600" /> : <Square className="w-4 h-4" />}
-                        </button>
-                      </th>
-                      <th className="px-4 py-3 sm:px-6 sm:py-4">No. Pesanan</th>
-                      <th className="px-4 py-3 sm:px-6 sm:py-4">Nama Produk</th>
-                      <th className="px-4 py-3 sm:px-6 sm:py-4">Status Kurir</th>
-                      <th className="px-4 py-3 sm:px-6 sm:py-4">Setoran</th>
-                      <th className="px-4 py-3 sm:px-6 sm:py-4">Sudah Dibayar</th>
-                      <th className="px-4 py-3 sm:px-6 sm:py-4 text-center">Aksi</th>
+                    <th className="p-4 w-10 text-center">
+                      <button onClick={() => setSelectedOrderIds(selectedOrderIds.length === storeOrders.length ? [] : storeOrders.map(o => o.id))}>
+                        {selectedOrderIds.length === storeOrders.length && storeOrders.length > 0 ? <CheckSquare className="w-4 h-4 text-red-600" /> : <Square className="w-4 h-4" />}
+                      </button>
+                    </th>
+                    <th className="px-4 py-3 sm:px-6 sm:py-4">No. Pesanan</th>
+                    <th className="px-4 py-3 sm:px-6 sm:py-4">Nama Produk</th>
+                    <th className="px-4 py-3 sm:px-6 sm:py-4">Status Kurir</th>
+                    <th className="px-4 py-3 sm:px-6 sm:py-4">Setoran</th>
+                    <th className="px-4 py-3 sm:px-6 sm:py-4">Sudah Dibayar</th>
+                    <th className="px-4 py-3 sm:px-6 sm:py-4 text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 text-sm font-bold text-slate-900">
                   {storeOrders.map(order => (
                     <tr key={order.id} className={`hover:bg-slate-50 transition-colors ${selectedOrderIds.includes(order.id) ? 'bg-red-50/30' : ''}`}>
-                        <td className="p-4 text-center">
-                          <button onClick={() => setSelectedOrderIds(prev => prev.includes(order.id) ? prev.filter(id => id !== order.id) : [...prev, order.id])}>
-                            {selectedOrderIds.includes(order.id) ? <CheckSquare className="w-4 h-4 text-red-600" /> : <Square className="w-4 h-4 text-slate-300" />}
-                          </button>
-                        </td>
-                        <td className="px-4 py-3 sm:px-6 sm:py-4 font-mono text-xs">{order.id}</td>
-                        <td className="px-4 py-3 sm:px-6 sm:py-4">
-                          <div className="flex flex-col max-w-[200px]">
-                            <span className="truncate" title={order.produk}>{order.produk}</span>
-                            {order.variasi && order.variasi !== 'Default' && (
+                      <td className="p-4 text-center">
+                        <button onClick={() => setSelectedOrderIds(prev => prev.includes(order.id) ? prev.filter(id => id !== order.id) : [...prev, order.id])}>
+                          {selectedOrderIds.includes(order.id) ? <CheckSquare className="w-4 h-4 text-red-600" /> : <Square className="w-4 h-4 text-slate-300" />}
+                        </button>
+                      </td>
+                      <td className="px-4 py-3 sm:px-6 sm:py-4 font-mono text-xs">{order.id}</td>
+                      <td className="px-4 py-3 sm:px-6 sm:py-4">
+                        <div className="flex flex-col max-w-[200px]">
+                          <span className="truncate" title={order.produk}>{order.produk}</span>
+                          {order.variasi && order.variasi !== 'Default' && (
                             <span className="text-[10px] text-slate-500 italic">{order.variasi}</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 sm:px-6 sm:py-4">
-                          <div className="flex flex-col items-start">
-                              <span className={`text-[10px] px-2 py-0.5 rounded font-black uppercase ${order.kurirStatus.includes('Tiba') ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>{order.kurirStatus}</span>
-                              <span className="text-[10px] font-mono mt-1 text-slate-400">{order.resi}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 sm:px-6 sm:py-4 text-emerald-600">
-                          Rp {order.setoran?.toLocaleString() || '0'}
-                        </td>
-                        <td className="px-4 py-3 sm:px-6 sm:py-4 text-emerald-600">
-                          {order.sudahDibayar > 0 ? (
-                            <span className="flex items-center"><CheckCircle2 className="w-3 h-3 mr-1" /> Rp {order.sudahDibayar.toLocaleString()}</span>
-                          ) : (
-                            <span className="text-amber-500 text-[10px] uppercase font-bold">Belum Setor</span>
                           )}
-                        </td>
-                        <td className="px-4 py-3 sm:px-6 sm:py-4 text-center">
-                          <div className="flex justify-center gap-2">
-                            <button onClick={() => { setSelectedOrder(order); setShowModal('order-detail'); }} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Lihat Detail"><Eye className="w-4 h-4" /></button>
-                            <button onClick={() => { setSelectedOrder(order); setShowModal('edit-order'); }} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Edit Pesanan"><Edit3 className="w-4 h-4" /></button>
-                          </div>
-                        </td>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 sm:px-6 sm:py-4">
+                        <div className="flex flex-col items-start">
+                          <span className={`text-[10px] px-2 py-0.5 rounded font-black uppercase ${order.kurirStatus.includes('Tiba') ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>{order.kurirStatus}</span>
+                          <span className="text-[10px] font-mono mt-1 text-slate-400">{order.resi}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 sm:px-6 sm:py-4 text-emerald-600">
+                        Rp {order.setoran?.toLocaleString() || '0'}
+                      </td>
+                      <td className="px-4 py-3 sm:px-6 sm:py-4 text-emerald-600">
+                        {order.sudahDibayar > 0 ? (
+                          <span className="flex items-center"><CheckCircle2 className="w-3 h-3 mr-1" /> Rp {order.sudahDibayar.toLocaleString()}</span>
+                        ) : (
+                          <span className="text-amber-500 text-[10px] uppercase font-bold">Belum Setor</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 sm:px-6 sm:py-4 text-center">
+                        <div className="flex justify-center gap-2">
+                          <button onClick={() => { setSelectedOrder(order); setShowModal('order-detail'); }} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Lihat Detail"><Eye className="w-4 h-4" /></button>
+                          <button onClick={() => { setSelectedOrder(order); setShowModal('edit-order'); }} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Edit Pesanan"><Edit3 className="w-4 h-4" /></button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                   {storeOrders.length === 0 && (
@@ -1848,11 +2783,10 @@ const App = () => {
               <button
                 onClick={handleSaveHargaSetoran}
                 disabled={!selectedSku || !hargaSetoranInput}
-                className={`w-full px-6 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition ${
-                  selectedSku && hargaSetoranInput
-                    ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-200'
-                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                }`}
+                className={`w-full px-6 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition ${selectedSku && hargaSetoranInput
+                  ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-200'
+                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  }`}
               >
                 Simpan Harga
               </button>
@@ -1878,7 +2812,7 @@ const App = () => {
                   <tr key={product.id} className="hover:bg-slate-50 transition-colors">
                     <td className="p-4 text-center font-mono text-slate-500">{index + 1}</td>
                     <td className="px-4 py-3 sm:px-6 sm:py-4">
-                        <span className="font-mono text-sm font-bold text-slate-800">{product.sku}</span>
+                      <span className="font-mono text-sm font-bold text-slate-800">{product.sku}</span>
                     </td>
                     <td className="px-4 py-3 sm:px-6 sm:py-4 text-center">
                       <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-black">
@@ -1939,46 +2873,46 @@ const App = () => {
       </div>
 
       <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden">
-         <div className="flex p-2 bg-slate-50 m-2 rounded-2xl">
-            {['camera', 'manual'].map(mode => (
-              <button key={mode} onClick={() => setScanMode(mode)} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${scanMode === mode ? 'bg-white text-red-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
-                 <div className="flex items-center justify-center gap-2">
-                    {mode === 'camera' ? <QrCode className="w-4 h-4" /> : <Keyboard className="w-4 h-4" />} {mode}
-                 </div>
-              </button>
-            ))}
-         </div>
+        <div className="flex p-2 bg-slate-50 m-2 rounded-2xl">
+          {['camera', 'manual'].map(mode => (
+            <button key={mode} onClick={() => setScanMode(mode)} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${scanMode === mode ? 'bg-white text-red-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+              <div className="flex items-center justify-center gap-2">
+                {mode === 'camera' ? <QrCode className="w-4 h-4" /> : <Keyboard className="w-4 h-4" />} {mode}
+              </div>
+            </button>
+          ))}
+        </div>
 
-         <div className="p-4">
-            {scanMode === 'camera' ? (
-               <div onClick={() => setIsCameraOpen(!isCameraOpen)} className="aspect-[3/4] bg-slate-900 rounded-[2rem] overflow-hidden relative cursor-pointer group">
-                  {!isCameraOpen ? (
-                     <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                        <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center backdrop-blur mb-4 group-hover:scale-110 transition-transform">
-                           <Camera className="w-8 h-8" />
-                        </div>
-                        <p className="font-bold text-xs tracking-widest uppercase opacity-60">Ketuk untuk Kamera</p>
-                     </div>
-                  ) : (
-                     <>
-                        <div className="absolute inset-0 bg-slate-800 animate-pulse opacity-20"></div>
-                        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-red-500 shadow-[0_0_20px_rgba(239,68,68,1)] animate-scan"></div>
-                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/50 backdrop-blur rounded-full text-white text-xs font-bold border border-white/10">Scanning...</div>
-                     </>
-                  )}
-               </div>
-            ) : (
-               <div className="py-12 px-6 space-y-6">
-                  <div className="space-y-2">
-                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nomor Resi</label>
-                     <input type="text" placeholder="SPX..." className="w-full px-6 py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xl font-mono font-bold text-center uppercase outline-none focus:border-red-500 focus:bg-white transition-colors" />
+        <div className="p-4">
+          {scanMode === 'camera' ? (
+            <div onClick={() => setIsCameraOpen(!isCameraOpen)} className="aspect-[3/4] bg-slate-900 rounded-[2rem] overflow-hidden relative cursor-pointer group">
+              {!isCameraOpen ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                  <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center backdrop-blur mb-4 group-hover:scale-110 transition-transform">
+                    <Camera className="w-8 h-8" />
                   </div>
-                  <button className="w-full py-5 bg-red-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-red-200 hover:bg-red-700 transition active:scale-95">
-                     Cek Sekarang
-                  </button>
-               </div>
-            )}
-         </div>
+                  <p className="font-bold text-xs tracking-widest uppercase opacity-60">Ketuk untuk Kamera</p>
+                </div>
+              ) : (
+                <>
+                  <div className="absolute inset-0 bg-slate-800 animate-pulse opacity-20"></div>
+                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-red-500 shadow-[0_0_20px_rgba(239,68,68,1)] animate-scan"></div>
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/50 backdrop-blur rounded-full text-white text-xs font-bold border border-white/10">Scanning...</div>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="py-12 px-6 space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nomor Resi</label>
+                <input type="text" placeholder="SPX..." className="w-full px-6 py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xl font-mono font-bold text-center uppercase outline-none focus:border-red-500 focus:bg-white transition-colors" />
+              </div>
+              <button className="w-full py-5 bg-red-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-red-200 hover:bg-red-700 transition active:scale-95">
+                Cek Sekarang
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       <style>{`@keyframes scan { 0% { top: 10%; } 50% { top: 90%; } 100% { top: 10%; } } .animate-scan { animation: scan 2s linear infinite; }`}</style>
     </div>
@@ -2080,7 +3014,7 @@ const App = () => {
           </div>
         </div>
         <div className="w-full mt-4 md:mt-0 md:w-auto flex-1 md:ml-8">
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Setoran</p>
               <h3 className="text-2xl font-black text-slate-900 mt-2">Rp {totalSetoran.toLocaleString()}</h3>
@@ -2107,31 +3041,31 @@ const App = () => {
 
       <div className="bg-white rounded-2xl border shadow-sm overflow-hidden border-slate-200">
         <div className="overflow-x-auto w-full">
-            <table className="w-full text-left whitespace-nowrap min-w-max">
-              <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b">
-                <tr>
-                  <th className="px-6 py-4">Nama Toko</th>
-                  <th className="px-6 py-4">Marketplace</th>
-                  <th className="px-6 py-4">Total Setoran</th>
-                  <th className="px-6 py-4">Setoran Belum Dibayar</th>
-                  <th className="px-6 py-4 text-right">Detail</th>
+          <table className="w-full text-left whitespace-nowrap min-w-max">
+            <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b">
+              <tr>
+                <th className="px-6 py-4">Nama Toko</th>
+                <th className="px-6 py-4">Marketplace</th>
+                <th className="px-6 py-4">Total Setoran</th>
+                <th className="px-6 py-4">Setoran Belum Dibayar</th>
+                <th className="px-6 py-4 text-right">Detail</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y text-sm text-slate-900 font-bold">
+              {filteredStores.map((t) => (
+                <tr key={t.id} className="hover:bg-slate-50 transition cursor-pointer">
+                  <td className="px-6 py-4 font-black uppercase tracking-tight">{t.name}</td>
+                  <td className="px-6 py-4 uppercase font-black tracking-tighter">{t.platform}</td>
+                  <td className="px-6 py-4 font-black text-emerald-600 tracking-tight">Rp {(perStoreSummary[t.name]?.totalSetoran ?? t.totalSetoran).toLocaleString()}</td>
+                  <td className="px-6 py-4 font-black text-amber-500 tracking-tight">Rp {(((perStoreSummary[t.name]?.totalSetoran ?? t.totalSetoran) - (perStoreSummary[t.name]?.sudahDibayar ?? 0)) || 0).toLocaleString()}</td>
+                  <td className="px-6 py-4 text-right">
+                    <button onClick={() => { setSelectedStore(t); setShowModal('store-orders'); }} className="px-3 py-1 bg-red-50 text-red-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-red-100 shadow-sm hover:bg-red-100 transition">Lihat List</button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y text-sm text-slate-900 font-bold">
-                {filteredStores.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-50 transition cursor-pointer">
-                    <td className="px-6 py-4 font-black uppercase tracking-tight">{t.name}</td>
-                    <td className="px-6 py-4 uppercase font-black tracking-tighter">{t.platform}</td>
-                    <td className="px-6 py-4 font-black text-emerald-600 tracking-tight">Rp {(perStoreSummary[t.name]?.totalSetoran ?? t.totalSetoran).toLocaleString()}</td>
-                    <td className="px-6 py-4 font-black text-amber-500 tracking-tight">Rp {(((perStoreSummary[t.name]?.totalSetoran ?? t.totalSetoran) - (perStoreSummary[t.name]?.sudahDibayar ?? 0)) || 0).toLocaleString()}</td>
-                    <td className="px-6 py-4 text-right">
-                      <button onClick={() => { setSelectedStore(t); setShowModal('store-orders'); }} className="px-3 py-1 bg-red-50 text-red-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-red-100 shadow-sm hover:bg-red-100 transition">Lihat List</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -2338,14 +3272,36 @@ const App = () => {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .pb-safe-area { padding-bottom: env(safe-area-inset-bottom); }
       `}</style>
-      
+
       <Sidebar activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
-      
+
       <div className="flex-1 lg:ml-64 min-h-screen flex flex-col relative w-full">
         <TopBar activeMenu={activeMenu} activeView={activeView} setActiveView={setActiveView} />
-        
+
         <main className="flex-1 p-4 md:p-8 pb-24 lg:pb-8 max-w-[1600px] mx-auto w-full overflow-x-hidden">
           {activeMenu === 'dashboard' && <Dashboard />}
+          {activeMenu === 'pos' && <POSView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} orders={offlineOrders} />}
+          {activeMenu === 'database-produk-offline' && <OfflineProductView products={offlineProducts} onAddProduct={handleAddOfflineProduct} />}
+          {activeMenu === 'pengeluaran' && <ExpenseView expenses={expenses} onAddExpense={handleAddExpense} />}
+          {activeMenu === 'rekap-cashflow' && (
+            <CashflowRecapView
+              orders={orders}
+              offlineOrders={filteredOfflineOrders}
+              expenses={filteredExpenses}
+              stores={filteredStores}
+              allStores={stores}
+              perStoreSummary={perStoreSummary}
+              setSelectedStore={setSelectedStore}
+              setShowModal={setShowModal}
+              totalSetoran={totalSetoran}
+              totalSudahDibayar={totalSudahDibayar}
+              sisaTagihan={sisaTagihan}
+              filterStore={filterStore} setFilterStore={setFilterStore}
+              startDate={startDate} setStartDate={setStartDate}
+              endDate={endDate} setEndDate={setEndDate}
+              dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
+            />
+          )}
           {activeMenu === 'toko' && <TokoList />}
           {activeMenu === 'toko-detail' && <TokoDetail />}
           {activeMenu === 'database-produk' && <DatabaseProduk />}
@@ -2362,13 +3318,13 @@ const App = () => {
       {/* Toast Notification */}
       {toast.show && (
         <div className="fixed bottom-24 lg:bottom-10 right-4 lg:right-10 z-[70] animate-in slide-in-from-bottom-5 fade-in duration-300">
-           <div className="bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 border border-slate-700">
-              <span className="font-bold text-sm">{toast.message}</span>
-              {toast.undoData && (
-                <button onClick={undoAction} className="text-xs font-black text-red-400 hover:text-red-300 uppercase tracking-wider underline decoration-2 underline-offset-2">Undo</button>
-              )}
-              <button onClick={() => setToast({ ...toast, show: false })} className="text-slate-500 hover:text-white"><X className="w-4 h-4" /></button>
-           </div>
+          <div className="bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 border border-slate-700">
+            <span className="font-bold text-sm">{toast.message}</span>
+            {toast.undoData && (
+              <button onClick={undoAction} className="text-xs font-black text-red-400 hover:text-red-300 uppercase tracking-wider underline decoration-2 underline-offset-2">Undo</button>
+            )}
+            <button onClick={() => setToast({ ...toast, show: false })} className="text-slate-500 hover:text-white"><X className="w-4 h-4" /></button>
+          </div>
         </div>
       )}
 
