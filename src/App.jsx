@@ -200,14 +200,27 @@ const TopBar = ({ activeMenu, activeView, setActiveView }) => (
   </header>
 );
 
-const OfflineProductView = ({ products, onAddProduct }) => {
+const OfflineProductView = ({ products, onAddProduct, onEditProduct }) => {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [newProduct, setNewProduct] = useState({ name: '', sku: '', stock: 0, unit: 'pcs', price: 0 });
+  const [editProduct, setEditProduct] = useState(null);
 
   const handleSave = () => {
     onAddProduct({ ...newProduct, id: Date.now() });
     setShowAddModal(false);
     setNewProduct({ name: '', sku: '', stock: 0, unit: 'pcs', price: 0 });
+  };
+
+  const handleEditClick = (product) => {
+    setEditProduct({ ...product });
+    setShowEditModal(true);
+  };
+
+  const handleEditSave = () => {
+    onEditProduct(editProduct);
+    setShowEditModal(false);
+    setEditProduct(null);
   };
 
   return (
@@ -261,7 +274,10 @@ const OfflineProductView = ({ products, onAddProduct }) => {
                     </td>
                     <td className="px-6 py-4 text-right font-black text-slate-700">Rp {Number(p.price).toLocaleString()}</td>
                     <td className="px-6 py-4 text-center">
-                      <button className="p-2 text-slate-400 hover:text-red-600 transition">
+                      <button
+                        onClick={() => handleEditClick(p)}
+                        className="p-2 text-slate-400 hover:text-red-600 transition"
+                      >
                         <Edit3 className="w-4 h-4" />
                       </button>
                     </td>
@@ -273,6 +289,7 @@ const OfflineProductView = ({ products, onAddProduct }) => {
         </div>
       </div>
 
+      {/* Add Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-sm sm:p-4">
           <div className="bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300">
@@ -317,8 +334,8 @@ const OfflineProductView = ({ products, onAddProduct }) => {
                     <option value="pcs">Pcs</option>
                     <option value="pack">Pack</option>
                     <option value="dus">Dus</option>
-                    <option value="kg">Kg</option>
                     <option value="box">Box</option>
+                    <option value="kg">Kg</option>
                   </select>
                 </div>
               </div>
@@ -348,6 +365,88 @@ const OfflineProductView = ({ products, onAddProduct }) => {
                 className="w-full py-4 bg-red-600 text-white rounded-2xl font-black shadow-lg shadow-red-200 hover:bg-red-700 transition uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed mt-2"
               >
                 Simpan Produk
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && editProduct && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-sm sm:p-4">
+          <div className="bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="text-lg text-slate-800 font-black tracking-tight uppercase italic flex items-center">
+                <span className="w-1 h-6 bg-red-600 mr-3 rounded-full"></span>
+                Edit Produk
+              </h3>
+              <button onClick={() => setShowEditModal(false)} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-full transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Produk</label>
+                <input
+                  type="text"
+                  value={editProduct.name}
+                  onChange={(e) => setEditProduct({ ...editProduct, name: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="Contoh: Pakan Burung Premium"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">SKU / Kode</label>
+                  <input
+                    type="text"
+                    value={editProduct.sku}
+                    onChange={(e) => setEditProduct({ ...editProduct, sku: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                    placeholder="SKU-001"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Satuan</label>
+                  <select
+                    value={editProduct.unit}
+                    onChange={(e) => setEditProduct({ ...editProduct, unit: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="pcs">Pcs</option>
+                    <option value="pack">Pack</option>
+                    <option value="dus">Dus</option>
+                    <option value="box">Box</option>
+                    <option value="kg">Kg</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Stok</label>
+                  <input
+                    type="number"
+                    value={editProduct.stock}
+                    onChange={(e) => setEditProduct({ ...editProduct, stock: parseInt(e.target.value) || 0 })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Harga (Rp)</label>
+                  <input
+                    type="number"
+                    value={editProduct.price}
+                    onChange={(e) => setEditProduct({ ...editProduct, price: parseInt(e.target.value) || 0 })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={handleEditSave}
+                disabled={!editProduct.name || !editProduct.price}
+                className="w-full py-4 bg-red-600 text-white rounded-2xl font-black shadow-lg shadow-red-200 hover:bg-red-700 transition uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              >
+                Update Produk
               </button>
             </div>
           </div>
@@ -1543,6 +1642,11 @@ const App = () => {
   const handleAddOfflineProduct = (product) => {
     setOfflineProducts(prev => [...prev, product]);
   };
+
+  const handleEditOfflineProduct = (updatedProduct) => {
+    setOfflineProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+  };
+
 
   const handleAddOfflineOrder = (order) => {
     setOfflineOrders(prev => [order, ...prev]);
@@ -3281,7 +3385,7 @@ const App = () => {
         <main className="flex-1 p-4 md:p-8 pb-24 lg:pb-8 max-w-[1600px] mx-auto w-full overflow-x-hidden">
           {activeMenu === 'dashboard' && <Dashboard />}
           {activeMenu === 'pos' && <POSView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} orders={offlineOrders} />}
-          {activeMenu === 'database-produk-offline' && <OfflineProductView products={offlineProducts} onAddProduct={handleAddOfflineProduct} />}
+          {activeMenu === 'database-produk-offline' && <OfflineProductView products={offlineProducts} onAddProduct={handleAddOfflineProduct} onEditProduct={handleEditOfflineProduct} />}
           {activeMenu === 'pengeluaran' && <ExpenseView expenses={expenses} onAddExpense={handleAddExpense} />}
           {activeMenu === 'rekap-cashflow' && (
             <CashflowRecapView
