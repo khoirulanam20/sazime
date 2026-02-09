@@ -10,7 +10,7 @@ import {
   Wallet, FileSpreadsheet, Edit3, X, Eye, Calendar, Share2, RefreshCw,
   Camera, Zap, Key, User, Truck, MapPin, CreditCard, Clock, FileText,
   CheckSquare, Square, QrCode, Keyboard, Phone, Printer, Menu, Save,
-  Database, Receipt, BarChart3
+  Database, Receipt, BarChart3, ChevronLeft
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -456,17 +456,24 @@ const OfflineProductView = ({ products, onAddProduct, onEditProduct }) => {
   );
 };
 
-const POSView = ({ offlineProducts, onAddOrder, orders }) => {
-  const [showModal, setShowModal] = useState(false);
+const CreateOrderView = ({ offlineProducts, onAddOrder, onBack }) => {
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [formData, setFormData] = useState({
-    customerName: '',
-    date: new Date().toISOString().slice(0, 10),
-    paymentMethod: 'Cash',
-    discount: 0,
-    paid: 0
+  const [formData, setFormData] = useState(() => {
+    const today = new Date();
+    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+    const timeStr = today.toTimeString().split(' ')[0].replace(/:/g, '');
+    return {
+      billNumber: `INV-${dateStr}-${timeStr}`,
+      customerName: '',
+      date: new Date().toISOString().slice(0, 10),
+      paymentMethod: 'Cash',
+      discount: 0,
+      splitCash: 0,
+      splitTransfer: 0,
+      paid: 0
+    };
   });
 
   const addToCart = (product) => {
@@ -492,23 +499,304 @@ const POSView = ({ offlineProducts, onAddOrder, orders }) => {
 
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const total = subtotal - formData.discount;
-  const remaining = total - formData.paid;
+
+  const effectivePaid = formData.paymentMethod === 'Split (Cash + Transfer)'
+    ? (formData.splitCash || 0) + (formData.splitTransfer || 0)
+    : formData.paid;
+
+  const remaining = total - effectivePaid;
 
   const handleSave = () => {
+    const finalPaid = formData.paymentMethod === 'Split (Cash + Transfer)'
+      ? (formData.splitCash || 0) + (formData.splitTransfer || 0)
+      : formData.paid;
+
+    const finalRemaining = total - finalPaid;
+
     onAddOrder({
-      id: `INV-${Date.now()}`,
+      id: formData.billNumber,
       ...formData,
+      paid: finalPaid,
       items: cart,
       total,
-      remaining,
-      status: remaining <= 0 ? 'Lunas' : 'Belum Lunas'
+      remaining: finalRemaining,
+      status: finalRemaining <= 0 ? 'Lunas' : 'Belum Lunas'
     });
-    setShowModal(false);
-    setCart([]);
-    setFormData({ customerName: '', date: new Date().toISOString().slice(0, 10), paymentMethod: 'Cash', discount: 0, paid: 0 });
+    onBack();
   };
 
   const filteredProducts = offlineProducts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.sku.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  return (
+    <div className="flex flex-col h-full bg-[#F8FAFC]">
+      {/* Header */}
+      <div className="mb-6 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="p-2 bg-white rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors">
+            <ChevronLeft className="w-5 h-5 text-slate-600" />
+          </button>
+          <div>
+            <h3 className="text-xl font-black text-slate-800 tracking-tight uppercase italic">Form Nota Pelanggan</h3>
+            <p className="text-xs text-slate-500 font-medium">Buat transaksi baru</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Body - 2 Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Left Column - Form */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Informasi Nota Section */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="p-2 bg-red-50 rounded-lg">
+                <FileText className="w-4 h-4 text-red-600" />
+              </div>
+              <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">Informasi Nota</h4>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nomor Tagihan</label>
+                <input
+                  type="text"
+                  value={formData.billNumber}
+                  readOnly
+                  className="w-full px-4 py-3 bg-slate-50 rounded-xl text-sm font-mono font-bold border border-slate-200 text-slate-500 cursor-not-allowed"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hari Tanggal</label>
+                <input
+                  type="date"
+                  value={formData.date}
+                  onChange={e => setFormData({ ...formData, date: e.target.value })}
+                  className="w-full px-4 py-3 bg-white rounded-xl text-sm font-bold border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Pelanggan</label>
+              <input
+                type="text"
+                value={formData.customerName}
+                onChange={e => setFormData({ ...formData, customerName: e.target.value })}
+                className="w-full px-4 py-3 bg-white rounded-xl text-sm font-bold border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none"
+                placeholder="Nama Customer"
+              />
+            </div>
+          </div>
+
+          {/* Input Barang Section */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="p-2 bg-red-50 rounded-lg">
+                <Package className="w-4 h-4 text-red-600" />
+              </div>
+              <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">Input Barang</h4>
+            </div>
+
+            {/* Search Product */}
+            <div className="space-y-2 mb-6">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cari Produk</label>
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => { setSearchTerm(e.target.value); setIsSearching(true); }}
+                  placeholder="Ketik nama produk atau SKU..."
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500 transition-all focus:bg-white"
+                />
+                {isSearching && searchTerm && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-100 z-20 max-h-60 overflow-y-auto">
+                    {filteredProducts.map(p => (
+                      <button key={p.id} onClick={() => addToCart(p)} className="w-full text-left px-4 py-3 hover:bg-red-50 flex justify-between items-center border-b border-slate-50 last:border-0 group">
+                        <div>
+                          <p className="font-bold text-slate-800 text-sm group-hover:text-red-700">{p.name}</p>
+                          <p className="text-[10px] text-slate-500 font-mono">{p.sku}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-black text-red-600 text-xs">Rp {Number(p.price).toLocaleString()}</p>
+                          <p className="text-[10px] text-emerald-600 font-bold">Stok: {p.stock}</p>
+                        </div>
+                      </button>
+                    ))}
+                    {filteredProducts.length === 0 && <div className="p-4 text-center text-slate-400 text-xs font-bold italic">Produk tidak ditemukan</div>}
+                  </div>
+                )}
+              </div>
+              <p className="text-[10px] text-slate-400 italic font-medium ml-1">Tips: Ketik nama produk untuk menambahkan ke keranjang.</p>
+            </div>
+
+            {/* Product Details Grid (Placeholder for detailed input if needed) */}
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">L (M)</label>
+                <input type="number" disabled className="w-full px-3 py-2 bg-slate-50 rounded-xl text-sm font-bold border border-slate-200 text-slate-400 cursor-not-allowed" placeholder="-" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">P (M)</label>
+                <input type="number" disabled className="w-full px-3 py-2 bg-slate-50 rounded-xl text-sm font-bold border border-slate-200 text-slate-400 cursor-not-allowed" placeholder="-" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Qty</label>
+                <input type="number" disabled className="w-full px-3 py-2 bg-slate-50 rounded-xl text-sm font-bold border border-slate-200 text-slate-400 cursor-not-allowed" placeholder="1" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Harga</label>
+                <input type="number" disabled className="w-full px-3 py-2 bg-slate-50 rounded-xl text-sm font-bold border border-slate-200 text-slate-400 cursor-not-allowed" placeholder="-" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Satuan</label>
+                <input type="text" disabled className="w-full px-3 py-2 bg-slate-50 rounded-xl text-sm font-bold border border-slate-200 text-slate-400 cursor-not-allowed" placeholder="-" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Diskon Global (Rp)</label>
+              <input
+                type="number"
+                value={formData.discount}
+                onChange={e => setFormData({ ...formData, discount: parseInt(e.target.value) || 0 })}
+                className="w-full px-4 py-3 bg-white rounded-xl text-sm font-bold border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Cart Items */}
+          {cart.length > 0 ? (
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+              <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Daftar Barang ({cart.length})</h4>
+              <div className="space-y-3">
+                {cart.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200/50 hover:border-red-200 transition-colors group">
+                    <div className="flex-1">
+                      <p className="font-black text-slate-800 text-sm">{item.name}</p>
+                      <p className="text-xs text-slate-500 font-medium mt-0.5">{item.sku} • {item.qty} {item.unit} × Rp {item.price.toLocaleString()}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center bg-white rounded-lg border border-slate-200 h-8">
+                        <button onClick={() => updateQty(item.id, item.qty - 1)} className="px-2.5 h-full text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-l-lg transition">-</button>
+                        <span className="w-8 text-center text-xs font-black text-slate-800">{item.qty}</span>
+                        <button onClick={() => updateQty(item.id, item.qty + 1)} className="px-2.5 h-full text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-r-lg transition">+</button>
+                      </div>
+                      <div className="text-right min-w-[80px]">
+                        <p className="font-black text-slate-800 text-sm">Rp {(item.price * item.qty).toLocaleString()}</p>
+                      </div>
+                      <button onClick={() => removeFromCart(item.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="bg-slate-50 rounded-2xl border border-dashed border-slate-300 p-8 text-center">
+              <ShoppingBag className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+              <p className="text-sm font-bold text-slate-400">Keranjang masih kosong</p>
+              <p className="text-xs text-slate-400 mt-1">Cari produk di atas untuk mulai transaksi</p>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column - Summary Panel (Dark) */}
+        <div className="lg:col-span-1">
+          <div className="bg-slate-900 rounded-[2rem] p-8 text-white sticky top-6 shadow-2xl shadow-slate-900/20">
+            {/* Total Tagihan */}
+            <div className="mb-8">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Tagihan</p>
+              <h2 className="text-4xl font-black tracking-tight text-white">Rp {total.toLocaleString()}</h2>
+            </div>
+
+            {/* Terbayar */}
+            <div className="space-y-6 mb-8">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Metode Bayar</label>
+                <select
+                  value={formData.paymentMethod}
+                  onChange={e => setFormData({ ...formData, paymentMethod: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-800 rounded-xl text-sm font-bold border border-slate-700 focus:ring-2 focus:ring-red-500 outline-none text-white appearance-none"
+                >
+                  <option>Cash</option>
+                  <option>Transfer</option>
+                  <option>QRIS</option>
+                  <option>Split (Cash + Transfer)</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nominal Bayar</label>
+                {formData.paymentMethod === 'Split (Cash + Transfer)' ? (
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xs uppercase">Cash</span>
+                      <input
+                        type="number"
+                        value={formData.splitCash}
+                        onChange={e => setFormData({ ...formData, splitCash: parseInt(e.target.value) || 0 })}
+                        className="w-full pl-16 pr-4 py-3 bg-slate-800 rounded-xl text-lg font-black border border-slate-700 focus:ring-2 focus:ring-red-500 outline-none text-white text-right placeholder-slate-600"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xs uppercase">Transfer</span>
+                      <input
+                        type="number"
+                        value={formData.splitTransfer}
+                        onChange={e => setFormData({ ...formData, splitTransfer: parseInt(e.target.value) || 0 })}
+                        className="w-full pl-20 pr-4 py-3 bg-slate-800 rounded-xl text-lg font-black border border-slate-700 focus:ring-2 focus:ring-red-500 outline-none text-white text-right placeholder-slate-600"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <input
+                    type="number"
+                    value={formData.paid}
+                    onChange={e => setFormData({ ...formData, paid: parseInt(e.target.value) || 0 })}
+                    className="w-full px-4 py-3 bg-slate-800 rounded-xl text-2xl font-black border border-slate-700 focus:ring-2 focus:ring-red-500 outline-none text-white text-right placeholder-slate-600"
+                    placeholder="0"
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Sisa Tagihan */}
+            <div className="pt-6 border-t border-slate-700 mb-8">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold text-slate-400">Kembalian / Sisa</span>
+                <span className={`text-xl font-black ${remaining <= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  Rp {Math.abs(remaining).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center bg-slate-800/50 p-2 rounded-lg">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Status</span>
+                <span className={`text-xs font-black uppercase px-2 py-1 rounded ${remaining <= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                  {remaining <= 0 ? 'Lunas' : 'Belum Lunas'}
+                </span>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <button
+              onClick={handleSave}
+              disabled={cart.length === 0 || !formData.customerName}
+              className="w-full py-5 bg-red-600 text-white rounded-xl font-black shadow-[0_10px_20px_-10px_rgba(220,38,38,0.5)] hover:bg-red-700 hover:shadow-[0_20px_25px_-12px_rgba(220,38,38,0.6)] hover:-translate-y-1 transition-all uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none flex items-center justify-center gap-2"
+            >
+              <Save className="w-5 h-5" /> Simpan Transaksi
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const POSView = ({ offlineProducts, onAddOrder, orders, onCreateOrder }) => {
+  const [searchTerm, setSearchTerm] = useState('');
 
   return (
     <div className="space-y-6">
@@ -520,7 +808,7 @@ const POSView = ({ offlineProducts, onAddOrder, orders }) => {
             <p className="text-[10px] text-slate-500 font-bold">Kasir toko offline</p>
           </div>
         </div>
-        <button onClick={() => setShowModal(true)} className="bg-red-600 text-white px-5 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition flex items-center gap-2">
+        <button onClick={onCreateOrder} className="bg-red-600 text-white px-5 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition flex items-center gap-2">
           <Plus className="w-4 h-4" /> Buat Nota
         </button>
       </div>
@@ -562,95 +850,6 @@ const POSView = ({ offlineProducts, onAddOrder, orders }) => {
           </table>
         </div>
       </div>
-
-      {showModal && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-sm sm:p-4">
-          <div className="bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-4xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300 flex flex-col max-h-[90vh]">
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h3 className="text-lg text-slate-800 font-black tracking-tight uppercase italic flex items-center">
-                <span className="w-1 h-6 bg-red-600 mr-3 rounded-full"></span> Buat Nota Transaksi
-              </h3>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-full transition-colors"><X className="w-5 h-5" /></button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2 space-y-6">
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Cari Produk</label>
-                  <div className="relative">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => { setSearchTerm(e.target.value); setIsSearching(true); }}
-                      placeholder="Ketik nama produk..."
-                      className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
-                    />
-                    {isSearching && searchTerm && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-100 z-10 max-h-60 overflow-y-auto">
-                        {filteredProducts.map(p => (
-                          <button key={p.id} onClick={() => addToCart(p)} className="w-full text-left px-4 py-3 hover:bg-red-50 flex justify-between items-center border-b border-slate-50 last:border-0">
-                            <div><p className="font-bold text-slate-800 text-sm">{p.name}</p><p className="text-[10px] text-slate-500 font-mono">{p.sku}</p></div>
-                            <div className="text-right"><p className="font-black text-red-600 text-xs">Rp {Number(p.price).toLocaleString()}</p><p className="text-[10px] text-emerald-600 font-bold">Stok: {p.stock}</p></div>
-                          </button>
-                        ))}
-                        {filteredProducts.length === 0 && <div className="p-4 text-center text-slate-400 text-xs font-bold italic">Produk tidak ditemukan</div>}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Keranjang Belanja</p>
-                  {cart.length === 0 ? (
-                    <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200"><p className="text-slate-400 text-xs font-bold italic">Keranjang kosong</p></div>
-                  ) : (
-                    <div className="space-y-2">
-                      {cart.map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100">
-                          <div className="flex-1">
-                            <p className="font-bold text-slate-800 text-sm line-clamp-1">{item.name}</p>
-                            <p className="text-[10px] text-slate-500">{item.unit}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <button onClick={() => updateQty(item.id, item.qty - 1)} className="w-6 h-6 bg-slate-100 rounded text-slate-600 flex items-center justify-center font-bold hover:bg-slate-200">-</button>
-                            <span className="font-black text-sm w-6 text-center">{item.qty}</span>
-                            <button onClick={() => updateQty(item.id, item.qty + 1)} className="w-6 h-6 bg-slate-100 rounded text-slate-600 flex items-center justify-center font-bold hover:bg-slate-200">+</button>
-                          </div>
-                          <div className="w-24 text-right">
-                            <p className="font-black text-slate-800 text-sm">Rp {(item.price * item.qty).toLocaleString()}</p>
-                          </div>
-                          <button onClick={() => removeFromCart(item.id)} className="text-slate-300 hover:text-red-600"><X className="w-4 h-4" /></button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
-                  <div className="space-y-1.5"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Pelanggan</label><input type="text" value={formData.customerName} onChange={e => setFormData({ ...formData, customerName: e.target.value })} className="w-full px-3 py-2 bg-white rounded-lg text-sm font-bold border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Nama..." /></div>
-                  <div className="space-y-1.5"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Metode Bayar</label><select value={formData.paymentMethod} onChange={e => setFormData({ ...formData, paymentMethod: e.target.value })} className="w-full px-3 py-2 bg-white rounded-lg text-sm font-bold border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none"><option>Cash</option><option>Transfer</option><option>QRIS</option></select></div>
-                  <div className="space-y-1.5"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Diskon (Rp)</label><input type="number" value={formData.discount} onChange={e => setFormData({ ...formData, discount: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 bg-white rounded-lg text-sm font-bold border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none text-right" /></div>
-                </div>
-
-                <div className="bg-red-50 p-4 rounded-xl border border-red-100 space-y-2">
-                  <div className="flex justify-between"><span className="text-xs text-red-400 font-bold uppercase">Subtotal</span><span className="font-black text-red-600">Rp {subtotal.toLocaleString()}</span></div>
-                  <div className="flex justify-between"><span className="text-xs text-red-400 font-bold uppercase">Diskon</span><span className="font-black text-red-600">- Rp {formData.discount.toLocaleString()}</span></div>
-                  <div className="h-px bg-red-200 my-2"></div>
-                  <div className="flex justify-between text-lg"><span className="font-black text-red-800 uppercase">Total</span><span className="font-black text-red-600">Rp {total.toLocaleString()}</span></div>
-                </div>
-
-                <div className="space-y-1.5"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Bayar (Rp)</label><input type="number" value={formData.paid} onChange={e => setFormData({ ...formData, paid: parseInt(e.target.value) || 0 })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-lg font-black outline-none focus:ring-2 focus:ring-red-500 text-right" /></div>
-                <div className="flex justify-between px-2"><span className="text-xs font-bold text-slate-400 uppercase">Kembalian / Sisa</span><span className={`font-black ${formData.paid >= total ? 'text-emerald-600' : 'text-amber-500'}`}>Rp {(formData.paid - total).toLocaleString()}</span></div>
-
-                <button onClick={handleSave} disabled={cart.length === 0 || !formData.customerName} className="w-full py-4 bg-red-600 text-white rounded-2xl font-black shadow-lg shadow-red-200 hover:bg-red-700 transition uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed">Proses Transaksi</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
@@ -3384,7 +3583,8 @@ const App = () => {
 
         <main className="flex-1 p-4 md:p-8 pb-24 lg:pb-8 max-w-[1600px] mx-auto w-full overflow-x-hidden">
           {activeMenu === 'dashboard' && <Dashboard />}
-          {activeMenu === 'pos' && <POSView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} orders={offlineOrders} />}
+          {activeMenu === 'pos' && <POSView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} orders={offlineOrders} onCreateOrder={() => setActiveMenu('pos-create')} />}
+          {activeMenu === 'pos-create' && <CreateOrderView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} onBack={() => setActiveMenu('pos')} />}
           {activeMenu === 'database-produk-offline' && <OfflineProductView products={offlineProducts} onAddProduct={handleAddOfflineProduct} onEditProduct={handleEditOfflineProduct} />}
           {activeMenu === 'pengeluaran' && <ExpenseView expenses={expenses} onAddExpense={handleAddExpense} />}
           {activeMenu === 'rekap-cashflow' && (
