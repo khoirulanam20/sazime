@@ -39,6 +39,7 @@ const Sidebar = ({ activeMenu, setActiveMenu }) => {
     {
       title: 'Kasir & Toko Fisik',
       items: [
+        { id: 'dashboard-offline', icon: BarChart3, label: 'Dashboard Fisik' },
         { id: 'pos', icon: Receipt, label: 'POS (Kasir)' },
         { id: 'database-produk-offline', icon: Database, label: 'Produk Offline' },
         { id: 'pengeluaran', icon: TrendingDown, label: 'Pengeluaran' }
@@ -47,6 +48,7 @@ const Sidebar = ({ activeMenu, setActiveMenu }) => {
     {
       title: 'Toko Online',
       items: [
+        { id: 'dashboard-online', icon: BarChart3, label: 'Dashboard Online' },
         { id: 'toko', icon: Store, label: 'Toko & Pesanan' },
         { id: 'database-produk', icon: Package, label: 'Database Online' },
         { id: 'status-pengiriman', icon: Truck, label: 'Status Pengiriman' },
@@ -2526,189 +2528,372 @@ const App = () => {
 
   // --- CONTENT PAGES ---
 
-  const Dashboard = () => {
-    // GENERATE DYNAMIC CHART DATA
-    const chartData = useMemo(() => {
-      let data = [];
-      if (dateFilterMode === 'day') {
-        // Data per jam (00:00 - 23:00)
-        for (let i = 0; i < 24; i++) {
-          data.push({
-            name: `${String(i).padStart(2, '0')}:00`,
-            v: Math.floor(Math.random() * 500000), // Random data
-          });
-        }
-      } else if (dateFilterMode === 'month') {
-        // Data per tanggal (1 - 30)
-        const daysInMonth = 30; // Simplifikasi
-        for (let i = 1; i <= daysInMonth; i++) {
-          data.push({
-            name: `${i}`,
-            v: Math.floor(Math.random() * 2000000),
-          });
-        }
-      } else {
-        // Data per bulan (Jan - Des)
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-        data = months.map(m => ({
-          name: m,
-          v: Math.floor(Math.random() * 10000000),
-        }));
-      }
-      return data;
-      return data;
-    }, [dateFilterMode, startDate]);
-
-    // Data Penjualan Online vs Offline
-    const totalOnlineIncome = useMemo(() => filteredOrders.reduce((sum, o) => sum + (o.totalBayar || 0), 0), [filteredOrders]);
-    const totalOfflineIncome = useMemo(() => offlineOrders.reduce((sum, o) => sum + o.total, 0), [offlineOrders]);
-
-    const incomeComparisonData = [
-      { name: 'Online', value: totalOnlineIncome, color: '#dc2626' },
-      { name: 'Offline', value: totalOfflineIncome, color: '#059669' }
-    ];
-
-    // Data Pengeluaran per Kategori
-    const expenseData = useMemo(() => {
-      const groups = expenses.reduce((acc, curr) => {
-        acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
-        return acc;
-      }, {});
-      return Object.keys(groups).map((key, index) => ({
-        name: key,
-        value: groups[key],
-        color: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b'][index % 4]
-      }));
-    }, [expenses]);
-
-    return (
-      <div className="space-y-6 animate-in fade-in duration-500">
-        <FilterBar
-          filterStore={filterStore} setFilterStore={setFilterStore}
-          startDate={startDate} setStartDate={setStartDate}
-          endDate={endDate} setEndDate={setEndDate}
-          dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
-          stores={stores}
-        />
-
-        {/* Compact Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-4">
-          {[
-            { label: 'Total Setoran', val: `Rp ${(totalSetoran / 1000000).toFixed(1)}jt`, fullVal: `Rp ${totalSetoran.toLocaleString()}`, icon: Wallet, color: 'text-slate-900', bg: 'bg-white' },
-            { label: 'Total Pesanan', val: filteredOrders.length, fullVal: filteredOrders.length, icon: Package, color: 'text-slate-900', bg: 'bg-white' },
-            { label: 'Toko Aktif', val: stores.length, fullVal: stores.length, icon: Store, color: 'text-red-600', bg: 'bg-white' },
-            { label: 'Avg Keranjang', val: '145rb', fullVal: 'Rp 145.000', icon: ShoppingBag, color: 'text-slate-900', bg: 'bg-white' }
-          ].map((stat, idx) => (
-            <div key={idx} className={`${stat.bg} p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group`}>
-              <div className="flex justify-between items-start mb-2">
-                <div className={`p-2 rounded-lg ${stat.color === 'text-red-600' ? 'bg-red-50' : 'bg-slate-50'} group-hover:scale-110 transition-transform`}>
-                  <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                </div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">
-                  Filtered
-                </span>
+  /* Shared Dashboard Layout Component */
+  const DashboardLayout = ({ title, totalIncome, totalExpense, totalProfit, chartData, topProducts, filterBar }) => (
+    <div className="space-y-6 animate-in fade-in duration-500 font-sans">
+      {/* Top Section: Filter & Total Balance */}
+      <div className="flex flex-col xl:flex-row gap-6">
+        <div className="flex-1">
+          {filterBar}
+        </div>
+        <div className="xl:w-1/3 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center relative overflow-hidden group">
+          <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
+          <div className="relative z-10">
+            <div className="flex justify-between items-start mb-2">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Saldo Keuangan</p>
+              <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                <Wallet className="w-5 h-5" />
               </div>
-              <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-0.5">{stat.label}</p>
-              <h3 className={`text-xl font-black ${stat.color} tracking-tight`} title={stat.fullVal}>{stat.val}</h3>
             </div>
-          ))}
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight mb-4">
+              Rp {(totalIncome - totalExpense).toLocaleString()}
+            </h2>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs font-bold text-slate-500">
+                <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-slate-300"></div> Bank Transfer</span>
+                <span className="text-slate-800">Rp {(totalIncome * 0.8).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs font-bold text-slate-500">
+                <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-slate-300"></div> Uang Tunai</span>
+                <span className="text-slate-800">Rp {(totalIncome * 0.2).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {/* Profit Card (Green) */}
+        <div className="bg-[#10b981] p-6 rounded-[2rem] shadow-lg shadow-emerald-200 text-white relative overflow-hidden group">
+          <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full group-hover:scale-125 transition-transform duration-500"></div>
+          <div className="relative z-10 h-full flex flex-col justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Estimasi Profit</p>
+              <h3 className="text-2xl sm:text-3xl font-black tracking-tight">Rp {(totalIncome - totalExpense).toLocaleString()}</h3>
+            </div>
+            <div className="mt-4 flex items-center gap-2">
+              <span className="text-[10px] font-bold bg-white/20 px-2 py-1 rounded backdrop-blur-sm"> Penjualan - Pengeluaran Total</span>
+            </div>
+          </div>
         </div>
 
-        <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
-          <h3 className="text-lg font-black text-slate-800 mb-6 uppercase tracking-tight italic flex items-center">
-            <TrendingUp className="w-5 h-5 mr-2 text-red-600" />
-            Grafik Pertumbuhan ({dateFilterMode === 'day' ? 'Per Jam' : dateFilterMode === 'month' ? 'Harian' : 'Bulanan'})
-          </h3>
-          <div className="h-[250px] sm:h-[300px] w-full">
+        {/* Income Details */}
+        <div className="space-y-4">
+          <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center justify-between group hover:border-emerald-200 transition-colors">
+            <div>
+              <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Total Pemasukan</p>
+              <h3 className="text-xl font-black text-slate-800">Rp {totalIncome.toLocaleString()}</h3>
+            </div>
+            <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600 group-hover:scale-110 transition-transform">
+              <TrendingUp className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white p-4 rounded-[1.5rem] border border-slate-100 shadow-sm">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Terbayarkan</p>
+              <h3 className="text-sm font-black text-slate-800">Rp {(totalIncome * 0.9).toLocaleString(undefined, { maximumFractionDigits: 0 })}</h3>
+            </div>
+            <div className="bg-white p-4 rounded-[1.5rem] border border-slate-100 shadow-sm border-l-4 border-l-amber-400">
+              <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-1">Belum Lunas</p>
+              <h3 className="text-sm font-black text-slate-800">Rp {(totalIncome * 0.1).toLocaleString(undefined, { maximumFractionDigits: 0 })}</h3>
+            </div>
+          </div>
+        </div>
+
+        {/* Expense Card */}
+        <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col justify-center group hover:border-red-200 transition-colors">
+          <div className="flex justify-between items-start mb-2">
+            <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">Total Pengeluaran</p>
+            <div className="p-2 bg-red-50 rounded-xl text-red-600 group-hover:scale-110 transition-transform">
+              <TrendingDown className="w-4 h-4" />
+            </div>
+          </div>
+          <h3 className="text-2xl font-black text-slate-800 mb-4">Rp {totalExpense.toLocaleString()}</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+              <span>Belanja Bahan</span>
+              <span className="text-slate-800">Rp {(totalExpense * 0.7).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+              <span>Operasional</span>
+              <span className="text-slate-800">Rp {(totalExpense * 0.3).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Operasional Detail */}
+        <div className="grid grid-cols-1 gap-4">
+          <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col justify-center">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Belanja Bahan Terbayar</p>
+            <h3 className="text-xl font-black text-slate-800">Rp {(totalExpense * 0.7).toLocaleString(undefined, { maximumFractionDigits: 0 })}</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white p-4 rounded-[1.5rem] border border-slate-100 shadow-sm border-l-4 border-l-red-500">
+              <p className="text-[9px] font-black text-red-500 uppercase tracking-widest mb-1">Hutang</p>
+              <h3 className="text-sm font-black text-slate-800">Rp 0</h3>
+            </div>
+            <div className="bg-white p-4 rounded-[1.5rem] border border-slate-100 shadow-sm">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Lainnya</p>
+              <h3 className="text-sm font-black text-slate-800">Rp {(totalExpense * 0.1).toLocaleString(undefined, { maximumFractionDigits: 0 })}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Section: Chart & Top Products */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Trend Chart */}
+        <div className="xl:col-span-2 bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-slate-400" /> Trend Keuangan
+              </h3>
+              <p className="text-xs text-slate-500 font-medium mt-1">Grafik perbandingan pemasukan dan pengeluaran</p>
+            </div>
+            <div className="flex gap-4">
+              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Pemasukan
+              </div>
+              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                <div className="w-2 h-2 rounded-full bg-blue-500"></div> Pengeluaran
+              </div>
+            </div>
+          </div>
+
+          <div className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData}>
                 <defs>
-                  <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#dc2626" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#dc2626" stopOpacity={0} />
+                  <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} tickFormatter={(v) => `${v / 1000}k`} />
-                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} cursor={{ stroke: '#dc2626', strokeWidth: 1 }} />
-                <Area type="monotone" dataKey="v" stroke="#dc2626" strokeWidth={3} fillOpacity={1} fill="url(#colorVal)" />
+                <Tooltip
+                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}
+                  itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
+                />
+                <Area type="monotone" dataKey="v" name="Pemasukan" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" />
+                <Area type="monotone" dataKey="e" name="Pengeluaran" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorExpense)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* New Charts Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Komposisi Keuangan (Donut Chart) */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center">
-            <h3 className="text-lg font-black text-slate-800 mb-6 uppercase tracking-tight italic w-full text-left">
-              KOMPOSISI KEUANGAN
-            </h3>
-            <div className="h-[300px] w-full relative">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={incomeComparisonData}
-                    innerRadius={80}
-                    outerRadius={110}
-                    paddingAngle={0}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {incomeComparisonData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => `Rp ${value.toLocaleString()}`} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={36}
-                    iconType="circle"
-                    formatter={(value) => <span className="text-xs font-bold text-slate-600 uppercase ml-1">{value}</span>}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Produk Terlaris Style (Expense Breakdown) */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center">
-            <h3 className="text-lg font-black text-slate-800 mb-6 uppercase tracking-tight italic w-full text-left">
-              BREAKDOWN PENGELUARAN
-            </h3>
-            <div className="h-[300px] w-full">
-              {expenseData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={expenseData}
-                      outerRadius={110}
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      labelLine={true}
-                      stroke="white"
-                      strokeWidth={2}
-                    >
-                      {expenseData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => `Rp ${value.toLocaleString()}`} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                  <TrendingDown className="w-8 h-8 mb-2 opacity-50" />
-                  <p className="text-xs font-bold italic">Belum ada data pengeluaran</p>
+        {/* Top Products */}
+        <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col">
+          <h3 className="text-lg font-black text-slate-800 flex items-center gap-2 mb-6">
+            <span className="text-amber-500">🏆</span> Produk Terlaris
+          </h3>
+          <div className="flex-1 space-y-6 overflow-y-auto custom-scrollbar pr-2">
+            {topProducts.map((product, idx) => (
+              <div key={idx} className="group">
+                <div className="flex justify-between items-end mb-2">
+                  <div className="flex items-center gap-3">
+                    <span className={`w-5 h-5 flex items-center justify-center rounded text-[10px] font-black ${idx === 0 ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>{idx + 1}</span>
+                    <h4 className="text-xs font-black text-slate-700 uppercase tracking-tight group-hover:text-red-600 transition-colors">{product.name}</h4>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400">{product.sold} items</span>
                 </div>
-              )}
-            </div>
+                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-1">
+                  <div className={`h-full rounded-full transition-all duration-1000 ${idx === 0 ? 'bg-amber-500 w-[90%]' : idx === 1 ? 'bg-slate-400 w-[70%]' : 'bg-blue-400 w-[40%]'}`}></div>
+                </div>
+                <p className="text-right text-[10px] font-black text-slate-800">Rp {product.revenue.toLocaleString()}</p>
+              </div>
+            ))}
           </div>
+          <button className="w-full mt-6 py-3 bg-slate-50 text-slate-500 rounded-xl font-bold text-xs hover:bg-slate-100 transition-colors">Lihat Semua Produk</button>
         </div>
       </div>
+    </div>
+  );
+
+  const getChartLabels = () => {
+    if (dateFilterMode === 'day') return Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
+    if (dateFilterMode === 'month') {
+      const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+      return Array.from({ length: daysInMonth }, (_, i) => `${i + 1}`);
+    }
+    return ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  };
+
+  const processChartData = (onlineData, offlineData, expenseData, mode) => {
+    const labels = getChartLabels();
+    const data = labels.map(name => ({ name, v: 0, e: 0 }));
+
+    const updateData = (dateStr, amount, type) => {
+      if (!dateStr) return;
+      const date = new Date(dateStr);
+      let index = -1;
+
+      if (mode === 'day') index = date.getHours();
+      else if (mode === 'month') index = date.getDate() - 1;
+      else index = date.getMonth();
+
+      if (index >= 0 && index < data.length) {
+        if (type === 'income') data[index].v += amount;
+        else data[index].e += amount;
+      }
+    };
+
+    // Process Online Orders
+    onlineData.forEach(o => {
+      // Use setoran as net income (if needed) or totalBayar as revenue. 
+      // Expense = totalBayar - setoran
+      if (o.waktuDibuat) {
+        updateData(o.waktuDibuat, o.totalBayar || 0, 'income');
+        updateData(o.waktuDibuat, (o.totalBayar || 0) - (o.setoran || 0), 'expense');
+      }
+    });
+
+    // Process Offline Orders
+    offlineData.forEach(o => {
+      if (o.date) {
+        updateData(o.date, o.total || 0, 'income');
+      }
+    });
+
+    // Process Expenses (Offline/Operational)
+    expenseData.forEach(e => {
+      if (e.date) {
+        updateData(e.date, e.amount || 0, 'expense');
+      }
+    });
+
+    return data;
+  };
+
+  const getTopProductsMerged = (onlineData, offlineData) => {
+    const productMap = {};
+
+    // Process Online
+    onlineData.forEach(o => {
+      const name = o.produk;
+      if (!productMap[name]) productMap[name] = { name, sold: 0, revenue: 0 };
+      productMap[name].sold += o.jumlah || 0;
+      productMap[name].revenue += o.totalHargaProduk || o.totalBayar || 0;
+    });
+
+    // Process Offline
+    offlineData.forEach(o => {
+      if (o.items && Array.isArray(o.items)) {
+        o.items.forEach(item => {
+          const name = item.name;
+          if (!productMap[name]) productMap[name] = { name, sold: 0, revenue: 0 };
+          productMap[name].sold += item.qty || 0;
+          productMap[name].revenue += (item.price * item.qty) || 0;
+        });
+      }
+    });
+
+    return Object.values(productMap).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+  };
+
+  const DashboardOffline = () => {
+    const totalIncome = useMemo(() => filteredOfflineOrders.reduce((sum, o) => sum + (o.total || 0), 0), [filteredOfflineOrders]);
+    const totalExpense = useMemo(() => filteredExpenses.reduce((sum, e) => sum + (e.amount || 0), 0), [filteredExpenses]);
+
+    const chartData = useMemo(() => processChartData([], filteredOfflineOrders, filteredExpenses, dateFilterMode), [filteredOfflineOrders, filteredExpenses, dateFilterMode]);
+    const topProducts = useMemo(() => getTopProductsMerged([], filteredOfflineOrders), [filteredOfflineOrders]);
+
+    return (
+      <DashboardLayout
+        title="Dashboard Fisik"
+        totalIncome={totalIncome}
+        totalExpense={totalExpense}
+        totalProfit={totalIncome - totalExpense}
+        chartData={chartData}
+        topProducts={topProducts}
+        filterBar={
+          <FilterBar
+            showStore={false}
+            filterStore={filterStore} setFilterStore={setFilterStore}
+            startDate={startDate} setStartDate={setStartDate}
+            endDate={endDate} setEndDate={setEndDate}
+            dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
+            stores={stores}
+          />
+        }
+      />
     );
   };
+
+  const DashboardOnline = () => {
+    const totalIncome = useMemo(() => filteredOrders.reduce((sum, o) => sum + (o.totalBayar || 0), 0), [filteredOrders]);
+    // Online Expense assumed to be difference between Total Bayar (Gross) and Setoran (Net)
+    const totalExpense = useMemo(() => filteredOrders.reduce((sum, o) => sum + ((o.totalBayar || 0) - (o.setoran || 0)), 0), [filteredOrders]);
+
+    const chartData = useMemo(() => processChartData(filteredOrders, [], [], dateFilterMode), [filteredOrders, dateFilterMode]);
+    const topProducts = useMemo(() => getTopProductsMerged(filteredOrders, []), [filteredOrders]);
+
+    return (
+      <DashboardLayout
+        title="Dashboard Online"
+        totalIncome={totalIncome}
+        totalExpense={totalExpense}
+        totalProfit={totalIncome - totalExpense}
+        chartData={chartData}
+        topProducts={topProducts}
+        filterBar={
+          <FilterBar
+            filterStore={filterStore} setFilterStore={setFilterStore}
+            startDate={startDate} setStartDate={setStartDate}
+            endDate={endDate} setEndDate={setEndDate}
+            dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
+            stores={stores}
+          />
+        }
+      />
+    );
+  };
+
+  const Dashboard = () => {
+    // Combined Income
+    const offlineIncome = useMemo(() => filteredOfflineOrders.reduce((sum, o) => sum + (o.total || 0), 0), [filteredOfflineOrders]);
+    const onlineIncome = useMemo(() => filteredOrders.reduce((sum, o) => sum + (o.totalBayar || 0), 0), [filteredOrders]);
+    const totalIncome = offlineIncome + onlineIncome;
+
+    // Combined Expense (Offline Operational + Online Fees)
+    const offlineExpense = useMemo(() => filteredExpenses.reduce((sum, e) => sum + (e.amount || 0), 0), [filteredExpenses]);
+    const onlineExpense = useMemo(() => filteredOrders.reduce((sum, o) => sum + ((o.totalBayar || 0) - (o.setoran || 0)), 0), [filteredOrders]);
+    const totalExpense = offlineExpense + onlineExpense;
+
+    const chartData = useMemo(() => processChartData(filteredOrders, filteredOfflineOrders, filteredExpenses, dateFilterMode), [filteredOrders, filteredOfflineOrders, filteredExpenses, dateFilterMode]);
+    const topProducts = useMemo(() => getTopProductsMerged(filteredOrders, filteredOfflineOrders), [filteredOrders, filteredOfflineOrders]);
+
+    return (
+      <DashboardLayout
+        title="Dashboard Utama"
+        totalIncome={totalIncome}
+        totalExpense={totalExpense}
+        totalProfit={totalIncome - totalExpense}
+        chartData={chartData}
+        topProducts={topProducts}
+        filterBar={
+          <FilterBar
+            showStore={false}
+            filterStore={filterStore} setFilterStore={setFilterStore}
+            startDate={startDate} setStartDate={setStartDate}
+            endDate={endDate} setEndDate={setEndDate}
+            dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
+            stores={stores}
+          />
+        }
+      />
+    );
+  };
+
+
+
 
   const TokoList = () => (
     <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
@@ -3583,6 +3768,8 @@ const App = () => {
 
         <main className="flex-1 p-4 md:p-8 pb-24 lg:pb-8 max-w-[1600px] mx-auto w-full overflow-x-hidden">
           {activeMenu === 'dashboard' && <Dashboard />}
+          {activeMenu === 'dashboard-offline' && <DashboardOffline />}
+          {activeMenu === 'dashboard-online' && <DashboardOnline />}
           {activeMenu === 'pos' && <POSView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} orders={offlineOrders} onCreateOrder={() => setActiveMenu('pos-create')} />}
           {activeMenu === 'pos-create' && <CreateOrderView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} onBack={() => setActiveMenu('pos')} />}
           {activeMenu === 'database-produk-offline' && <OfflineProductView products={offlineProducts} onAddProduct={handleAddOfflineProduct} onEditProduct={handleEditOfflineProduct} />}
