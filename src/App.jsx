@@ -2529,193 +2529,210 @@ const App = () => {
   // --- CONTENT PAGES ---
 
   /* Shared Dashboard Layout Component */
-  const DashboardLayout = ({ title, totalIncome, totalExpense, totalProfit, chartData, topProducts, filterBar }) => (
-    <div className="space-y-6 animate-in fade-in duration-500 font-sans">
-      {/* Top Section: Filter & Total Balance */}
-      <div className="flex flex-col xl:flex-row gap-6">
-        <div className="flex-1">
+  const DashboardLayout = ({ title, totalIncome, totalExpense, totalProfit, incomePaid, incomeUnpaid, chartData, topProducts, filterBar }) => {
+    // Default values if not provided
+    const paid = incomePaid !== undefined ? incomePaid : totalIncome * 0.9;
+    const unpaid = incomeUnpaid !== undefined ? incomeUnpaid : totalIncome * 0.1;
+    // Calculate percentages for visualization
+    const paidPercent = totalIncome > 0 ? (paid / totalIncome) * 100 : 0;
+
+    // Estimates for breakdown (can be replaced with real props later)
+    const expenseMaterial = totalExpense * 0.7;
+    const expenseOps = totalExpense * 0.3;
+
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500 font-sans">
+        {/* Top Section: Filter Bar */}
+        <div className="w-full">
           {filterBar}
         </div>
-        <div className="xl:w-1/3 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center relative overflow-hidden group">
-          <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
-          <div className="relative z-10">
-            <div className="flex justify-between items-start mb-2">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Saldo Keuangan</p>
-              <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
-                <Wallet className="w-5 h-5" />
+
+        {/* Hero Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          {/* Income Card */}
+          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+            <div className="absolute -right-6 -top-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+              <TrendingUp className="w-48 h-48 text-blue-600" />
+            </div>
+            <div className="relative z-10">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-lg">Pemasukan</span>
               </div>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight mb-4">
-              Rp {(totalIncome - totalExpense).toLocaleString()}
-            </h2>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs font-bold text-slate-500">
-                <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-slate-300"></div> Bank Transfer</span>
-                <span className="text-slate-800">Rp {(totalIncome * 0.8).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs font-bold text-slate-500">
-                <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-slate-300"></div> Uang Tunai</span>
-                <span className="text-slate-800">Rp {(totalIncome * 0.2).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {/* Profit Card (Green) */}
-        <div className="bg-[#10b981] p-6 rounded-[2rem] shadow-lg shadow-emerald-200 text-white relative overflow-hidden group">
-          <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full group-hover:scale-125 transition-transform duration-500"></div>
-          <div className="relative z-10 h-full flex flex-col justify-between">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Estimasi Profit</p>
-              <h3 className="text-2xl sm:text-3xl font-black tracking-tight">Rp {(totalIncome - totalExpense).toLocaleString()}</h3>
-            </div>
-            <div className="mt-4 flex items-center gap-2">
-              <span className="text-[10px] font-bold bg-white/20 px-2 py-1 rounded backdrop-blur-sm"> Penjualan - Pengeluaran Total</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Income Details */}
-        <div className="space-y-4">
-          <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center justify-between group hover:border-emerald-200 transition-colors">
-            <div>
-              <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Total Pemasukan</p>
-              <h3 className="text-xl font-black text-slate-800">Rp {totalIncome.toLocaleString()}</h3>
-            </div>
-            <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600 group-hover:scale-110 transition-transform">
-              <TrendingUp className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white p-4 rounded-[1.5rem] border border-slate-100 shadow-sm">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Terbayarkan</p>
-              <h3 className="text-sm font-black text-slate-800">Rp {(totalIncome * 0.9).toLocaleString(undefined, { maximumFractionDigits: 0 })}</h3>
-            </div>
-            <div className="bg-white p-4 rounded-[1.5rem] border border-slate-100 shadow-sm border-l-4 border-l-amber-400">
-              <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-1">Belum Lunas</p>
-              <h3 className="text-sm font-black text-slate-800">Rp {(totalIncome * 0.1).toLocaleString(undefined, { maximumFractionDigits: 0 })}</h3>
-            </div>
-          </div>
-        </div>
-
-        {/* Expense Card */}
-        <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col justify-center group hover:border-red-200 transition-colors">
-          <div className="flex justify-between items-start mb-2">
-            <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">Total Pengeluaran</p>
-            <div className="p-2 bg-red-50 rounded-xl text-red-600 group-hover:scale-110 transition-transform">
-              <TrendingDown className="w-4 h-4" />
-            </div>
-          </div>
-          <h3 className="text-2xl font-black text-slate-800 mb-4">Rp {totalExpense.toLocaleString()}</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
-              <span>Belanja Bahan</span>
-              <span className="text-slate-800">Rp {(totalExpense * 0.7).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-            </div>
-            <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
-              <span>Operasional</span>
-              <span className="text-slate-800">Rp {(totalExpense * 0.3).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Operasional Detail */}
-        <div className="grid grid-cols-1 gap-4">
-          <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col justify-center">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Belanja Bahan Terbayar</p>
-            <h3 className="text-xl font-black text-slate-800">Rp {(totalExpense * 0.7).toLocaleString(undefined, { maximumFractionDigits: 0 })}</h3>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white p-4 rounded-[1.5rem] border border-slate-100 shadow-sm border-l-4 border-l-red-500">
-              <p className="text-[9px] font-black text-red-500 uppercase tracking-widest mb-1">Hutang</p>
-              <h3 className="text-sm font-black text-slate-800">Rp 0</h3>
-            </div>
-            <div className="bg-white p-4 rounded-[1.5rem] border border-slate-100 shadow-sm">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Lainnya</p>
-              <h3 className="text-sm font-black text-slate-800">Rp {(totalExpense * 0.1).toLocaleString(undefined, { maximumFractionDigits: 0 })}</h3>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Section: Chart & Top Products */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Trend Chart */}
-        <div className="xl:col-span-2 bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-slate-400" /> Trend Keuangan
+              <h3 className="text-3xl font-black text-slate-800 tracking-tight mb-6">
+                Rp {totalIncome.toLocaleString()}
               </h3>
-              <p className="text-xs text-slate-500 font-medium mt-1">Grafik perbandingan pemasukan dan pengeluaran</p>
-            </div>
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Pemasukan
-              </div>
-              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                <div className="w-2 h-2 rounded-full bg-blue-500"></div> Pengeluaran
+
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-[11px] font-bold text-slate-500 mb-1.5">
+                    <span>Sudah Dibayar</span>
+                    <span className="text-blue-600">{paidPercent.toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-blue-500 rounded-full transition-all duration-1000"
+                      style={{ width: `${paidPercent}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-right text-xs font-bold text-slate-800 mt-1.5">Rp {paid.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                </div>
+
+                {unpaid > 0 && (
+                  <div className="flex justify-between items-center bg-amber-50 p-3 rounded-xl border border-amber-100">
+                    <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider">Belum Lunas</span>
+                    <span className="text-sm font-black text-amber-700">Rp {unpaid.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          <div className="h-[350px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} tickFormatter={(v) => `${v / 1000}k`} />
-                <Tooltip
-                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}
-                  itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
-                />
-                <Area type="monotone" dataKey="v" name="Pemasukan" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" />
-                <Area type="monotone" dataKey="e" name="Pengeluaran" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorExpense)" />
-              </AreaChart>
-            </ResponsiveContainer>
+          {/* Expense Card */}
+          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+            <div className="absolute -right-6 -top-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+              <TrendingDown className="w-48 h-48 text-red-600" />
+            </div>
+            <div className="relative z-10">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2.5 bg-red-50 rounded-xl text-red-600">
+                  <TrendingDown className="w-6 h-6" />
+                </div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-lg">Pengeluaran</span>
+              </div>
+
+              <h3 className="text-3xl font-black text-slate-800 tracking-tight mb-6">
+                Rp {totalExpense.toLocaleString()}
+              </h3>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Bahan Baku</p>
+                  <p className="text-xs font-black text-slate-700">Rp {expenseMaterial.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Operasional</p>
+                  <p className="text-xs font-black text-slate-700">Rp {expenseOps.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Profit Card */}
+          <div className="bg-[#10b981] p-6 rounded-[2rem] shadow-xl shadow-emerald-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
+            <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
+            <div className="absolute -left-10 -top-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+
+            <div className="relative z-10 h-full flex flex-col justify-between">
+              <div className="flex justify-between items-start">
+                <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-md">
+                  <Wallet className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-[10px] font-black bg-white/20 px-2 py-1 rounded-lg uppercase tracking-widest backdrop-blur-md">Net Profit</span>
+              </div>
+
+              <div className="my-6">
+                <p className="text-sm font-medium text-emerald-50 mb-1">Total Saldo Bersih</p>
+                <h3 className="text-4xl font-black tracking-tight text-white drop-shadow-md">
+                  Rp {totalProfit.toLocaleString()}
+                </h3>
+              </div>
+
+              <div className="mt-auto bg-black/10 rounded-xl p-4 backdrop-blur-sm border border-white/10 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-emerald-100 uppercase tracking-wider mb-0.5">Margin</p>
+                  <p className="text-lg font-black text-white">{totalIncome > 0 ? ((totalProfit / totalIncome) * 100).toFixed(1) : 0}%</p>
+                </div>
+                <div className="h-8 w-[1px] bg-white/20"></div>
+                <div className="text-right">
+                  <p className="text-[10px] font-bold text-emerald-100 uppercase tracking-wider mb-0.5">Status</p>
+                  <p className="text-xs font-black text-emerald-50 bg-emerald-600/50 px-2 py-1 rounded-lg">Sehat</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Top Products */}
-        <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col">
-          <h3 className="text-lg font-black text-slate-800 flex items-center gap-2 mb-6">
-            <span className="text-amber-500">🏆</span> Produk Terlaris
-          </h3>
-          <div className="flex-1 space-y-6 overflow-y-auto custom-scrollbar pr-2">
-            {topProducts.map((product, idx) => (
-              <div key={idx} className="group">
-                <div className="flex justify-between items-end mb-2">
-                  <div className="flex items-center gap-3">
-                    <span className={`w-5 h-5 flex items-center justify-center rounded text-[10px] font-black ${idx === 0 ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>{idx + 1}</span>
-                    <h4 className="text-xs font-black text-slate-700 uppercase tracking-tight group-hover:text-red-600 transition-colors">{product.name}</h4>
-                  </div>
-                  <span className="text-[10px] font-bold text-slate-400">{product.sold} items</span>
-                </div>
-                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-1">
-                  <div className={`h-full rounded-full transition-all duration-1000 ${idx === 0 ? 'bg-amber-500 w-[90%]' : idx === 1 ? 'bg-slate-400 w-[70%]' : 'bg-blue-400 w-[40%]'}`}></div>
-                </div>
-                <p className="text-right text-[10px] font-black text-slate-800">Rp {product.revenue.toLocaleString()}</p>
+        {/* Bottom Section: Chart & Top Products */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {/* Trend Chart */}
+          <div className="xl:col-span-2 bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-slate-400" /> Trend Keuangan
+                </h3>
+                <p className="text-xs text-slate-500 font-medium mt-1">Grafik perbandingan pemasukan dan pengeluaran</p>
               </div>
-            ))}
+              <div className="flex gap-4">
+                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Pemasukan
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <div className="w-2 h-2 rounded-full bg-blue-500"></div> Pengeluaran
+                </div>
+              </div>
+            </div>
+
+            <div className="h-[350px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} tickFormatter={(v) => `${v / 1000}k`} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}
+                    itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
+                  />
+                  <Area type="monotone" dataKey="v" name="Pemasukan" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" />
+                  <Area type="monotone" dataKey="e" name="Pengeluaran" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorExpense)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <button className="w-full mt-6 py-3 bg-slate-50 text-slate-500 rounded-xl font-bold text-xs hover:bg-slate-100 transition-colors">Lihat Semua Produk</button>
+
+          {/* Top Products */}
+          <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col">
+            <h3 className="text-lg font-black text-slate-800 flex items-center gap-2 mb-6">
+              <span className="text-amber-500">🏆</span> Produk Terlaris
+            </h3>
+            <div className="flex-1 space-y-6 overflow-y-auto custom-scrollbar pr-2">
+              {topProducts.map((product, idx) => (
+                <div key={idx} className="group">
+                  <div className="flex justify-between items-end mb-2">
+                    <div className="flex items-center gap-3">
+                      <span className={`w-5 h-5 flex items-center justify-center rounded text-[10px] font-black ${idx === 0 ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>{idx + 1}</span>
+                      <h4 className="text-xs font-black text-slate-700 uppercase tracking-tight group-hover:text-red-600 transition-colors">{product.name}</h4>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400">{product.sold} items</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-1">
+                    <div className={`h-full rounded-full transition-all duration-1000 ${idx === 0 ? 'bg-amber-500 w-[90%]' : idx === 1 ? 'bg-slate-400 w-[70%]' : 'bg-blue-400 w-[40%]'}`}></div>
+                  </div>
+                  <p className="text-right text-[10px] font-black text-slate-800">Rp {product.revenue.toLocaleString()}</p>
+                </div>
+              ))}
+            </div>
+            <button className="w-full mt-6 py-3 bg-slate-50 text-slate-500 rounded-xl font-bold text-xs hover:bg-slate-100 transition-colors">Lihat Semua Produk</button>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const getChartLabels = () => {
     if (dateFilterMode === 'day') return Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
@@ -2747,7 +2764,7 @@ const App = () => {
 
     // Process Online Orders
     onlineData.forEach(o => {
-      // Use setoran as net income (if needed) or totalBayar as revenue. 
+      // Use setoran as net income (if needed) or totalBayar as revenue.
       // Expense = totalBayar - setoran
       if (o.waktuDibuat) {
         updateData(o.waktuDibuat, o.totalBayar || 0, 'income');
@@ -2811,6 +2828,8 @@ const App = () => {
         totalIncome={totalIncome}
         totalExpense={totalExpense}
         totalProfit={totalIncome - totalExpense}
+        incomePaid={totalIncome} // Assuming offline is immediate cash
+        incomeUnpaid={0}
         chartData={chartData}
         topProducts={topProducts}
         filterBar={
@@ -2828,9 +2847,23 @@ const App = () => {
   };
 
   const DashboardOnline = () => {
-    const totalIncome = useMemo(() => filteredOrders.reduce((sum, o) => sum + (o.totalBayar || 0), 0), [filteredOrders]);
-    // Online Expense assumed to be difference between Total Bayar (Gross) and Setoran (Net)
-    const totalExpense = useMemo(() => filteredOrders.reduce((sum, o) => sum + ((o.totalBayar || 0) - (o.setoran || 0)), 0), [filteredOrders]);
+    const totalOmzet = useMemo(() => filteredOrders.reduce((sum, o) => sum + (o.totalBayar || 0), 0), [filteredOrders]);
+
+    // Calculate global setoran (Net) based on logic consistent with store summary (respects globalProductPrices if set)
+    // We re-use logic similar to perStoreSummary for consistency
+    const { totalSetoran, totalSudahBayar } = useMemo(() => {
+      let setoran = 0;
+      let dibayar = 0;
+      filteredOrders.forEach(o => {
+        const setoranVal = globalProductPrices[o.produk] !== undefined ? globalProductPrices[o.produk] : (o.setoran || 0);
+        setoran += setoranVal;
+        dibayar += (o.sudahDibayar || 0);
+      });
+      return { totalSetoran: setoran, totalSudahBayar: dibayar };
+    }, [filteredOrders, globalProductPrices]);
+
+    const totalFees = totalOmzet - totalSetoran;
+    const unpaidSetoran = totalSetoran - totalSudahBayar;
 
     const chartData = useMemo(() => processChartData(filteredOrders, [], [], dateFilterMode), [filteredOrders, dateFilterMode]);
     const topProducts = useMemo(() => getTopProductsMerged(filteredOrders, []), [filteredOrders]);
@@ -2838,9 +2871,11 @@ const App = () => {
     return (
       <DashboardLayout
         title="Dashboard Online"
-        totalIncome={totalIncome}
-        totalExpense={totalExpense}
-        totalProfit={totalIncome - totalExpense}
+        totalIncome={totalOmzet}
+        totalExpense={totalFees}
+        totalProfit={totalSetoran}
+        incomePaid={totalSudahBayar}
+        incomeUnpaid={unpaidSetoran}
         chartData={chartData}
         topProducts={topProducts}
         filterBar={
@@ -2859,13 +2894,32 @@ const App = () => {
   const Dashboard = () => {
     // Combined Income
     const offlineIncome = useMemo(() => filteredOfflineOrders.reduce((sum, o) => sum + (o.total || 0), 0), [filteredOfflineOrders]);
-    const onlineIncome = useMemo(() => filteredOrders.reduce((sum, o) => sum + (o.totalBayar || 0), 0), [filteredOrders]);
-    const totalIncome = offlineIncome + onlineIncome;
 
-    // Combined Expense (Offline Operational + Online Fees)
+    // Online Calculation
+    const totalOmzet = useMemo(() => filteredOrders.reduce((sum, o) => sum + (o.totalBayar || 0), 0), [filteredOrders]);
+    const { totalSetoran, totalSudahBayar } = useMemo(() => {
+      let setoran = 0;
+      let dibayar = 0;
+      filteredOrders.forEach(o => {
+        const setoranVal = globalProductPrices[o.produk] !== undefined ? globalProductPrices[o.produk] : (o.setoran || 0);
+        setoran += setoranVal;
+        dibayar += (o.sudahDibayar || 0);
+      });
+      return { totalSetoran: setoran, totalSudahBayar: dibayar };
+    }, [filteredOrders, globalProductPrices]);
+    const onlineFees = totalOmzet - totalSetoran;
+    const onlineUnpaid = totalSetoran - totalSudahBayar;
+
+    // Combined
+    const totalIncome = offlineIncome + totalOmzet;
     const offlineExpense = useMemo(() => filteredExpenses.reduce((sum, e) => sum + (e.amount || 0), 0), [filteredExpenses]);
-    const onlineExpense = useMemo(() => filteredOrders.reduce((sum, o) => sum + ((o.totalBayar || 0) - (o.setoran || 0)), 0), [filteredOrders]);
-    const totalExpense = offlineExpense + onlineExpense;
+    const totalExpense = offlineExpense + onlineFees;
+
+    // Profit = (Offline Income - Offline Expense) + Online Net (Setoran)
+    const totalProfit = (offlineIncome - offlineExpense) + totalSetoran;
+
+    const combinedPaid = offlineIncome + totalSudahBayar; // Offline is considered paid
+    const combinedUnpaid = onlineUnpaid; // Offline unpaid is 0
 
     const chartData = useMemo(() => processChartData(filteredOrders, filteredOfflineOrders, filteredExpenses, dateFilterMode), [filteredOrders, filteredOfflineOrders, filteredExpenses, dateFilterMode]);
     const topProducts = useMemo(() => getTopProductsMerged(filteredOrders, filteredOfflineOrders), [filteredOrders, filteredOfflineOrders]);
@@ -2875,7 +2929,9 @@ const App = () => {
         title="Dashboard Utama"
         totalIncome={totalIncome}
         totalExpense={totalExpense}
-        totalProfit={totalIncome - totalExpense}
+        totalProfit={totalProfit}
+        incomePaid={combinedPaid}
+        incomeUnpaid={combinedUnpaid}
         chartData={chartData}
         topProducts={topProducts}
         filterBar={
@@ -2891,9 +2947,6 @@ const App = () => {
       />
     );
   };
-
-
-
 
   const TokoList = () => (
     <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
