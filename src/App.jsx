@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   LineChart, Line, AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar
 } from 'recharts';
 import {
   LayoutDashboard, Store, ScanLine, Settings, LogOut, ChevronRight,
@@ -39,7 +40,7 @@ const Sidebar = ({ activeMenu, setActiveMenu }) => {
     {
       title: 'Kasir & Toko Fisik',
       items: [
-        { id: 'dashboard-offline', icon: BarChart3, label: 'Dashboard Fisik' },
+
         { id: 'pos', icon: Receipt, label: 'POS (Kasir)' },
         { id: 'database-produk-offline', icon: Database, label: 'Produk Offline' },
         { id: 'pengeluaran', icon: TrendingDown, label: 'Pengeluaran' }
@@ -48,7 +49,7 @@ const Sidebar = ({ activeMenu, setActiveMenu }) => {
     {
       title: 'Toko Online',
       items: [
-        { id: 'dashboard-online', icon: BarChart3, label: 'Dashboard Online' },
+
         { id: 'toko', icon: Store, label: 'Toko & Pesanan' },
         { id: 'database-produk', icon: Package, label: 'Database Online' },
         { id: 'status-pengiriman', icon: Truck, label: 'Status Pengiriman' },
@@ -147,7 +148,7 @@ const BottomNavbar = ({ activeMenu, setActiveMenu }) => (
   </nav>
 );
 
-const TopBar = ({ activeMenu, activeView, setActiveView }) => (
+const TopBar = ({ activeMenu, activeView, setActiveView, totalBalance }) => (
   <header className={`h-16 md:h-20 ${THEME.headerMobile} md:bg-white md:backdrop-blur-md md:border-b md:border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 shadow-sm transition-colors duration-300`}>
     {/* Mobile Left */}
     <div className="flex items-center md:hidden">
@@ -155,48 +156,26 @@ const TopBar = ({ activeMenu, activeView, setActiveView }) => (
         <span className="font-black text-white text-lg">S</span>
       </div>
       <h2 className="font-black text-white tracking-tight text-lg uppercase truncate max-w-[200px]">
-        {activeMenu.replace(/-/g, ' ')}
+        {activeMenu === 'dashboard' ? 'DASHBOARD' : activeMenu.replace(/-/g, ' ')}
       </h2>
     </div>
 
     {/* Desktop Left */}
-    <div className="hidden md:flex items-center space-x-4 uppercase tracking-tighter">
-      <h2 className="font-black text-slate-900 tracking-tight italic text-2xl">
-        {activeMenu.replace(/-/g, ' ')}
-      </h2>
+    <div className="hidden md:flex items-center">
+      <h1 className="font-black text-slate-800 text-3xl italic tracking-tighter uppercase">DASHBOARD</h1>
     </div>
 
     {/* Right Section */}
-    <div className="flex items-center space-x-3 md:space-x-4">
-      <div className="flex bg-black/20 md:bg-slate-100 p-1 rounded-xl backdrop-blur-sm">
-        <button
-          onClick={() => setActiveView('owner')}
-          className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${activeView === 'owner'
-            ? 'bg-white shadow-sm text-red-600'
-            : 'text-white/70 md:text-slate-500 hover:text-white md:hover:text-slate-700'
-            }`}
-        >
-          OWNER
-        </button>
-        <button
-          onClick={() => setActiveView('admin')}
-          className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${activeView === 'admin'
-            ? 'bg-white shadow-sm text-red-600'
-            : 'text-white/70 md:text-slate-500 hover:text-white md:hover:text-slate-700'
-            }`}
-        >
-          ADMIN
-        </button>
+    <div className="flex items-center space-x-4 md:space-x-6">
+      <div className="flex flex-col items-end mr-2">
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Saldo Keuangan</span>
+        <h2 className="font-black text-slate-900 tracking-tight text-xl">
+          Rp {(totalBalance || 0).toLocaleString()}
+        </h2>
       </div>
 
-      <div className="flex items-center space-x-2 md:border-l md:border-slate-200 md:pl-4">
-        <div className="w-8 h-8 md:w-10 md:h-10 bg-white md:bg-red-600 rounded-full md:rounded-xl flex items-center justify-center text-red-600 md:text-white text-xs md:text-sm font-black shadow-sm ring-2 ring-white/20 md:ring-0">
-          U
-        </div>
-        <div className="hidden md:flex flex-col">
-          <span className="text-xs font-bold text-slate-800">Sazime User</span>
-          <span className="text-[10px] text-slate-500 font-medium">Administrator</span>
-        </div>
+      <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white text-sm font-black shadow-lg shadow-red-200 ring-2 ring-white">
+        S
       </div>
     </div>
   </header>
@@ -940,10 +919,11 @@ const ExpenseView = ({ expenses, onAddExpense }) => {
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori</label>
                 <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500">
-                  <option>Operasional</option>
-                  <option>Luar Biasa</option>
-                  <option>Saving</option>
-                  <option>Development</option>
+                  <option>Operasional Pokok</option>
+                  <option>Operasional Luar Biasa</option>
+                  <option>Gaji Karyawan</option>
+                  <option>Gaji Direksi</option>
+                  <option>Pengembangan</option>
                 </select>
               </div>
               <div className="space-y-1.5">
@@ -1259,7 +1239,7 @@ const FilterBar = ({
   const yearOptions = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
 
   return (
-    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 items-center">
+    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-center h-full">
       {showStore && (
         <div className="space-y-1.5">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center">
@@ -1306,7 +1286,7 @@ const FilterBar = ({
                       setStartDate(`${y}-01-01`); setEndDate(`${y}-12-31`);
                     }
                   }}
-                  className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${dateFilterMode === m.k ? 'bg-white shadow-sm text-red-600 ring-1 ring-slate-100' : 'text-slate-500 hover:text-slate-700'
+                  className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${dateFilterMode === m.k ? 'bg-white shadow-sm text-emerald-600 ring-1 ring-emerald-100' : 'text-slate-500 hover:text-slate-700'
                     }`}
                 >
                   {m.l}
@@ -1778,6 +1758,7 @@ const App = () => {
 
   // Date Handling
   const _now = new Date();
+  const [totalBalance, setTotalBalance] = useState(0);
   const [startDate, setStartDate] = useState(`${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-01`);
   const [endDate, setEndDate] = useState(`${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(new Date(_now.getFullYear(), _now.getMonth() + 1, 0).getDate()).padStart(2, '0')}`);
   const [dateFilterMode, setDateFilterMode] = useState('month');
@@ -1832,12 +1813,47 @@ const App = () => {
       remaining: 40000,
       status: 'Belum Lunas',
       items: [{ id: 2, name: 'Vitamin Burung Gacor', price: 45000, qty: 2, total: 90000 }]
+    },
+    {
+      id: 'OFF-003',
+      customerName: 'Toko Sejahtera',
+      date: '2026-01-25',
+      paymentMethod: 'Cash',
+      subtotal: 500000,
+      discount: 20000,
+      total: 480000,
+      paidAmount: 480000,
+      remaining: 0,
+      status: 'Lunas',
+      items: [
+        { id: 1, name: 'Pakan Burung Lovebird Premium', price: 25000, qty: 10, total: 250000 },
+        { id: 2, name: 'Vitamin Burung Gacor', price: 45000, qty: 5, total: 225000 }
+      ]
+    },
+    {
+      id: 'OFF-004',
+      customerName: 'Doni Bird',
+      date: '2026-01-26',
+      paymentMethod: 'Cash',
+      subtotal: 1000000,
+      discount: 50000,
+      total: 950000,
+      paidAmount: 950000,
+      remaining: 0,
+      status: 'Lunas',
+      items: [
+        { id: 3, name: 'Sangkar Murai No 1 - Sazime Original', price: 350000, qty: 2, total: 700000 },
+        { id: 4, name: 'Cangkir Cepuk Pakan Mika', price: 25000, qty: 12, total: 300000 }
+      ]
     }
   ]);
   const [expenses, setExpenses] = useState([
-    { id: 1, date: '2026-01-21', category: 'Operasional', description: 'Listrik & Air Januari', amount: 500000, paid: 500000, remaining: 0, paymentMethod: 'Transfer' },
-    { id: 2, date: '2026-01-23', category: 'Saving', description: 'Tabungan Pengembangan', amount: 1000000, paid: 1000000, remaining: 0, paymentMethod: 'Cash' },
-    { id: 3, date: '2026-01-24', category: 'Development', description: 'Renovasi Lantai 2', amount: 2500000, paid: 1000000, remaining: 1500000, paymentMethod: 'Transfer' }
+    { id: 1, date: '2026-01-21', category: 'Operasional Pokok', description: 'Listrik & Air Januari', amount: 500000, paid: 500000, remaining: 0, paymentMethod: 'Transfer' },
+    { id: 2, date: '2026-01-23', category: 'Pengembangan', description: 'Tabungan Pengembangan', amount: 1000000, paid: 1000000, remaining: 0, paymentMethod: 'Cash' },
+    { id: 3, date: '2026-01-24', category: 'Gaji Karyawan', description: 'Gaji Staff Admin', amount: 3500000, paid: 3500000, remaining: 0, paymentMethod: 'Transfer' },
+    { id: 4, date: '2026-01-25', category: 'Gaji Direksi', description: 'Withdraw Owner', amount: 5000000, paid: 5000000, remaining: 0, paymentMethod: 'Transfer' },
+    { id: 5, date: '2026-01-26', category: 'Operasional Luar Biasa', description: 'Perbaikan Atap Toko', amount: 1500000, paid: 1500000, remaining: 0, paymentMethod: 'Cash' },
+    { id: 6, date: '2026-02-01', category: 'Belanja Bahan', description: 'Kayu Jati', amount: 2000000, paid: 2000000, remaining: 0, paymentMethod: 'Transfer' },
   ]);
 
   const handleAddOfflineProduct = (product) => {
@@ -2479,6 +2495,41 @@ const App = () => {
 
   const sisaTagihan = totalSetoran - totalSudahDibayar;
 
+  // Calculate Global Total Balance (Profit) for Header
+  const calculatedTotalBalance = useMemo(() => {
+    // 1. Online Revenue
+    const totalOmzet = filteredOrders.reduce((sum, o) => sum + (o.totalBayar || 0), 0);
+
+    // 2. Setoran (Net Income from Online)
+    let totalSetoranVal = 0;
+    filteredOrders.forEach(o => {
+      const setoranVal = globalProductPrices[o.produk] !== undefined ? globalProductPrices[o.produk] : (o.setoran || 0);
+      totalSetoranVal += setoranVal;
+    });
+
+    // 3. Offline Income
+    const offlineIncome = filteredOfflineOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+
+    // 4. Expenses
+    const offlineExpense = filteredExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+    const onlineFees = totalOmzet - totalSetoranVal;
+    const totalExpense = offlineExpense + onlineFees;
+
+    // 5. Profit = (Total Setoran + Offline Income) - (Offline Expense + Online Fees)?
+    // Wait, onlineFees are already deducted from Total Omzet to get Setoran.
+    // So "Income" = Setoran + Offline Income.
+    // "Expense" = Offline Expense.
+    // Profit = (Setoran + Offline Income) - Offline Expense.
+    // Let's verify with Dashboard logic.
+    // Dashboard: totalProfit = (offlineIncome - offlineExpense) + totalSetoran;
+    // Yes, that matches.
+    return (offlineIncome - offlineExpense) + totalSetoranVal;
+  }, [filteredOrders, filteredOfflineOrders, filteredExpenses, globalProductPrices]);
+
+  useEffect(() => {
+    setTotalBalance(calculatedTotalBalance);
+  }, [calculatedTotalBalance]);
+
   // Actions
   const handleBulkMarkPaid = () => {
     const prevOrders = [...orders];
@@ -2529,156 +2580,183 @@ const App = () => {
   // --- CONTENT PAGES ---
 
   /* Shared Dashboard Layout Component */
-  const DashboardLayout = ({ title, totalIncome, totalExpense, totalProfit, incomePaid, incomeUnpaid, chartData, topProducts, filterBar }) => {
-    // Default values if not provided
-    const paid = incomePaid !== undefined ? incomePaid : totalIncome * 0.9;
-    const unpaid = incomeUnpaid !== undefined ? incomeUnpaid : totalIncome * 0.1;
-    // Calculate percentages for visualization
-    const paidPercent = totalIncome > 0 ? (paid / totalIncome) * 100 : 0;
-
-    // Estimates for breakdown (can be replaced with real props later)
-    const expenseMaterial = totalExpense * 0.7;
-    const expenseOps = totalExpense * 0.3;
+  const SavingProfitModal = ({ currentSaving, onSave, onClose }) => {
+    const [value, setValue] = useState(currentSaving);
 
     return (
+      <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <h3 className="font-black text-slate-800 text-lg uppercase tracking-tight">Edit Saving Profit</h3>
+            <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition"><X className="w-5 h-5 text-slate-400" /></button>
+          </div>
+          <div className="p-6 space-y-6">
+            <div>
+              <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Jumlah Saving Profit</label>
+              <input
+                type="number"
+                value={value}
+                onChange={(e) => setValue(Number(e.target.value))}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 outline-none transition"
+              />
+            </div>
+            <button
+              onClick={() => onSave(value)}
+              className="w-full py-3 bg-blue-600 text-white rounded-xl font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 transition"
+            >
+              Simpan Perubahan
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const DashboardLayout = ({ title, totalIncome, totalExpense, totalProfit, incomeBreakdown, expenseBreakdown, chartData, topProductsOnline, topProductsOffline, filterBar, activeView, bankBalance, cashBalance, savingProfit, onEditSaving, setTotalBalance }) => {
+    return (
       <div className="space-y-6 animate-in fade-in duration-500 font-sans">
-        {/* Top Section: Filter Bar */}
-        <div className="w-full">
-          {filterBar}
-        </div>
 
-        {/* Hero Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-          {/* Income Card */}
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-lg transition-all duration-300">
-            <div className="absolute -right-6 -top-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-              <TrendingUp className="w-48 h-48 text-blue-600" />
-            </div>
-            <div className="relative z-10">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600">
-                  <TrendingUp className="w-6 h-6" />
-                </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-lg">Pemasukan</span>
-              </div>
-
-              <h3 className="text-3xl font-black text-slate-800 tracking-tight mb-6">
-                Rp {totalIncome.toLocaleString()}
-              </h3>
-
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-[11px] font-bold text-slate-500 mb-1.5">
-                    <span>Sudah Dibayar</span>
-                    <span className="text-blue-600">{paidPercent.toFixed(1)}%</span>
-                  </div>
-                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-blue-500 rounded-full transition-all duration-1000"
-                      style={{ width: `${paidPercent}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-right text-xs font-bold text-slate-800 mt-1.5">Rp {paid.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-                </div>
-
-                {unpaid > 0 && (
-                  <div className="flex justify-between items-center bg-amber-50 p-3 rounded-xl border border-amber-100">
-                    <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider">Belum Lunas</span>
-                    <span className="text-sm font-black text-amber-700">Rp {unpaid.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                  </div>
-                )}
-              </div>
-            </div>
+        {/* Top Section: Filter & Financial Balance */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-stretch">
+          <div className="xl:col-span-2 min-w-0">
+            {filterBar}
           </div>
 
-          {/* Expense Card */}
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-lg transition-all duration-300">
-            <div className="absolute -right-6 -top-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-              <TrendingDown className="w-48 h-48 text-red-600" />
-            </div>
-            <div className="relative z-10">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2.5 bg-red-50 rounded-xl text-red-600">
-                  <TrendingDown className="w-6 h-6" />
-                </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-lg">Pengeluaran</span>
+          <div className="bg-white p-6 rounded-[1.5rem] border border-slate-200 shadow-sm flex flex-col justify-between h-full">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Total Saldo Keuangan</h3>
+                <h2 className="text-slate-800 text-3xl font-black tracking-tight">Rp {(bankBalance + cashBalance).toLocaleString()}</h2>
               </div>
-
-              <h3 className="text-3xl font-black text-slate-800 tracking-tight mb-6">
-                Rp {totalExpense.toLocaleString()}
-              </h3>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Bahan Baku</p>
-                  <p className="text-xs font-black text-slate-700">Rp {expenseMaterial.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Operasional</p>
-                  <p className="text-xs font-black text-slate-700">Rp {expenseOps.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-                </div>
+              <div className="p-3 bg-emerald-50 rounded-xl">
+                <Wallet className="w-6 h-6 text-emerald-600" />
               </div>
             </div>
-          </div>
 
-          {/* Profit Card */}
-          <div className="bg-[#10b981] p-6 rounded-[2rem] shadow-xl shadow-emerald-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
-            <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
-            <div className="absolute -left-10 -top-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-
-            <div className="relative z-10 h-full flex flex-col justify-between">
-              <div className="flex justify-between items-start">
-                <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-md">
-                  <Wallet className="w-6 h-6 text-white" />
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-sm">
+                <div className="flex items-center gap-2 text-slate-500 font-bold">
+                  <CreditCard className="w-4 h-4" />
+                  <span className="text-xs">Bank Transfer</span>
                 </div>
-                <span className="text-[10px] font-black bg-white/20 px-2 py-1 rounded-lg uppercase tracking-widest backdrop-blur-md">Net Profit</span>
+                <span className="font-black text-slate-800">Rp {bankBalance.toLocaleString()}</span>
               </div>
-
-              <div className="my-6">
-                <p className="text-sm font-medium text-emerald-50 mb-1">Total Saldo Bersih</p>
-                <h3 className="text-4xl font-black tracking-tight text-white drop-shadow-md">
-                  Rp {totalProfit.toLocaleString()}
-                </h3>
-              </div>
-
-              <div className="mt-auto bg-black/10 rounded-xl p-4 backdrop-blur-sm border border-white/10 flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] font-bold text-emerald-100 uppercase tracking-wider mb-0.5">Margin</p>
-                  <p className="text-lg font-black text-white">{totalIncome > 0 ? ((totalProfit / totalIncome) * 100).toFixed(1) : 0}%</p>
+              <div className="w-full h-px bg-slate-50"></div>
+              <div className="flex justify-between items-center text-sm">
+                <div className="flex items-center gap-2 text-slate-500 font-bold">
+                  <Wallet className="w-4 h-4" />
+                  <span className="text-xs">Uang Tunai</span>
                 </div>
-                <div className="h-8 w-[1px] bg-white/20"></div>
-                <div className="text-right">
-                  <p className="text-[10px] font-bold text-emerald-100 uppercase tracking-wider mb-0.5">Status</p>
-                  <p className="text-xs font-black text-emerald-50 bg-emerald-600/50 px-2 py-1 rounded-lg">Sehat</p>
-                </div>
+                <span className="font-black text-slate-800">Rp {cashBalance.toLocaleString()}</span>
               </div>
             </div>
           </div>
         </div>
+
+
+        {/* Top Cards Row */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          {/* Card 1: Estimasi Profit Bersih */}
+          <div className="md:col-span-3 bg-emerald-600 p-6 rounded-[1.5rem] shadow-lg shadow-emerald-200 relative overflow-hidden group flex flex-col justify-center min-h-[160px]">
+            <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-40 transition-opacity transform group-hover:scale-110 duration-500">
+              <TrendingUp className="w-24 h-24 text-white" />
+            </div>
+            <div className="relative z-10">
+              <h3 className="text-white/80 text-[10px] font-black uppercase tracking-widest mb-1">Estimasi Profit Bersih</h3>
+              <h2 className="text-white text-3xl font-black tracking-tight leading-tight">Rp {(totalProfit || 0).toLocaleString()}</h2>
+            </div>
+          </div>
+
+          {/* Card 2: Total Penjualan */}
+          <div className="md:col-span-3 bg-emerald-500 p-0 rounded-[1.5rem] shadow-lg shadow-emerald-200 overflow-hidden relative group flex flex-col">
+            <div className="bg-emerald-600/30 p-4 text-center border-b border-white/10">
+              <h3 className="text-white/90 text-[10px] font-black uppercase tracking-widest mb-1">Total Penjualan</h3>
+              <h2 className="text-white text-2xl font-black tracking-tight">Rp {totalIncome.toLocaleString()}</h2>
+            </div>
+            <div className="p-3 grid grid-cols-2 gap-2 flex-1 relative">
+              <div className="bg-white/10 p-2 rounded-xl backdrop-blur-sm flex flex-col justify-center">
+                <p className="text-[8px] text-emerald-100 font-black uppercase tracking-wider mb-0.5">Online Lunas</p>
+                <p className="text-xs font-black text-white truncate">Rp {incomeBreakdown.onlinePaid.toLocaleString()}</p>
+              </div>
+              <div className="bg-white/10 p-2 rounded-xl backdrop-blur-sm flex flex-col justify-center">
+                <p className="text-[8px] text-emerald-100 font-black uppercase tracking-wider mb-0.5">Offline Lunas</p>
+                <p className="text-xs font-black text-white truncate">Rp {incomeBreakdown.offlinePaid.toLocaleString()}</p>
+              </div>
+              <div className="bg-orange-500/20 p-2 rounded-xl backdrop-blur-sm flex flex-col justify-center border border-orange-400/30">
+                <p className="text-[8px] text-orange-200 font-black uppercase tracking-wider mb-0.5">Online Belum Lunas</p>
+                <p className="text-xs font-black text-orange-100 truncate">Rp {incomeBreakdown.onlineUnpaid.toLocaleString()}</p>
+              </div>
+              <div className="bg-orange-500/20 p-2 rounded-xl backdrop-blur-sm flex flex-col justify-center border border-orange-400/30">
+                <p className="text-[8px] text-orange-200 font-black uppercase tracking-wider mb-0.5">Offline Belum Lunas</p>
+                <p className="text-xs font-black text-orange-100 truncate">Rp {incomeBreakdown.offlineUnpaid.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: Total Pengeluaran */}
+          <div className="md:col-span-4 bg-red-600 p-0 rounded-[1.5rem] shadow-lg shadow-red-200 overflow-hidden relative group flex flex-col">
+            <div className="bg-red-700/30 p-4 text-center border-b border-white/10">
+              <h3 className="text-white/90 text-[10px] font-black uppercase tracking-widest mb-1">Total Pengeluaran</h3>
+              <h2 className="text-white text-2xl font-black tracking-tight">Rp {totalExpense.toLocaleString()}</h2>
+            </div>
+            <div className="p-3 grid grid-cols-3 gap-2 flex-1 overflow-y-auto custom-scrollbar">
+              {[
+                { label: 'Belanja Bahan', value: expenseBreakdown.belanjaBahan },
+                { label: 'Operasional Pokok', value: expenseBreakdown.operasionalPokok },
+                { label: 'Ops. Luar Biasa', value: expenseBreakdown.operasionalLuarBiasa },
+                { label: 'Gaji Karyawan', value: expenseBreakdown.gajiKaryawan },
+                { label: 'Gaji Direksi', value: expenseBreakdown.gajiDireksi },
+                { label: 'Pengembangan', value: expenseBreakdown.pengembangan }
+              ].map((item, idx) => (
+                <div key={idx} className="bg-white/10 p-1.5 rounded-lg flex flex-col justify-center">
+                  <p className="text-[8px] text-red-100 font-bold uppercase tracking-wider mb-0.5 truncate">{item.label}</p>
+                  <p className="text-[10px] font-black text-white">Rp {item.value.toLocaleString()}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Card 4: Saving Profit */}
+          <div className="md:col-span-2 bg-blue-900 p-6 rounded-[1.5rem] shadow-xl shadow-blue-200 text-white relative overflow-hidden group flex flex-col justify-between">
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Wallet className="w-24 h-24" />
+            </div>
+            <div className="relative z-10">
+              <p className="text-[10px] font-bold text-blue-300 uppercase tracking-widest mb-2">Saving Profit</p>
+              <h2 className="text-xl font-black tracking-tight mb-4">Rp {savingProfit.toLocaleString()}</h2>
+            </div>
+            {activeView === 'owner' && (
+              <button
+                onClick={onEditSaving}
+                className="relative z-10 bg-blue-600 hover:bg-white hover:text-blue-900 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all w-max flex items-center gap-2 shadow-lg"
+              >
+                <Edit3 className="w-3 h-3" /> Edit
+              </button>
+            )}
+          </div>
+        </div>
+
+
 
         {/* Bottom Section: Chart & Top Products */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Trend Chart */}
-          <div className="xl:col-span-2 bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-slate-400" /> Trend Keuangan
-                </h3>
-                <p className="text-xs text-slate-500 font-medium mt-1">Grafik perbandingan pemasukan dan pengeluaran</p>
-              </div>
-              <div className="flex gap-4">
-                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Pemasukan
+          <div className="xl:col-span-1 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-sm font-black text-slate-800 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-slate-400" /> Trend Keuangan
+              </h3>
+              <div className="flex gap-2">
+                <div className="flex items-center gap-1 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> In
                 </div>
-                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div> Pengeluaran
+                <div className="flex items-center gap-1 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Out
                 </div>
               </div>
             </div>
-
-            <div className="h-[350px] w-full">
+            <div className="h-[200px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
                   <defs>
@@ -2692,42 +2770,65 @@ const App = () => {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} tickFormatter={(v) => `${v / 1000}k`} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}
-                    itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
-                  />
-                  <Area type="monotone" dataKey="v" name="Pemasukan" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" />
-                  <Area type="monotone" dataKey="e" name="Pengeluaran" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorExpense)" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: 700 }} dy={10} interval={dateFilterMode === 'month' ? 2 : 0} />
+                  <YAxis hide />
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} itemStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
+                  <Area type="monotone" dataKey="v" name="Pemasukan" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorIncome)" />
+                  <Area type="monotone" dataKey="e" name="Pengeluaran" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorExpense)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Top Products */}
-          <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col">
-            <h3 className="text-lg font-black text-slate-800 flex items-center gap-2 mb-6">
-              <span className="text-amber-500">🏆</span> Produk Terlaris
-            </h3>
-            <div className="flex-1 space-y-6 overflow-y-auto custom-scrollbar pr-2">
-              {topProducts.map((product, idx) => (
-                <div key={idx} className="group">
-                  <div className="flex justify-between items-end mb-2">
-                    <div className="flex items-center gap-3">
-                      <span className={`w-5 h-5 flex items-center justify-center rounded text-[10px] font-black ${idx === 0 ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>{idx + 1}</span>
-                      <h4 className="text-xs font-black text-slate-700 uppercase tracking-tight group-hover:text-red-600 transition-colors">{product.name}</h4>
+          {/* Top Products Online & Offline */}
+          <div className="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Online */}
+            <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col">
+              <h3 className="text-sm font-black text-slate-800 flex items-center gap-2 mb-4">
+                <span className="text-emerald-500">🏆</span> Produk <span className="text-emerald-500">ONLINE</span> Terlaris
+              </h3>
+              <div className="flex-1 space-y-4 overflow-y-auto custom-scrollbar pr-2 max-h-[250px]">
+                {topProductsOnline.map((product, idx) => (
+                  <div key={idx} className="group">
+                    <div className="flex justify-between items-end mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-4 h-4 flex items-center justify-center rounded text-[9px] font-black ${idx === 0 ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>{idx + 1}</span>
+                        <h4 className="text-[11px] font-black text-slate-700 uppercase tracking-tight group-hover:text-emerald-600 transition-colors truncate max-w-[120px]">{product.name}</h4>
+                      </div>
+                      <span className="text-[9px] font-bold text-slate-400">{product.qty} items</span>
                     </div>
-                    <span className="text-[10px] font-bold text-slate-400">{product.sold} items</span>
+                    <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden mb-1">
+                      <div className={`h-full rounded-full transition-all duration-1000 ${idx === 0 ? 'bg-amber-500 w-[90%]' : idx === 1 ? 'bg-slate-400 w-[70%]' : 'bg-slate-300 w-[40%]'}`}></div>
+                    </div>
+                    {/* <p className="text-right text-[9px] font-black text-slate-800">Rp {product.revenue.toLocaleString()}</p> */}
                   </div>
-                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-1">
-                    <div className={`h-full rounded-full transition-all duration-1000 ${idx === 0 ? 'bg-amber-500 w-[90%]' : idx === 1 ? 'bg-slate-400 w-[70%]' : 'bg-blue-400 w-[40%]'}`}></div>
-                  </div>
-                  <p className="text-right text-[10px] font-black text-slate-800">Rp {product.revenue.toLocaleString()}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-            <button className="w-full mt-6 py-3 bg-slate-50 text-slate-500 rounded-xl font-bold text-xs hover:bg-slate-100 transition-colors">Lihat Semua Produk</button>
+
+            {/* Offline */}
+            <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col">
+              <h3 className="text-sm font-black text-slate-800 flex items-center gap-2 mb-4">
+                <span className="text-red-500">🏆</span> Produk <span className="text-red-500">OFFLINE</span> Terlaris
+              </h3>
+              <div className="flex-1 space-y-4 overflow-y-auto custom-scrollbar pr-2 max-h-[250px]">
+                {topProductsOffline.map((product, idx) => (
+                  <div key={idx} className="group">
+                    <div className="flex justify-between items-end mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-4 h-4 flex items-center justify-center rounded text-[9px] font-black ${idx === 0 ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>{idx + 1}</span>
+                        <h4 className="text-[11px] font-black text-slate-700 uppercase tracking-tight group-hover:text-red-600 transition-colors truncate max-w-[120px]">{product.name}</h4>
+                      </div>
+                      <span className="text-[9px] font-bold text-slate-400">{product.qty} items</span>
+                    </div>
+                    <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden mb-1">
+                      <div className={`h-full rounded-full transition-all duration-1000 ${idx === 0 ? 'bg-amber-500 w-[90%]' : idx === 1 ? 'bg-slate-400 w-[70%]' : 'bg-slate-300 w-[40%]'}`}></div>
+                    </div>
+                    {/* <p className="text-right text-[9px] font-black text-slate-800">Rp {product.revenue.toLocaleString()}</p> */}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -2815,114 +2916,126 @@ const App = () => {
     return Object.values(productMap).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
   };
 
-  const DashboardOffline = () => {
-    const totalIncome = useMemo(() => filteredOfflineOrders.reduce((sum, o) => sum + (o.total || 0), 0), [filteredOfflineOrders]);
-    const totalExpense = useMemo(() => filteredExpenses.reduce((sum, e) => sum + (e.amount || 0), 0), [filteredExpenses]);
 
-    const chartData = useMemo(() => processChartData([], filteredOfflineOrders, filteredExpenses, dateFilterMode), [filteredOfflineOrders, filteredExpenses, dateFilterMode]);
-    const topProducts = useMemo(() => getTopProductsMerged([], filteredOfflineOrders), [filteredOfflineOrders]);
+  // State for Saving Profit
+  const [savingProfit, setSavingProfit] = useState(20000000);
+  const [showSavingModal, setShowSavingModal] = useState(false);
 
-    return (
-      <DashboardLayout
-        title="Dashboard Fisik"
-        totalIncome={totalIncome}
-        totalExpense={totalExpense}
-        totalProfit={totalIncome - totalExpense}
-        incomePaid={totalIncome} // Assuming offline is immediate cash
-        incomeUnpaid={0}
-        chartData={chartData}
-        topProducts={topProducts}
-        filterBar={
-          <FilterBar
-            showStore={false}
-            filterStore={filterStore} setFilterStore={setFilterStore}
-            startDate={startDate} setStartDate={setStartDate}
-            endDate={endDate} setEndDate={setEndDate}
-            dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
-            stores={stores}
-          />
-        }
-      />
-    );
-  };
-
-  const DashboardOnline = () => {
-    const totalOmzet = useMemo(() => filteredOrders.reduce((sum, o) => sum + (o.totalBayar || 0), 0), [filteredOrders]);
-
-    // Calculate global setoran (Net) based on logic consistent with store summary (respects globalProductPrices if set)
-    // We re-use logic similar to perStoreSummary for consistency
-    const { totalSetoran, totalSudahBayar } = useMemo(() => {
+  const Dashboard = ({ setTotalBalance }) => {
+    // 1. Online Metrics
+    const onlineRevenue = useMemo(() => filteredOrders.reduce((sum, o) => sum + (o.totalBayar || 0), 0), [filteredOrders]);
+    const { totalSetoran, totalSudahDibayarOnline } = useMemo(() => {
       let setoran = 0;
       let dibayar = 0;
       filteredOrders.forEach(o => {
         const setoranVal = globalProductPrices[o.produk] !== undefined ? globalProductPrices[o.produk] : (o.setoran || 0);
         setoran += setoranVal;
-        dibayar += (o.sudahDibayar || 0);
+        dibayar += (o.sudahDibayar || 0); // Use the actual field
       });
-      return { totalSetoran: setoran, totalSudahBayar: dibayar };
+      return { totalSetoran: setoran, totalSudahDibayarOnline: dibayar };
     }, [filteredOrders, globalProductPrices]);
+    const onlineUnpaid = totalSetoran - totalSudahDibayarOnline;
 
-    const totalFees = totalOmzet - totalSetoran;
-    const unpaidSetoran = totalSetoran - totalSudahBayar;
-
-    const chartData = useMemo(() => processChartData(filteredOrders, [], [], dateFilterMode), [filteredOrders, dateFilterMode]);
-    const topProducts = useMemo(() => getTopProductsMerged(filteredOrders, []), [filteredOrders]);
-
-    return (
-      <DashboardLayout
-        title="Dashboard Online"
-        totalIncome={totalOmzet}
-        totalExpense={totalFees}
-        totalProfit={totalSetoran}
-        incomePaid={totalSudahBayar}
-        incomeUnpaid={unpaidSetoran}
-        chartData={chartData}
-        topProducts={topProducts}
-        filterBar={
-          <FilterBar
-            filterStore={filterStore} setFilterStore={setFilterStore}
-            startDate={startDate} setStartDate={setStartDate}
-            endDate={endDate} setEndDate={setEndDate}
-            dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
-            stores={stores}
-          />
-        }
-      />
-    );
-  };
-
-  const Dashboard = () => {
-    // Combined Income
+    // 2. Offline Metrics
     const offlineIncome = useMemo(() => filteredOfflineOrders.reduce((sum, o) => sum + (o.total || 0), 0), [filteredOfflineOrders]);
+    const offlinePaid = useMemo(() => filteredOfflineOrders.reduce((sum, o) => sum + (o.paidAmount || 0), 0), [filteredOfflineOrders]);
+    const offlineUnpaid = useMemo(() => filteredOfflineOrders.reduce((sum, o) => sum + (o.remaining || 0), 0), [filteredOfflineOrders]);
 
-    // Online Calculation
-    const totalOmzet = useMemo(() => filteredOrders.reduce((sum, o) => sum + (o.totalBayar || 0), 0), [filteredOrders]);
-    const { totalSetoran, totalSudahBayar } = useMemo(() => {
-      let setoran = 0;
-      let dibayar = 0;
-      filteredOrders.forEach(o => {
-        const setoranVal = globalProductPrices[o.produk] !== undefined ? globalProductPrices[o.produk] : (o.setoran || 0);
-        setoran += setoranVal;
-        dibayar += (o.sudahDibayar || 0);
+    // 3. Totals
+    const totalIncome = onlineRevenue + offlineIncome;
+
+    // Income Breakdown
+    const incomeBreakdown = {
+      onlinePaid: totalSudahDibayarOnline,
+      offlinePaid: offlinePaid,
+      onlineUnpaid: onlineUnpaid,
+      offlineUnpaid: offlineUnpaid
+    };
+
+    // 4. Expenses Breakdown
+    const expenseBreakdown = useMemo(() => {
+      const breakdown = {
+        belanjaBahan: 0,
+        operasionalPokok: 0,
+        operasionalLuarBiasa: 0,
+        gajiKaryawan: 0,
+        gajiDireksi: 0,
+        pengembangan: 0
+      };
+      filteredExpenses.forEach(e => {
+        if (e.category === 'Belanja Bahan') breakdown.belanjaBahan += e.amount;
+        else if (e.category === 'Operasional Pokok') breakdown.operasionalPokok += e.amount;
+        else if (e.category === 'Operasional Luar Biasa') breakdown.operasionalLuarBiasa += e.amount;
+        else if (e.category === 'Gaji Karyawan') breakdown.gajiKaryawan += e.amount;
+        else if (e.category === 'Gaji Direksi') breakdown.gajiDireksi += e.amount;
+        else if (e.category === 'Pengembangan') breakdown.pengembangan += e.amount;
+        else if (e.category === 'Operasional') breakdown.operasionalPokok += e.amount; // fallback for old data
       });
-      return { totalSetoran: setoran, totalSudahBayar: dibayar };
-    }, [filteredOrders, globalProductPrices]);
-    const onlineFees = totalOmzet - totalSetoran;
-    const onlineUnpaid = totalSetoran - totalSudahBayar;
+      return breakdown;
+    }, [filteredExpenses]);
+    const totalExpense = Object.values(expenseBreakdown).reduce((a, b) => a + b, 0);
 
-    // Combined
-    const totalIncome = offlineIncome + totalOmzet;
-    const offlineExpense = useMemo(() => filteredExpenses.reduce((sum, e) => sum + (e.amount || 0), 0), [filteredExpenses]);
-    const totalExpense = offlineExpense + onlineFees;
+    // 5. Profit
+    // Profit = (Total Setoran Online + Offline Income) - Total Expense
+    const totalProfit = (totalSetoran + offlineIncome) - totalExpense;
 
-    // Profit = (Offline Income - Offline Expense) + Online Net (Setoran)
-    const totalProfit = (offlineIncome - offlineExpense) + totalSetoran;
+    // 6. Financial Balance Calculation
+    // Bank Transfer = Online Paid (All assumed Transfer/Marketplace) + Offline Transfer Paid - Expenses Transfer
+    // Cash = Offline Cash Paid - Expenses Cash
+    const { bankBalance, cashBalance } = useMemo(() => {
+      // Online Paid (Marketplace is usually transfer/balance) -> Treat as Bank
+      const onlineIn = totalSudahDibayarOnline;
 
-    const combinedPaid = offlineIncome + totalSudahBayar; // Offline is considered paid
-    const combinedUnpaid = onlineUnpaid; // Offline unpaid is 0
+      // Offline
+      const offlineInTransfer = filteredOfflineOrders.filter(o => o.paymentMethod === 'Transfer').reduce((sum, o) => sum + (o.paidAmount || 0), 0);
+      const offlineInCash = filteredOfflineOrders.filter(o => o.paymentMethod === 'Cash').reduce((sum, o) => sum + (o.paidAmount || 0), 0);
 
+      // Expenses
+      const expenseTransfer = filteredExpenses.filter(e => e.paymentMethod === 'Transfer').reduce((sum, e) => sum + (e.amount || 0), 0);
+      const expenseCash = filteredExpenses.filter(e => e.paymentMethod === 'Cash').reduce((sum, e) => sum + (e.amount || 0), 0);
+
+      const bank = onlineIn + offlineInTransfer - expenseTransfer;
+      const cash = offlineInCash - expenseCash;
+
+      return { bankBalance: bank, cashBalance: cash };
+    }, [totalSudahDibayarOnline, filteredOfflineOrders, filteredExpenses]);
+
+    // Update Global Balance
+    useEffect(() => {
+      if (setTotalBalance) {
+        setTotalBalance(bankBalance + cashBalance);
+      }
+    }, [bankBalance, cashBalance, setTotalBalance]);
+
+    // 7. Data needed for charts
     const chartData = useMemo(() => processChartData(filteredOrders, filteredOfflineOrders, filteredExpenses, dateFilterMode), [filteredOrders, filteredOfflineOrders, filteredExpenses, dateFilterMode]);
-    const topProducts = useMemo(() => getTopProductsMerged(filteredOrders, filteredOfflineOrders), [filteredOrders, filteredOfflineOrders]);
+
+    // 8. Top Products
+    const topProductsOnline = useMemo(() => {
+      const productSales = {};
+      filteredOrders.forEach(o => {
+        if (!productSales[o.produk]) productSales[o.produk] = 0;
+        productSales[o.produk] += (o.jumlah || 1);
+      });
+      return Object.entries(productSales)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5)
+        .map(([name, qty]) => ({ name, qty }));
+    }, [filteredOrders]);
+
+    const topProductsOffline = useMemo(() => {
+      const productSales = {};
+      filteredOfflineOrders.forEach(order => {
+        order.items.forEach(item => {
+          if (!productSales[item.name]) productSales[item.name] = 0;
+          productSales[item.name] += item.qty;
+        });
+      });
+      return Object.entries(productSales)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5)
+        .map(([name, qty]) => ({ name, qty }));
+    }, [filteredOfflineOrders]);
 
     return (
       <DashboardLayout
@@ -2930,20 +3043,25 @@ const App = () => {
         totalIncome={totalIncome}
         totalExpense={totalExpense}
         totalProfit={totalProfit}
-        incomePaid={combinedPaid}
-        incomeUnpaid={combinedUnpaid}
+        incomeBreakdown={incomeBreakdown}
+        expenseBreakdown={expenseBreakdown}
         chartData={chartData}
-        topProducts={topProducts}
+        topProductsOnline={topProductsOnline}
+        topProductsOffline={topProductsOffline}
+        activeView={activeView}
         filterBar={
           <FilterBar
-            showStore={false}
             filterStore={filterStore} setFilterStore={setFilterStore}
             startDate={startDate} setStartDate={setStartDate}
-            endDate={endDate} setEndDate={setEndDate}
+            endDate={endDate} setEndDate={endDate}
             dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
             stores={stores}
           />
         }
+        bankBalance={bankBalance}
+        cashBalance={cashBalance}
+        savingProfit={savingProfit}
+        onEditSaving={() => setShowSavingModal(true)}
       />
     );
   };
@@ -2971,7 +3089,7 @@ const App = () => {
                 <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 mt-1 inline-block">{t.status}</span>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
                 <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Orders</p>
                 <p className="text-lg font-black text-slate-800">{t.totalOrders}</p>
@@ -2979,6 +3097,12 @@ const App = () => {
               <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
                 <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Setoran</p>
                 <p className="text-lg font-black text-red-600 truncate">{(t.totalSetoran / 1000000).toFixed(1)} jt</p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Dibayar</p>
+                <p className="text-lg font-black text-emerald-600 truncate">
+                  {((perStoreSummary[t.name]?.sudahDibayar || 0) / 1000000).toFixed(1)} jt
+                </p>
               </div>
             </div>
           </div>
@@ -3817,12 +3941,12 @@ const App = () => {
       <Sidebar activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
 
       <div className="flex-1 lg:ml-64 min-h-screen flex flex-col relative w-full">
-        <TopBar activeMenu={activeMenu} activeView={activeView} setActiveView={setActiveView} />
+        <TopBar activeMenu={activeMenu} activeView={activeView} setActiveView={setActiveView} totalBalance={totalBalance} />
 
         <main className="flex-1 p-4 md:p-8 pb-24 lg:pb-8 max-w-[1600px] mx-auto w-full overflow-x-hidden">
-          {activeMenu === 'dashboard' && <Dashboard />}
-          {activeMenu === 'dashboard-offline' && <DashboardOffline />}
-          {activeMenu === 'dashboard-online' && <DashboardOnline />}
+          {activeMenu === 'dashboard' && <Dashboard setTotalBalance={setTotalBalance} />}
+
+
           {activeMenu === 'pos' && <POSView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} orders={offlineOrders} onCreateOrder={() => setActiveMenu('pos-create')} />}
           {activeMenu === 'pos-create' && <CreateOrderView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} onBack={() => setActiveMenu('pos')} />}
           {activeMenu === 'database-produk-offline' && <OfflineProductView products={offlineProducts} onAddProduct={handleAddOfflineProduct} onEditProduct={handleEditOfflineProduct} />}
@@ -3872,7 +3996,15 @@ const App = () => {
         </div>
       )}
 
-      {showModal && (
+      {showSavingModal && (
+        <SavingProfitModal
+          currentSaving={savingProfit}
+          onSave={(val) => { setSavingProfit(val); setShowSavingModal(false); }}
+          onClose={() => setShowSavingModal(false)}
+        />
+      )}
+
+      {showModal && !showSavingModal && (
         <Modal
           title={showModal.replace('-', ' ')}
           type={showModal}
