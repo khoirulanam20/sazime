@@ -1786,6 +1786,9 @@ const App = () => {
   const [offlineProducts, setOfflineProducts] = useState([
     { id: 1, name: 'Pakan Burung Lovebird Premium', sku: 'PBLP-001', stock: 50, unit: 'pcs', price: 25000 },
     { id: 2, name: 'Vitamin Burung Gacor', sku: 'VBG-002', stock: 30, unit: 'btl', price: 45000 },
+    { id: 3, name: 'Kandang Besi Kotak', sku: 'KBK-003', stock: 20, unit: 'pcs', price: 150000 },
+    { id: 4, name: 'Batu Gosok Paruh', sku: 'BGP-004', stock: 100, unit: 'pcs', price: 15000 },
+    { id: 5, name: 'Tangkringan Kayu Jati', sku: 'TKJ-005', stock: 75, unit: 'pcs', price: 25000 },
   ]);
   const [offlineOrders, setOfflineOrders] = useState([
     {
@@ -1813,6 +1816,45 @@ const App = () => {
       remaining: 40000,
       status: 'Belum Lunas',
       items: [{ id: 2, name: 'Vitamin Burung Gacor', price: 45000, qty: 2, total: 90000 }]
+    },
+    {
+      id: 'OFF-003',
+      customerName: 'Toko Sejahtera',
+      date: '2026-02-05',
+      paymentMethod: 'Cash',
+      subtotal: 300000,
+      discount: 0,
+      total: 300000,
+      paidAmount: 300000,
+      remaining: 0,
+      status: 'Lunas',
+      items: [{ id: 3, name: 'Kandang Besi Kotak', price: 150000, qty: 2, total: 300000 }]
+    },
+    {
+      id: 'OFF-004',
+      customerName: 'Budi Santoso',
+      date: '2026-02-06',
+      paymentMethod: 'Transfer',
+      subtotal: 75000,
+      discount: 0,
+      total: 75000,
+      paidAmount: 75000,
+      remaining: 0,
+      status: 'Lunas',
+      items: [{ id: 4, name: 'Batu Gosok Paruh', price: 15000, qty: 5, total: 75000 }]
+    },
+    {
+      id: 'OFF-005',
+      customerName: 'Ani Wijaya',
+      date: '2026-02-07',
+      paymentMethod: 'Cash',
+      subtotal: 100000,
+      discount: 0,
+      total: 100000,
+      paidAmount: 100000,
+      remaining: 0,
+      status: 'Lunas',
+      items: [{ id: 5, name: 'Tangkringan Kayu Jati', price: 25000, qty: 4, total: 100000 }]
     },
     {
       id: 'OFF-003',
