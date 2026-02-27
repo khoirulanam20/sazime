@@ -1024,10 +1024,26 @@ const CashflowRecapView = ({
   filterStore, setFilterStore,
   startDate, setStartDate,
   endDate, setEndDate,
-  dateFilterMode, setDateFilterMode
+  dateFilterMode, setDateFilterMode,
+  onEditOrder, onDeleteOrder
 }) => {
   const [activeTab, setActiveTab] = useState('online'); // online, offline, expenses
+  const [editOrder, setEditOrder] = useState(null);
 
+  const handleDeleteClick = (id) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus pesanan ini?")) {
+      if (onDeleteOrder) onDeleteOrder(id);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (editOrder && onEditOrder) {
+      const remaining = editOrder.total - editOrder.paidAmount;
+      const status = remaining <= 0 ? 'Lunas' : 'Belum Lunas';
+      onEditOrder({ ...editOrder, remaining, status });
+      setEditOrder(null);
+    }
+  };
   const handleExportExcel = () => {
     let data = [];
     let fileName = '';
@@ -1130,36 +1146,28 @@ const CashflowRecapView = ({
   );
 
   const renderOffline = () => {
-    // Group Offline Orders by Payment Method (to mimic Rekap Setoran structure)
-    const grouped = offlineOrders.reduce((acc, curr) => {
-      acc[curr.paymentMethod] = acc[curr.paymentMethod] || { total: 0, remaining: 0, count: 0 };
-      acc[curr.paymentMethod].total += curr.total;
-      acc[curr.paymentMethod].remaining += curr.remaining;
-      acc[curr.paymentMethod].count += 1;
-      return acc;
-    }, {});
-
+    // offlineOrders contains all POS transactions.
     const offlineTotals = offlineOrders.reduce((acc, curr) => {
+      if (curr.paymentMethod === 'Transfer') acc.bank += curr.total;
+      if (curr.paymentMethod === 'Cash') acc.cash += curr.total;
       acc.total += curr.total;
-      acc.paid += curr.paidAmount;
-      acc.remaining += curr.remaining;
       return acc;
-    }, { total: 0, paid: 0, remaining: 0 });
+    }, { total: 0, bank: 0, cash: 0 });
 
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Penjualan Offline</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saldo Bank</p>
+            <h3 className="text-2xl font-black text-emerald-600 mt-2">Rp {offlineTotals.bank.toLocaleString()}</h3>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saldo Cash</p>
+            <h3 className="text-2xl font-black text-emerald-600 mt-2">Rp {offlineTotals.cash.toLocaleString()}</h3>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Saldo</p>
             <h3 className="text-2xl font-black text-slate-900 mt-2">Rp {offlineTotals.total.toLocaleString()}</h3>
-          </div>
-          <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Diterima</p>
-            <h3 className="text-2xl font-black text-emerald-600 mt-2">Rp {offlineTotals.paid.toLocaleString()}</h3>
-          </div>
-          <div className="bg-white p-4 rounded-2xl border shadow-sm border-slate-200">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Belum Dibayar</p>
-            <h3 className="text-2xl font-black text-amber-500 mt-2">Rp {offlineTotals.remaining.toLocaleString()}</h3>
           </div>
         </div>
 
@@ -1174,24 +1182,28 @@ const CashflowRecapView = ({
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase">
                 <tr>
-                  <th className="px-6 py-4">Nama Toko</th>
-                  <th className="px-6 py-4">Metode Bayar</th>
-                  <th className="px-6 py-4">Total Setoran</th>
-                  <th className="px-6 py-4">Setoran Belum Dibayar</th>
-                  <th className="px-6 py-4 text-center">Jumlah Transaksi</th>
+                  <th className="px-6 py-4">No. Nota</th>
+                  <th className="px-6 py-4">Tanggal</th>
+                  <th className="px-6 py-4">Pelanggan</th>
+                  <th className="px-6 py-4 text-center">Item</th>
+                  <th className="px-6 py-4 text-right">Total</th>
+                  <th className="px-6 py-4 text-center">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {Object.keys(grouped).length === 0 ? (
-                  <tr><td colSpan="5" className="px-6 py-8 text-center text-slate-400 font-bold italic text-xs">Belum ada transaksi offline</td></tr>
+                {offlineOrders.length === 0 ? (
+                  <tr><td colSpan="7" className="px-6 py-8 text-center text-slate-400 font-bold italic text-xs">Belum ada transaksi offline</td></tr>
                 ) : (
-                  Object.entries(grouped).map(([method, stats], idx) => (
-                    <tr key={idx} className="hover:bg-slate-50 transition">
-                      <td className="px-6 py-4 font-black text-slate-800 uppercase">Toko Fisik (Offline)</td>
-                      <td className="px-6 py-4 uppercase font-black tracking-tight">{method}</td>
-                      <td className="px-6 py-4 font-black text-emerald-600">Rp {stats.total.toLocaleString()}</td>
-                      <td className="px-6 py-4 font-black text-amber-500">Rp {stats.remaining.toLocaleString()}</td>
-                      <td className="px-6 py-4 text-center font-bold text-slate-500">{stats.count}</td>
+                  offlineOrders.map((order) => (
+                    <tr key={order.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4 font-mono font-bold text-slate-700">{order.id}</td>
+                      <td className="px-6 py-4 text-xs font-bold text-slate-500">{order.date}</td>
+                      <td className="px-6 py-4 font-bold text-slate-800">{order.customerName}</td>
+                      <td className="px-6 py-4 text-center"><span className="bg-slate-100 px-2 py-1 rounded text-[10px] font-black">{order.items.length} Item</span></td>
+                      <td className="px-6 py-4 text-right font-black text-red-600">Rp {order.total.toLocaleString()}</td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`px-2 py-1 rounded text-[10px] uppercase font-black ${order.status === 'Lunas' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{order.status}</span>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -1199,6 +1211,48 @@ const CashflowRecapView = ({
             </table>
           </div>
         </div>
+
+        {/* Modal Edit POS Sama Seperti di POSView */}
+        {editOrder && (
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-sm sm:p-4">
+            <div className="bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300">
+              <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 className="text-lg text-slate-800 font-black tracking-tight uppercase italic flex items-center">
+                  <span className="w-1 h-6 bg-red-600 mr-3 rounded-full"></span> Edit {editOrder.id}
+                </h3>
+                <button onClick={() => setEditOrder(null)} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-full transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Pelanggan (Opsional)</label>
+                  <input type="text" value={editOrder.customerName} onChange={(e) => setEditOrder({ ...editOrder, customerName: e.target.value })} className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold py-3 px-4 outline-none focus:ring-2 focus:ring-red-500 transition-all text-slate-700 focus:bg-white" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Metode Pembayaran</label>
+                  <div className="relative group">
+                    <select value={editOrder.paymentMethod} onChange={(e) => setEditOrder({ ...editOrder, paymentMethod: e.target.value })} className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold py-3 pl-4 pr-10 outline-none focus:ring-2 focus:ring-red-500 transition-all appearance-none cursor-pointer text-slate-700 focus:bg-white">
+                      <option value="Cash">Tunai (Cash)</option>
+                      <option value="Transfer">Transfer Bank</option>
+                    </select>
+                    <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Total Diterima (Rp)</label>
+                  <input type="number" value={editOrder.paidAmount} onChange={(e) => setEditOrder({ ...editOrder, paidAmount: Number(e.target.value) })} className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold py-3 px-4 outline-none focus:ring-2 focus:ring-red-500 transition-all text-slate-700 focus:bg-white" />
+                </div>
+              </div>
+
+              <div className="p-6 pt-2 bg-slate-50/50 flex gap-3">
+                <button onClick={() => setEditOrder(null)} className="flex-1 py-3.5 rounded-xl font-black text-xs uppercase tracking-widest text-slate-500 hover:bg-slate-200 transition-colors">Batal</button>
+                <button onClick={handleSaveEdit} className="flex-1 py-3.5 rounded-xl font-black text-xs uppercase tracking-widest bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200">Simpan</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -1274,6 +1328,7 @@ const CashflowRecapView = ({
       </div>
 
       <FilterBar
+        showStore={activeTab === 'online'}
         filterStore={filterStore} setFilterStore={setFilterStore}
         startDate={startDate} setStartDate={setStartDate}
         endDate={endDate} setEndDate={setEndDate}
@@ -2726,7 +2781,7 @@ const App = () => {
     );
   };
 
-  const DashboardLayout = ({ title, totalIncome, totalExpense, totalProfit, incomeBreakdown, expenseBreakdown, chartData, topProductsOnline, topProductsOffline, filterBar, activeView, bankBalance, cashBalance, savingProfit, onEditSaving, setTotalBalance }) => {
+  const DashboardLayout = ({ title, totalIncome, totalExpense, totalProfit, incomeBreakdown, expenseBreakdown, chartData, topProductsOnline, topProductsOffline, filterBar, activeView, bankBalance, cashBalance, marketplaceBalance, savingProfit, onEditSaving, setTotalBalance }) => {
     return (
       <div className="space-y-6 animate-in fade-in duration-500 font-sans">
 
@@ -2741,7 +2796,7 @@ const App = () => {
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Total Saldo Keuangan</h3>
-                <h2 className="text-slate-800 text-3xl font-black tracking-tight">Rp {(bankBalance + cashBalance).toLocaleString()}</h2>
+                <h2 className="text-slate-800 text-3xl font-black tracking-tight">Rp {(bankBalance + cashBalance + marketplaceBalance).toLocaleString()}</h2>
               </div>
               <div className="p-3 bg-emerald-50 rounded-xl">
                 <Wallet className="w-6 h-6 text-emerald-600" />
@@ -2752,9 +2807,17 @@ const App = () => {
               <div className="flex justify-between items-center text-sm">
                 <div className="flex items-center gap-2 text-slate-500 font-bold">
                   <CreditCard className="w-4 h-4" />
-                  <span className="text-xs">Bank Transfer</span>
+                  <span className="text-xs">Saldo Bank</span>
                 </div>
                 <span className="font-black text-slate-800">Rp {bankBalance.toLocaleString()}</span>
+              </div>
+              <div className="w-full h-px bg-slate-50"></div>
+              <div className="flex justify-between items-center text-sm">
+                <div className="flex items-center gap-2 text-slate-500 font-bold">
+                  <Store className="w-4 h-4" />
+                  <span className="text-xs">Saldo Marketplace</span>
+                </div>
+                <span className="font-black text-slate-800">Rp {marketplaceBalance.toLocaleString()}</span>
               </div>
               <div className="w-full h-px bg-slate-50"></div>
               <div className="flex justify-between items-center text-sm">
@@ -3094,9 +3157,9 @@ const App = () => {
     const totalProfit = (totalSetoran + offlineIncome) - totalExpense;
 
     // 6. Financial Balance Calculation
-    // Bank Transfer = Online Paid (All assumed Transfer/Marketplace) + Offline Transfer Paid - Expenses Transfer
-    // Cash = Offline Cash Paid - Expenses Cash
-    const { bankBalance, cashBalance } = useMemo(() => {
+    // bank transfer is now Saldo Bank. We separate Marketplace from Bank.
+    // Marketplace = Total Dibayar Online (Marketplace transfers)
+    const { bankBalance, cashBalance, marketplaceBalance } = useMemo(() => {
       // Online Paid (Marketplace is usually transfer/balance) -> Treat as Bank
       const onlineIn = totalSudahDibayarOnline;
 
@@ -3108,18 +3171,19 @@ const App = () => {
       const expenseTransfer = filteredExpenses.filter(e => e.paymentMethod === 'Transfer').reduce((sum, e) => sum + (e.amount || 0), 0);
       const expenseCash = filteredExpenses.filter(e => e.paymentMethod === 'Cash').reduce((sum, e) => sum + (e.amount || 0), 0);
 
-      const bank = onlineIn + offlineInTransfer - expenseTransfer;
+      const bank = offlineInTransfer - expenseTransfer;
+      const marketplace = onlineIn;
       const cash = offlineInCash - expenseCash;
 
-      return { bankBalance: bank, cashBalance: cash };
+      return { bankBalance: bank, cashBalance: cash, marketplaceBalance: marketplace };
     }, [totalSudahDibayarOnline, filteredOfflineOrders, filteredExpenses]);
 
     // Update Global Balance
     useEffect(() => {
       if (setTotalBalance) {
-        setTotalBalance(bankBalance + cashBalance);
+        setTotalBalance(bankBalance + cashBalance + marketplaceBalance);
       }
-    }, [bankBalance, cashBalance, setTotalBalance]);
+    }, [bankBalance, cashBalance, marketplaceBalance, setTotalBalance]);
 
     // 7. Data needed for charts
     const chartData = useMemo(() => processChartData(filteredOrders, filteredOfflineOrders, filteredExpenses, dateFilterMode), [filteredOrders, filteredOfflineOrders, filteredExpenses, dateFilterMode]);
@@ -3163,6 +3227,12 @@ const App = () => {
         topProductsOnline={topProductsOnline}
         topProductsOffline={topProductsOffline}
         activeView={activeView}
+        bankBalance={bankBalance}
+        cashBalance={cashBalance}
+        marketplaceBalance={marketplaceBalance}
+        savingProfit={savingProfit}
+        onEditSaving={() => setShowSavingModal(true)}
+        setTotalBalance={setTotalBalance}
         filterBar={
           <FilterBar
             filterStore={filterStore} setFilterStore={setFilterStore}
@@ -3172,10 +3242,6 @@ const App = () => {
             stores={stores}
           />
         }
-        bankBalance={bankBalance}
-        cashBalance={cashBalance}
-        savingProfit={savingProfit}
-        onEditSaving={() => setShowSavingModal(true)}
       />
     );
   };
@@ -4082,6 +4148,8 @@ const App = () => {
               startDate={startDate} setStartDate={setStartDate}
               endDate={endDate} setEndDate={setEndDate}
               dateFilterMode={dateFilterMode} setDateFilterMode={setDateFilterMode}
+              onEditOrder={handleEditOfflineOrder}
+              onDeleteOrder={handleDeleteOfflineOrder}
             />
           )}
           {activeMenu === 'toko' && <TokoList />}
