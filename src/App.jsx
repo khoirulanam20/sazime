@@ -148,38 +148,61 @@ const BottomNavbar = ({ activeMenu, setActiveMenu }) => (
   </nav>
 );
 
-const TopBar = ({ activeMenu, activeView, setActiveView, totalBalance }) => (
-  <header className={`h-16 md:h-20 ${THEME.headerMobile} md:bg-white md:backdrop-blur-md md:border-b md:border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 shadow-sm transition-colors duration-300`}>
-    {/* Mobile Left */}
-    <div className="flex items-center md:hidden">
-      <div className="w-8 h-8 bg-white/10 backdrop-blur rounded-lg flex items-center justify-center mr-3">
-        <span className="font-black text-white text-lg">S</span>
-      </div>
-      <h2 className="font-black text-white tracking-tight text-lg uppercase truncate max-w-[200px]">
-        {activeMenu === 'dashboard' ? 'DASHBOARD' : activeMenu.replace(/-/g, ' ')}
-      </h2>
-    </div>
+const TopBar = ({ activeMenu, activeView, setActiveView, totalBalance }) => {
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-    {/* Desktop Left */}
-    <div className="hidden md:flex items-center">
-      <h1 className="font-black text-slate-800 text-3xl italic tracking-tighter uppercase">DASHBOARD</h1>
-    </div>
-
-    {/* Right Section */}
-    <div className="flex items-center space-x-4 md:space-x-6">
-      <div className="flex flex-col items-end mr-2">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Saldo Keuangan</span>
-        <h2 className="font-black text-slate-900 tracking-tight text-xl">
-          Rp {(totalBalance || 0).toLocaleString()}
+  return (
+    <header className={`h-16 md:h-20 ${THEME.headerMobile} md:bg-white md:backdrop-blur-md md:border-b md:border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 shadow-sm transition-colors duration-300`}>
+      {/* Mobile Left */}
+      <div className="flex items-center md:hidden">
+        <div className="w-8 h-8 bg-white/10 backdrop-blur rounded-lg flex items-center justify-center mr-3">
+          <span className="font-black text-white text-lg">S</span>
+        </div>
+        <h2 className="font-black text-white tracking-tight text-lg uppercase truncate max-w-[200px]">
+          {activeMenu === 'dashboard' ? 'DASHBOARD' : activeMenu.replace(/-/g, ' ')}
         </h2>
       </div>
 
-      <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white text-sm font-black shadow-lg shadow-red-200 ring-2 ring-white">
-        S
+      {/* Desktop Left */}
+      <div className="hidden md:flex items-center">
+        <h1 className="font-black text-slate-800 text-3xl italic tracking-tighter uppercase">DASHBOARD</h1>
       </div>
-    </div>
-  </header>
-);
+
+      {/* Right Section */}
+      <div className="flex items-center space-x-4 md:space-x-6">
+        <div className="flex flex-col items-end mr-2">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Saldo Keuangan</span>
+          <h2 className="font-black text-slate-900 tracking-tight text-xl">
+            Rp {(totalBalance || 0).toLocaleString()}
+          </h2>
+        </div>
+
+        <div className="relative">
+          <button
+            onClick={() => setIsProfileOpen(!isProfileOpen)}
+            className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white text-sm font-black shadow-lg shadow-red-200 ring-2 ring-white hover:bg-red-700 transition"
+          >
+            S
+          </button>
+
+          {isProfileOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl shadow-slate-200 border border-slate-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+              <a href="#" className="flex items-center px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-red-600 transition-colors">
+                <User className="w-4 h-4 mr-3 text-slate-400 group-hover:text-red-600" />
+                Profil Pengguna
+              </a>
+              <div className="h-px bg-slate-100 my-1 mx-2"></div>
+              <a href="#" className="flex items-center px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors">
+                <LogOut className="w-4 h-4 mr-3 text-red-400" />
+                Keluar (Logout)
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+};
 
 const OfflineProductView = ({ products, onAddProduct, onEditProduct }) => {
   const [showAddModal, setShowAddModal] = useState(false);

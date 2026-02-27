@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Header - Sazime</title>
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons via CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            /* slate-50 */
+        }
+
+        @keyframes fadeInZoom {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInZoom 0.2s ease-out forwards;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased text-slate-800">
+
+    <!-- Header Container -->
+    <header
+        class="h-16 md:h-20 bg-emerald-600 md:bg-white md:backdrop-blur-md md:border-b md:border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 shadow-sm transition-colors duration-300 w-full">
+
+        <!-- Mobile Left -->
+        <div class="flex items-center md:hidden">
+            <div class="w-8 h-8 bg-white/10 backdrop-blur rounded-lg flex items-center justify-center mr-3">
+                <span class="font-black text-white text-lg">S</span>
+            </div>
+            <h2 class="font-black text-white tracking-tight text-lg uppercase truncate max-w-[200px]">
+                DASHBOARD
+            </h2>
+        </div>
+
+        <!-- Desktop Left -->
+        <div class="hidden md:flex items-center">
+            <h1 class="font-black text-slate-800 text-3xl italic tracking-tighter uppercase">DASHBOARD</h1>
+        </div>
+
+        <!-- Right Section -->
+        <div class="flex items-center space-x-4 md:space-x-6">
+
+            <!-- Balance Info -->
+            <div class="flex flex-col items-end mr-2">
+                <span class="text-[10px] font-bold text-emerald-100 md:text-slate-400 uppercase tracking-widest">Total
+                    Saldo Keuangan</span>
+                <h2 class="font-black text-white md:text-slate-900 tracking-tight text-xl">
+                    Rp 125.430.000
+                </h2>
+            </div>
+
+            <!-- Profile Container -->
+            <div class="relative">
+                <button id="profileBtn" onclick="toggleProfileDropdown()"
+                    class="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white text-sm font-black shadow-lg shadow-red-200 ring-2 ring-white hover:bg-red-700 transition">
+                    S
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="profileDropdown"
+                    class="hidden absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl shadow-slate-200 border border-slate-100 py-2 z-50 animate-in">
+                    <a href="#"
+                        class="flex items-center px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-red-600 transition-colors group">
+                        <i data-lucide="user" class="w-4 h-4 mr-3 text-slate-400 group-hover:text-red-600"></i>
+                        Profil Pengguna
+                    </a>
+                    <div class="h-px bg-slate-100 my-1 mx-2"></div>
+                    <a href="#"
+                        class="flex items-center px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors">
+                        <i data-lucide="log-out" class="w-4 h-4 mr-3 text-red-400"></i>
+                        Keluar (Logout)
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Dummy Content Area for visualization -->
+    <div class="p-8 text-center text-slate-400 font-bold mt-10">
+        <p>Klik ikon S (Profile) untuk memunculkan dropdown.</p>
+    </div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        function toggleProfileDropdown() {
+            const dropdown = document.getElementById('profileDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (event) {
+            const profileBtn = document.getElementById('profileBtn');
+            const dropdown = document.getElementById('profileDropdown');
+
+            // If the click is outside the button and the dropdown, hide it
+            if (!profileBtn.contains(event.target) && !dropdown.contains(event.target)) {
+                if (!dropdown.classList.contains('hidden')) {
+                    dropdown.classList.add('hidden');
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
