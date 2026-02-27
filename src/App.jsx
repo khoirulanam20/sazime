@@ -11,7 +11,7 @@ import {
   Wallet, FileSpreadsheet, Edit3, X, Eye, Calendar, Share2, RefreshCw,
   Camera, Zap, Key, User, Truck, MapPin, CreditCard, Clock, FileText,
   CheckSquare, Square, QrCode, Keyboard, Phone, Printer, Menu, Save,
-  Database, Receipt, BarChart3, ChevronLeft
+  Database, Receipt, BarChart3, ChevronLeft, Trash2
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -776,8 +776,26 @@ const CreateOrderView = ({ offlineProducts, onAddOrder, onBack }) => {
   );
 };
 
-const POSView = ({ offlineProducts, onAddOrder, orders, onCreateOrder }) => {
+const POSView = ({ offlineProducts, onAddOrder, orders, onCreateOrder, onEditOrder, onDeleteOrder }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [editOrder, setEditOrder] = useState(null);
+
+  const handleDeleteClick = (id) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus pesanan ini?")) {
+      if (onDeleteOrder) {
+        onDeleteOrder(id);
+      }
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (editOrder && onEditOrder) {
+      const remaining = editOrder.total - editOrder.paidAmount;
+      const status = remaining <= 0 ? 'Lunas' : 'Belum Lunas';
+      onEditOrder({ ...editOrder, remaining, status });
+      setEditOrder(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -823,7 +841,12 @@ const POSView = ({ offlineProducts, onAddOrder, orders, onCreateOrder }) => {
                     <td className="px-6 py-4 text-center">
                       <span className={`px-2 py-1 rounded text-[10px] uppercase font-black ${order.status === 'Lunas' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{order.status}</span>
                     </td>
-                    <td className="px-6 py-4 text-center"><button className="text-slate-400 hover:text-red-600"><FileText className="w-4 h-4" /></button></td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex justify-center gap-2">
+                        <button onClick={() => setEditOrder({ ...order })} className="text-slate-400 hover:text-emerald-600"><Edit3 className="w-4 h-4" /></button>
+                        <button onClick={() => handleDeleteClick(order.id)} className="text-slate-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -831,6 +854,47 @@ const POSView = ({ offlineProducts, onAddOrder, orders, onCreateOrder }) => {
           </table>
         </div>
       </div>
+
+      {editOrder && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-sm sm:p-4">
+          <div className="bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="text-lg text-slate-800 font-black tracking-tight uppercase italic flex items-center">
+                <span className="w-1 h-6 bg-red-600 mr-3 rounded-full"></span> Edit Nota
+              </h3>
+              <button onClick={() => setEditOrder(null)} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-full transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4">
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">No. Nota</p>
+                <p className="font-mono font-black text-lg text-slate-800">{editOrder.id}</p>
+                <p className="text-xs text-slate-500 font-bold mt-1">Total: Rp {editOrder.total.toLocaleString()}</p>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pelanggan</label>
+                <input type="text" value={editOrder.customerName} onChange={e => setEditOrder({ ...editOrder, customerName: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Metode Bayar</label>
+                <select value={editOrder.paymentMethod} onChange={e => setEditOrder({ ...editOrder, paymentMethod: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500">
+                  <option value="Cash">Cash</option>
+                  <option value="Transfer">Transfer</option>
+                  <option value="Debit">Debit</option>
+                  <option value="Kredit">Kredit</option>
+                  <option value="Qris">Qris</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jumlah Dibayar (Rp)</label>
+                <input type="number" value={editOrder.paidAmount} onChange={e => setEditOrder({ ...editOrder, paidAmount: parseInt(e.target.value) || 0 })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" />
+              </div>
+              <button onClick={handleSaveEdit} className="w-full py-4 bg-red-600 text-white rounded-2xl font-black shadow-lg shadow-red-200 hover:bg-red-700 transition uppercase tracking-widest text-sm flex items-center justify-center mt-2">
+                <Save className="w-4 h-4 mr-2" /> Simpan Perubahan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1913,6 +1977,14 @@ const App = () => {
     order.items.forEach(item => {
       setOfflineProducts(prev => prev.map(p => p.id === item.id ? { ...p, stock: p.stock - item.qty } : p));
     });
+  };
+
+  const handleEditOfflineOrder = (updatedOrder) => {
+    setOfflineOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+  };
+
+  const handleDeleteOfflineOrder = (id) => {
+    setOfflineOrders(prev => prev.filter(o => o.id !== id));
   };
 
   const handleAddExpense = (expense) => {
@@ -3989,7 +4061,7 @@ const App = () => {
           {activeMenu === 'dashboard' && <Dashboard setTotalBalance={setTotalBalance} />}
 
 
-          {activeMenu === 'pos' && <POSView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} orders={offlineOrders} onCreateOrder={() => setActiveMenu('pos-create')} />}
+          {activeMenu === 'pos' && <POSView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} orders={offlineOrders} onCreateOrder={() => setActiveMenu('pos-create')} onEditOrder={handleEditOfflineOrder} onDeleteOrder={handleDeleteOfflineOrder} />}
           {activeMenu === 'pos-create' && <CreateOrderView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} onBack={() => setActiveMenu('pos')} />}
           {activeMenu === 'database-produk-offline' && <OfflineProductView products={offlineProducts} onAddProduct={handleAddOfflineProduct} onEditProduct={handleEditOfflineProduct} />}
           {activeMenu === 'pengeluaran' && <ExpenseView expenses={expenses} onAddExpense={handleAddExpense} />}
