@@ -33,12 +33,27 @@ const THEME = {
 // --- SUB-KOMPONEN UI ---
 
 const Sidebar = ({ activeMenu, setActiveMenu }) => {
+  const [nfcExpanded, setNfcExpanded] = useState(false);
+  const nfcSubActive = activeMenu === 'nfc' || activeMenu === 'nfc-scan' || activeMenu === 'nfc-transfer';
+
   const menuGroups = [
     {
       title: 'Menu Utama',
       items: [
         { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-        { id: 'nfc', icon: Cpu, label: 'NFC' }
+      ]
+    },
+    {
+      title: 'NFC',
+      items: [
+        {
+          id: 'nfc', icon: Cpu, label: 'NFC Management',
+          children: [
+            { id: 'nfc', icon: Database, label: 'Data Chip' },
+            { id: 'nfc-scan', icon: ScanLine, label: 'Scan NFC' },
+            { id: 'nfc-transfer', icon: Send, label: 'Permintaan Transfer Pemilik' },
+          ]
+        }
       ]
     },
     {
@@ -92,19 +107,56 @@ const Sidebar = ({ activeMenu, setActiveMenu }) => {
         {menuGroups.map((group, groupIdx) => (
           <div key={groupIdx} className="space-y-1">
             <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">{group.title}</p>
-            {group.items.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveMenu(item.id)}
-                className={`flex items-center w-full p-3 rounded-xl transition-all duration-200 group ${activeMenu === item.id || (activeMenu === 'toko-detail' && item.id === 'toko')
-                  ? `${THEME.primary} text-white shadow-lg shadow-red-900/20`
-                  : 'hover:bg-white/10 text-slate-400 hover:text-white'
-                  }`}
-              >
-                <item.icon className={`w-4 h-4 mr-3 transition-transform ${activeMenu === item.id ? 'scale-110' : 'group-hover:scale-110'}`} />
-                <span className="font-bold text-xs tracking-wide">{item.label}</span>
-              </button>
-            ))}
+            {group.items.map((item) => {
+              if (item.children) {
+                const isExpanded = nfcExpanded || nfcSubActive;
+                return (
+                  <div key={item.id} className="space-y-0.5">
+                    <button
+                      onClick={() => setNfcExpanded(!isExpanded)}
+                      className={`flex items-center w-full p-3 rounded-xl transition-all duration-200 group ${nfcSubActive
+                        ? `${THEME.primary} text-white shadow-lg shadow-red-900/20`
+                        : 'hover:bg-white/10 text-slate-400 hover:text-white'
+                        }`}
+                    >
+                      <item.icon className={`w-4 h-4 mr-3 transition-transform ${nfcSubActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                      <span className="font-bold text-xs tracking-wide flex-1 text-left">{item.label}</span>
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isExpanded && (
+                      <div className="ml-3 space-y-0.5 border-l-2 border-slate-700/50 pl-2">
+                        {item.children.map(child => (
+                          <button
+                            key={child.id}
+                            onClick={() => setActiveMenu(child.id)}
+                            className={`flex items-center w-full p-2.5 rounded-lg transition-all duration-200 group ${activeMenu === child.id
+                              ? 'bg-white/15 text-white font-black'
+                              : 'hover:bg-white/5 text-slate-400 hover:text-white'
+                              }`}
+                          >
+                            <child.icon className="w-3.5 h-3.5 mr-2.5 shrink-0" />
+                            <span className="text-[10px] font-bold text-left leading-snug">{child.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveMenu(item.id)}
+                  className={`flex items-center w-full p-3 rounded-xl transition-all duration-200 group ${activeMenu === item.id || (activeMenu === 'toko-detail' && item.id === 'toko')
+                    ? `${THEME.primary} text-white shadow-lg shadow-red-900/20`
+                    : 'hover:bg-white/10 text-slate-400 hover:text-white'
+                    }`}
+                >
+                  <item.icon className={`w-4 h-4 mr-3 transition-transform ${activeMenu === item.id ? 'scale-110' : 'group-hover:scale-110'}`} />
+                  <span className="font-bold text-xs tracking-wide">{item.label}</span>
+                </button>
+              );
+            })}
           </div>
         ))}
       </nav>
@@ -130,31 +182,45 @@ const BottomNavbar = ({ activeMenu, setActiveMenu }) => (
       { id: 'database-produk', icon: Package, label: 'Prd. On' },
       // { id: 'status-pengiriman', icon: Truck, label: 'Kirim' },
       { id: 'rekap-setoran', icon: Wallet, label: 'Setor' },
-    ].map((item) => (
-      <button
-        key={item.id}
-        onClick={() => setActiveMenu(item.id)}
-        className={`flex flex-col items-center p-2 rounded-xl transition-all duration-300 min-w-[20%] relative ${activeMenu === item.id || (activeMenu === 'toko-detail' && item.id === 'toko')
-          ? 'opacity-100'
-          : 'opacity-60 hover:opacity-100'
-          }`}
-      >
-        <div className={`transition-all duration-300 ${activeMenu === item.id ? '-translate-y-1' : ''}`}>
-          <item.icon className={`w-6 h-6 ${activeMenu === item.id ? 'scale-110 drop-shadow-md' : ''}`} />
-        </div>
-        <span className={`text-[9px] font-bold mt-1 uppercase tracking-tight truncate max-w-full transition-all ${activeMenu === item.id ? 'opacity-100 font-black' : 'opacity-0 h-0 overflow-hidden'}`}>
-          {item.label}
-        </span>
-        {activeMenu === item.id && (
-          <span className="absolute -bottom-2 w-1 h-1 bg-white rounded-full"></span>
-        )}
-      </button>
-    ))}
+    ].map((item) => {
+      const isNavActive = activeMenu === item.id || (activeMenu === 'toko-detail' && item.id === 'toko') || (item.id === 'nfc' && ['nfc', 'nfc-scan', 'nfc-transfer'].includes(activeMenu));
+      return (
+        <button
+          key={item.id}
+          onClick={() => setActiveMenu(item.id)}
+          className={`flex flex-col items-center p-2 rounded-xl transition-all duration-300 min-w-[20%] relative ${isNavActive
+            ? 'opacity-100'
+            : 'opacity-60 hover:opacity-100'
+            }`}
+        >
+          <div className={`transition-all duration-300 ${isNavActive ? '-translate-y-1' : ''}`}>
+            <item.icon className={`w-6 h-6 ${isNavActive ? 'scale-110 drop-shadow-md' : ''}`} />
+          </div>
+          <span className={`text-[9px] font-bold mt-1 uppercase tracking-tight truncate max-w-full transition-all ${isNavActive ? 'opacity-100 font-black' : 'opacity-0 h-0 overflow-hidden'}`}>
+            {item.label}
+          </span>
+          {isNavActive && (
+            <span className="absolute -bottom-2 w-1 h-1 bg-white rounded-full"></span>
+          )}
+        </button>
+      );
+    })}
   </nav>
 );
 
 const TopBar = ({ activeMenu, activeView, setActiveView, totalBalance }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const pageLabel =
+    activeMenu === 'dashboard'
+      ? 'DASHBOARD'
+      : activeMenu === 'nfc'
+        ? 'NFC · DATA CHIP'
+        : activeMenu === 'nfc-scan'
+          ? 'SCAN NFC'
+          : activeMenu === 'nfc-transfer'
+            ? 'PERMINTAAN TRANSFER PEMILIK'
+            : activeMenu.replace(/-/g, ' ').toUpperCase();
 
   return (
     <header className={`h-16 md:h-20 ${THEME.headerMobile} md:bg-white md:backdrop-blur-md md:border-b md:border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 shadow-sm transition-colors duration-300`}>
@@ -164,13 +230,13 @@ const TopBar = ({ activeMenu, activeView, setActiveView, totalBalance }) => {
           <span className="font-black text-white text-lg">S</span>
         </div>
         <h2 className="font-black text-white tracking-tight text-lg uppercase truncate max-w-[200px]">
-          {activeMenu === 'dashboard' ? 'DASHBOARD' : activeMenu.replace(/-/g, ' ')}
+          {pageLabel}
         </h2>
       </div>
 
       {/* Desktop Left */}
       <div className="hidden md:flex items-center">
-        <h1 className="font-black text-slate-800 text-3xl italic tracking-tighter uppercase">DASHBOARD</h1>
+        <h1 className="font-black text-slate-800 text-3xl italic tracking-tighter uppercase">{pageLabel}</h1>
       </div>
 
       {/* Right Section */}
@@ -4164,8 +4230,9 @@ const App = () => {
     </div>
   );
 
-  const NFCView = ({ nfcChips, onAddNfcChip, onEditNfcChip, onDeleteNfcChip }) => {
-    const [activeNfcTab, setActiveNfcTab] = useState('list');
+  const NFCView = ({ initialTab = 'list', setActiveMenu, nfcChips, onAddNfcChip, onEditNfcChip, onDeleteNfcChip }) => {
+    const [activeNfcTab, setActiveNfcTab] = useState(initialTab);
+    useEffect(() => { setActiveNfcTab(initialTab); }, [initialTab]);
     const [scanInput, setScanInput] = useState('');
     const [scannedChip, setScannedChip] = useState(null);
     const [showForm, setShowForm] = useState(false);
@@ -4228,13 +4295,12 @@ const App = () => {
     const [transferRequests, setTransferRequests] = useState(() =>
       JSON.parse(localStorage.getItem('sazime_transfer_requests') || '[]')
     );
+    const [evidenceModalReq, setEvidenceModalReq] = useState(null);
 
     const saveTransferRequests = (requests) => {
       localStorage.setItem('sazime_transfer_requests', JSON.stringify(requests));
       setTransferRequests(requests);
     };
-
-    const pendingCount = transferRequests.filter(r => r.status === 'pending').length;
 
     const handleApproveTransfer = (req) => {
       const chip = nfcChips.find(c => c.id_nfc === req.id_nfc);
@@ -4263,13 +4329,6 @@ const App = () => {
               <p className="text-[10px] text-slate-500 font-bold">Kelola data chip NFC produk sangkar</p>
             </div>
           </div>
-          {pendingCount > 0 && (
-            <button onClick={() => setActiveNfcTab('transfer')} className="relative flex items-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-700 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-amber-100 transition border border-amber-200">
-              <Send className="w-4 h-4" />
-              Transfer
-              <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-600 text-white rounded-full text-[9px] flex items-center justify-center font-black shadow-lg">{pendingCount}</span>
-            </button>
-          )}
         </div>
 
         {/* Tab Content */}
@@ -4298,8 +4357,8 @@ const App = () => {
                 <button onClick={handleScan} className="w-full py-4 bg-red-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition flex items-center justify-center gap-2">
                   <ScanLine className="w-4 h-4" /> Scan Sekarang
                 </button>
-                <button onClick={() => setActiveNfcTab('list')} className="w-full py-4 bg-slate-100 text-slate-700 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 transition flex items-center justify-center gap-2">
-                  <ArrowLeft className="w-4 h-4" /> Kembali
+                <button type="button" onClick={() => { setActiveMenu?.('nfc'); }} className="w-full py-4 bg-slate-100 text-slate-700 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 transition flex items-center justify-center gap-2">
+                  <ArrowLeft className="w-4 h-4" /> Kembali ke Data Chip
                 </button>
               </div>
             </div>
@@ -4411,26 +4470,7 @@ const App = () => {
 
           {activeNfcTab === 'write' && (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-              <h4 className="font-black text-slate-800 text-lg uppercase tracking-tight mb-6 flex items-center gap-2">
-                <Edit3 className="w-5 h-5 text-red-600" /> {editChip ? 'Edit Data Chip NFC' : 'Tulis Data Chip NFC'}
-              </h4>
-
-              {!showForm && (
-                <div className="text-center py-8">
-                  <p className="text-slate-400 font-bold text-sm mb-4">Pilih metode untuk memulai</p>
-                  <div className="flex justify-center gap-4">
-                    <button onClick={() => { setShowForm(true); setEditChip(null); resetForm(); }} className="flex flex-col items-center gap-3 p-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 hover:border-red-500 hover:bg-red-50 transition group">
-                      <Plus className="w-8 h-8 text-slate-400 group-hover:text-red-600" />
-                      <span className="font-bold text-xs text-slate-600 group-hover:text-red-600 uppercase tracking-widest">Data Baru</span>
-                    </button>
-                    <button onClick={() => setActiveNfcTab('list')} className="flex flex-col items-center gap-3 p-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 hover:border-red-500 hover:bg-red-50 transition group">
-                      <Database className="w-8 h-8 text-slate-400 group-hover:text-red-600" />
-                      <span className="font-bold text-xs text-slate-600 group-hover:text-red-600 uppercase tracking-widest">Pilih dari Data</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
+              
               {showForm && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4505,7 +4545,7 @@ const App = () => {
                   </div>
 
                   <div className="flex gap-3 pt-4">
-                  <button onClick={() => setActiveNfcTab('list')}  className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 transition">Batal</button>
+                  <button type="button" onClick={() => { resetForm(); setActiveNfcTab('list'); setActiveMenu?.('nfc'); }} className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 transition">Batal</button>
                     <button onClick={handleSave} disabled={!formData.id_nfc || formData.id_nfc.length !== 10 || !formData.id_produk || !formData.nama_produk || !formData.nama_pemilik} className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-black shadow-lg shadow-red-200 hover:bg-red-700 transition uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                       <Save className="w-5 h-5" /> {editChip ? 'Update Data' : 'Simpan Data'}
                     </button>
@@ -4521,14 +4561,9 @@ const App = () => {
                 <h4 className="font-black text-slate-800 uppercase tracking-tight text-sm flex items-center gap-2">
                   <Database className="w-4 h-4 text-red-600" /> Data Chip NFC ({nfcChips.length})
                 </h4>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button type="button" onClick={() => setActiveNfcTab('scan')} className="bg-red-600 text-white px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition flex items-center gap-2">
-                    <ScanLine className="w-4 h-4" /> Scan Sekarang
-                  </button>
-                  <button type="button" onClick={() => { resetForm(); setShowForm(true); setActiveNfcTab('write'); }} className="bg-red-600 text-white px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition flex items-center gap-2">
+                <button type="button" onClick={() => { resetForm(); setShowForm(true); setActiveNfcTab('write'); }} className="bg-red-600 text-white px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition flex items-center gap-2">
                     <Plus className="w-4 h-4" /> Tambah Baru
                   </button>
-                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
@@ -4570,9 +4605,11 @@ const App = () => {
 
           {activeNfcTab === 'transfer' && (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-slate-100 flex items-center gap-3">
-                <Send className="w-5 h-5 text-red-600" />
-                <h4 className="font-black text-slate-800 uppercase tracking-tight text-sm">Permintaan Transfer Pemilik ({transferRequests.length})</h4>
+              <div className="p-6 border-b border-slate-100 flex flex-wrap items-center gap-3 justify-between">
+                <div className="flex flex-wrap items-center gap-3">
+                    <Send className="w-5 h-5 text-red-600 shrink-0" />
+                    <h4 className="font-black text-slate-800 uppercase tracking-tight text-sm">Permintaan Transfer Pemilik ({transferRequests.length})</h4>
+                </div>
               </div>
               {transferRequests.length === 0 ? (
                 <div className="p-8 text-center">
@@ -4614,12 +4651,29 @@ const App = () => {
                           </td>
                           <td className="px-6 py-4 text-center">
                             {req.status === 'pending' ? (
-                              <div className="flex justify-center gap-2">
-                                <button onClick={() => handleApproveTransfer(req)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Setujui"><CheckCircle2 className="w-4 h-4" /></button>
-                                <button onClick={() => handleRejectTransfer(req)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Tolak"><X className="w-4 h-4" /></button>
+                              <div className="flex justify-center gap-2 flex-wrap">
+                                <button
+                                  type="button"
+                                  onClick={() => setEvidenceModalReq(req)}
+                                  className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                  title="Cek dokumen"
+                                >
+                                  <FileText className="w-4 h-4" />
+                                </button>
+                                <button type="button" onClick={() => handleApproveTransfer(req)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Setujui"><CheckCircle2 className="w-4 h-4" /></button>
+                                <button type="button" onClick={() => handleRejectTransfer(req)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Tolak"><X className="w-4 h-4" /></button>
                               </div>
                             ) : (
-                              <span className="text-[10px] text-slate-400 font-medium">{req.tanggal_diproses || '-'}</span>
+                              <div className="flex flex-col items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setEvidenceModalReq(req)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+                                >
+                                  <FileText className="w-3.5 h-3.5" /> Cek Dokumen
+                                </button>
+                                <span className="text-[10px] text-slate-400 font-medium">{req.tanggal_diproses || '-'}</span>
+                              </div>
                             )}
                           </td>
                         </tr>
@@ -4631,6 +4685,94 @@ const App = () => {
             </div>
           )}
         </div>
+
+        {evidenceModalReq && (
+          <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center backdrop-blur-sm sm:p-4 bg-slate-900/40" onClick={() => setEvidenceModalReq(null)}>
+            <div className="bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+              <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/80 shrink-0">
+                <div>
+                  <h3 className="text-lg text-slate-800 font-black tracking-tight uppercase italic flex items-center gap-2">
+                    <span className="w-1 h-6 bg-red-600 rounded-full inline-block" />
+                    Dokumen Bukti Transfer
+                  </h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">ID NFC <span className="font-mono text-slate-600">{evidenceModalReq.id_nfc}</span></p>
+                </div>
+                <button type="button" onClick={() => setEvidenceModalReq(null)} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-full transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+                {!evidenceModalReq.dokumen_eviden?.data ? (
+                  <div className="text-center py-12 space-y-3">
+                    <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
+                      <FileText className="w-7 h-7 text-slate-300" />
+                    </div>
+                    <p className="text-sm font-bold text-slate-500">Belum ada dokumen bukti untuk permintaan ini.</p>
+                    <p className="text-xs text-slate-400 font-medium max-w-md mx-auto">Permintaan lama mungkin dikirim sebelum fitur unggah dokumen tersedia. Minta pemohon mengajukan ulang dengan lampiran.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-xs font-bold text-slate-600 truncate flex-1 min-w-0">
+                        <span className="text-slate-400 uppercase tracking-widest mr-2">Berkas</span>
+                        {evidenceModalReq.dokumen_eviden.nama_file || 'dokumen'}
+                      </p>
+                      <a
+                        href={evidenceModalReq.dokumen_eviden.data}
+                        download={evidenceModalReq.dokumen_eviden.nama_file || 'bukti-transfer'}
+                        className="shrink-0 px-4 py-2 bg-red-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-700 transition flex items-center gap-2"
+                      >
+                        <Download className="w-4 h-4" /> Unduh
+                      </a>
+                    </div>
+                    {(() => {
+                      const mime = evidenceModalReq.dokumen_eviden.mime || ''
+                      const fn = evidenceModalReq.dokumen_eviden.nama_file || ''
+                      const url = evidenceModalReq.dokumen_eviden.data
+                      const isPdf = mime.includes('pdf') || /\.pdf$/i.test(fn)
+                      const isWord = /word|msword|wordprocessingml/i.test(mime) || /\.docx?$/i.test(fn)
+                      const isImage = mime.startsWith('image/')
+                      if (isPdf) {
+                        return (
+                          <iframe title="Pratinjau PDF" src={url} className="w-full h-[min(65vh,520px)] rounded-2xl border border-slate-200 bg-slate-50" />
+                        )
+                      }
+                      if (isImage) {
+                        return (
+                          <div className="rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 flex justify-center p-4">
+                            <img src={url} alt="Bukti" className="max-h-[min(65vh,520px)] object-contain" />
+                          </div>
+                        )
+                      }
+                      if (isWord) {
+                        return (
+                          <div className="rounded-2xl border border-amber-100 bg-amber-50/80 p-6 space-y-3">
+                            <div className="flex items-start gap-3">
+                              <FileText className="w-8 h-8 text-amber-600 shrink-0 mt-0.5" />
+                              <div className="space-y-2 text-sm">
+                                <p className="font-black text-slate-800 uppercase tracking-tight text-xs">Dokumen Word / Office (.doc / .docx)</p>
+                                <p className="text-slate-600 font-medium leading-relaxed">
+                                  Browser tidak dapat menampilkan file ini secara langsung. Gunakan tombol Unduh untuk membuka di Microsoft Word, Google Docs, atau aplikasi sejenis.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      }
+                      return (
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+                          <p className="text-sm font-medium text-slate-600">
+                            Pratinjau tidak tersedia untuk tipe file ini. Gunakan tombol Unduh untuk membuka berkas.
+                          </p>
+                        </div>
+                      )
+                    })()}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -4652,7 +4794,16 @@ const App = () => {
         <main className="flex-1 p-4 md:p-8 pb-24 lg:pb-8 max-w-[1600px] mx-auto w-full overflow-x-hidden">
           {activeMenu === 'dashboard' && <Dashboard setTotalBalance={setTotalBalance} />}
 
-          {activeMenu === 'nfc' && <NFCView nfcChips={nfcChips} onAddNfcChip={handleAddNfcChip} onEditNfcChip={handleEditNfcChip} onDeleteNfcChip={handleDeleteNfcChip} />}
+          {(activeMenu === 'nfc' || activeMenu === 'nfc-scan' || activeMenu === 'nfc-transfer') && (
+            <NFCView
+              initialTab={activeMenu === 'nfc-scan' ? 'scan' : activeMenu === 'nfc-transfer' ? 'transfer' : 'list'}
+              setActiveMenu={setActiveMenu}
+              nfcChips={nfcChips}
+              onAddNfcChip={handleAddNfcChip}
+              onEditNfcChip={handleEditNfcChip}
+              onDeleteNfcChip={handleDeleteNfcChip}
+            />
+          )}
 
           {activeMenu === 'pos' && <POSView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} orders={offlineOrders} onCreateOrder={() => setActiveMenu('pos-create')} onEditOrder={handleEditOfflineOrder} onDeleteOrder={handleDeleteOfflineOrder} />}
           {activeMenu === 'pos-create' && <CreateOrderView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} onBack={() => setActiveMenu('pos')} />}

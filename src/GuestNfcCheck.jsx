@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ScanLine, Cpu, CheckCircle2, AlertCircle, Send, ArrowRight, X } from 'lucide-react'
+import { ScanLine, Cpu, CheckCircle2, AlertCircle, Send, ArrowRight, FileText } from 'lucide-react'
 
 const nfcChips = [
   {
@@ -19,6 +19,7 @@ const nfcChips = [
 const RequestTransferForm = ({ idNfc, namaProduk, pemilikLama }) => {
   const [open, setOpen] = useState(false)
   const [namaBaru, setNamaBaru] = useState('')
+  const [evidenFile, setEvidenFile] = useState(null)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
 
@@ -26,6 +27,7 @@ const RequestTransferForm = ({ idNfc, namaProduk, pemilikLama }) => {
     const val = namaBaru.trim()
     if (!val) { setError('Nama pemilik baru wajib diisi'); return }
     if (val.toLowerCase() === pemilikLama.toLowerCase()) { setError('Nama pemilik baru tidak boleh sama dengan pemilik lama'); return }
+    if (!evidenFile) { setError('Unggah dokumen bukti (PDF, DOC, atau DOCX).'); return }
     setError('')
 
     const requests = JSON.parse(localStorage.getItem('sazime_transfer_requests') || '[]')
@@ -40,7 +42,12 @@ const RequestTransferForm = ({ idNfc, namaProduk, pemilikLama }) => {
       pemilik_baru: val,
       status: 'pending',
       tanggal_pengajuan: new Date().toISOString().slice(0, 10),
-      tanggal_diproses: null
+      tanggal_diproses: null,
+      dokumen_eviden: {
+        nama_file: evidenFile.name,
+        mime: evidenFile.mime,
+        data: evidenFile.dataUrl
+      }
     })
     localStorage.setItem('sazime_transfer_requests', JSON.stringify(requests))
     setSent(true)
@@ -74,9 +81,44 @@ const RequestTransferForm = ({ idNfc, namaProduk, pemilikLama }) => {
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Pemilik Baru</label>
             <input type="text" value={namaBaru} onChange={e => { setNamaBaru(e.target.value); setError('') }} placeholder="Masukkan nama pemilik baru" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" />
           </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+              <FileText className="w-3.5 h-3.5" /> Dokumen bukti (.pdf, .doc, .docx)
+            </label>
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              className="w-full text-xs font-bold text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-red-600 file:text-white file:font-black file:uppercase file:tracking-wider cursor-pointer"
+              onChange={e => {
+                const file = e.target.files?.[0]
+                setError('')
+                if (!file) { setEvidenFile(null); return }
+                const okExt = /\.(pdf|doc|docx)$/i.test(file.name)
+                const okMime = /pdf|msword|wordprocessingml/i.test(file.type || '')
+                if (!okExt && !okMime) {
+                  setError('Format file harus PDF, DOC, atau DOCX.')
+                  setEvidenFile(null)
+                  e.target.value = ''
+                  return
+                }
+                const reader = new FileReader()
+                reader.onload = () => {
+                  setEvidenFile({
+                    name: file.name,
+                    mime: file.type || 'application/octet-stream',
+                    dataUrl: typeof reader.result === 'string' ? reader.result : ''
+                  })
+                }
+                reader.readAsDataURL(file)
+              }}
+            />
+            {evidenFile && (
+              <p className="text-[10px] font-bold text-emerald-600 truncate">Terunggah: {evidenFile.name}</p>
+            )}
+          </div>
           {error && <p className="text-xs font-bold text-red-600">{error}</p>}
           <div className="flex gap-3">
-            <button onClick={() => { setOpen(false); setNamaBaru(''); setError('') }} className="flex-1 py-3.5 bg-slate-100 text-slate-700 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition">Batal</button>
+            <button onClick={() => { setOpen(false); setNamaBaru(''); setEvidenFile(null); setError('') }} className="flex-1 py-3.5 bg-slate-100 text-slate-700 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition">Batal</button>
             <button onClick={handleSubmit} className="flex-1 py-3.5 bg-red-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition flex items-center justify-center gap-2">
               <Send className="w-4 h-4" /> Kirim Permintaan
             </button>
