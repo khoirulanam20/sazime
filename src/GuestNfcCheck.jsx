@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ScanLine, Cpu, CheckCircle2, AlertCircle, X, Edit3 } from 'lucide-react'
+import { ScanLine, Cpu, CheckCircle2, AlertCircle, Send, ArrowRight, X } from 'lucide-react'
 
 const nfcChips = [
   {
@@ -15,6 +15,77 @@ const nfcChips = [
     tanggal_registrasi: '2026-02-15', gambar: []
   }
 ]
+
+const RequestTransferForm = ({ idNfc, namaProduk, pemilikLama }) => {
+  const [open, setOpen] = useState(false)
+  const [namaBaru, setNamaBaru] = useState('')
+  const [sent, setSent] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = () => {
+    const val = namaBaru.trim()
+    if (!val) { setError('Nama pemilik baru wajib diisi'); return }
+    if (val.toLowerCase() === pemilikLama.toLowerCase()) { setError('Nama pemilik baru tidak boleh sama dengan pemilik lama'); return }
+    setError('')
+
+    const requests = JSON.parse(localStorage.getItem('sazime_transfer_requests') || '[]')
+    const alreadyPending = requests.some(r => r.id_nfc === idNfc && r.status === 'pending')
+    if (alreadyPending) { setError('Permintaan transfer untuk chip ini masih menunggu persetujuan admin.'); return }
+
+    requests.push({
+      id: Date.now(),
+      id_nfc: idNfc,
+      nama_produk: namaProduk,
+      pemilik_lama: pemilikLama,
+      pemilik_baru: val,
+      status: 'pending',
+      tanggal_pengajuan: new Date().toISOString().slice(0, 10),
+      tanggal_diproses: null
+    })
+    localStorage.setItem('sazime_transfer_requests', JSON.stringify(requests))
+    setSent(true)
+  }
+
+  if (sent) {
+    return (
+      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 text-center space-y-3">
+        <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+          <Send className="w-6 h-6 text-blue-600" />
+        </div>
+        <p className="font-black text-blue-800 text-sm uppercase tracking-widest">Permintaan Dikirim</p>
+        <p className="text-xs text-blue-600 font-medium">Menunggu persetujuan admin.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="border-t border-slate-100 pt-5">
+      {!open ? (
+        <button onClick={() => setOpen(true)} className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition flex items-center justify-center gap-2 shadow-lg">
+          <ArrowRight className="w-4 h-4" /> Request Pindah Pemilik
+        </button>
+      ) : (
+        <div className="space-y-4">
+          <div className="bg-slate-50 rounded-xl p-3 space-y-1">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pemilik Saat Ini</p>
+            <p className="font-bold text-slate-800">{pemilikLama}</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Pemilik Baru</label>
+            <input type="text" value={namaBaru} onChange={e => { setNamaBaru(e.target.value); setError('') }} placeholder="Masukkan nama pemilik baru" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" />
+          </div>
+          {error && <p className="text-xs font-bold text-red-600">{error}</p>}
+          <div className="flex gap-3">
+            <button onClick={() => { setOpen(false); setNamaBaru(''); setError('') }} className="flex-1 py-3.5 bg-slate-100 text-slate-700 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition">Batal</button>
+            <button onClick={handleSubmit} className="flex-1 py-3.5 bg-red-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition flex items-center justify-center gap-2">
+              <Send className="w-4 h-4" /> Kirim Permintaan
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 const GuestNfcCheck = () => {
   const [input, setInput] = useState('')
@@ -145,6 +216,9 @@ const GuestNfcCheck = () => {
                         </div>
                       )}
                     </div>
+
+                    {/* Transfer Request */}
+                    <RequestTransferForm idNfc={result.id_nfc} namaProduk={result.nama_produk} pemilikLama={result.nama_pemilik} />
                   </div>
                 </div>
               ) : (

@@ -12,7 +12,7 @@ import {
   Camera, Zap, Key, User, Truck, MapPin, CreditCard, Clock, FileText,
   CheckSquare, Square, QrCode, Keyboard, Phone, Printer,   Menu, Save,
   Database, Receipt, BarChart3, ChevronLeft, Trash2,
-  Cpu
+  Cpu, Send
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -4224,10 +4224,38 @@ const App = () => {
       setFormData(prev => ({ ...prev, [field]: value }));
     };
 
+    // Transfer request logic via localStorage
+    const [transferRequests, setTransferRequests] = useState(() =>
+      JSON.parse(localStorage.getItem('sazime_transfer_requests') || '[]')
+    );
+
+    const saveTransferRequests = (requests) => {
+      localStorage.setItem('sazime_transfer_requests', JSON.stringify(requests));
+      setTransferRequests(requests);
+    };
+
+    const pendingCount = transferRequests.filter(r => r.status === 'pending').length;
+
+    const handleApproveTransfer = (req) => {
+      const chip = nfcChips.find(c => c.id_nfc === req.id_nfc);
+      if (chip) onEditNfcChip({ ...chip, nama_pemilik: req.pemilik_baru });
+      const updated = transferRequests.map(r =>
+        r.id === req.id ? { ...r, status: 'approved', tanggal_diproses: new Date().toISOString().slice(0, 10) } : r
+      );
+      saveTransferRequests(updated);
+    };
+
+    const handleRejectTransfer = (req) => {
+      const updated = transferRequests.map(r =>
+        r.id === req.id ? { ...r, status: 'rejected', tanggal_diproses: new Date().toISOString().slice(0, 10) } : r
+      );
+      saveTransferRequests(updated);
+    };
+
     return (
       <div className="space-y-6 animate-in fade-in duration-300">
         {/* Header */}
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center">
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-red-50 rounded-lg"><Cpu className="w-5 h-5 text-red-600" /></div>
             <div>
@@ -4235,20 +4263,14 @@ const App = () => {
               <p className="text-[10px] text-slate-500 font-bold">Kelola data chip NFC produk sangkar</p>
             </div>
           </div>
-        </div>
-
-        {/* Tabs
-        <div className="flex space-x-2 bg-slate-100 p-1 rounded-xl">
-          {[
-            { id: 'scan', icon: ScanLine, label: 'Scan NFC' },
-            { id: 'write', icon: Edit3, label: 'Tulis NFC' },
-            { id: 'list', icon: Database, label: 'Data NFC' }
-          ].map(tab => (
-            <button key={tab.id} onClick={() => setActiveNfcTab(tab.id)} className={`flex-1 py-3 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeNfcTab === tab.id ? 'bg-white shadow-sm text-red-600' : 'text-slate-400 hover:text-slate-600'}`}>
-              <tab.icon className="w-4 h-4" /> {tab.label}
+          {pendingCount > 0 && (
+            <button onClick={() => setActiveNfcTab('transfer')} className="relative flex items-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-700 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-amber-100 transition border border-amber-200">
+              <Send className="w-4 h-4" />
+              Transfer
+              <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-600 text-white rounded-full text-[9px] flex items-center justify-center font-black shadow-lg">{pendingCount}</span>
             </button>
-          ))}
-        </div> */}
+          )}
+        </div>
 
         {/* Tab Content */}
         <div className="animate-in slide-in-from-bottom-2 duration-300">
@@ -4543,6 +4565,69 @@ const App = () => {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {activeNfcTab === 'transfer' && (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-100 flex items-center gap-3">
+                <Send className="w-5 h-5 text-red-600" />
+                <h4 className="font-black text-slate-800 uppercase tracking-tight text-sm">Permintaan Transfer Pemilik ({transferRequests.length})</h4>
+              </div>
+              {transferRequests.length === 0 ? (
+                <div className="p-8 text-center">
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Send className="w-7 h-7 text-slate-300" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-400">Belum ada permintaan transfer</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase">
+                      <tr>
+                        <th className="px-6 py-4">ID NFC</th>
+                        <th className="px-6 py-4">Produk</th>
+                        <th className="px-6 py-4">Pemilik Lama</th>
+                        <th className="px-6 py-4">Pemilik Baru</th>
+                        <th className="px-6 py-4">Tanggal</th>
+                        <th className="px-6 py-4 text-center">Status</th>
+                        <th className="px-6 py-4 text-center">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {transferRequests.map(req => (
+                        <tr key={req.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-6 py-4 font-mono font-bold text-slate-700">{req.id_nfc}</td>
+                          <td className="px-6 py-4 font-bold text-slate-800 max-w-[120px] truncate" title={req.nama_produk}>{req.nama_produk}</td>
+                          <td className="px-6 py-4 text-slate-600">{req.pemilik_lama}</td>
+                          <td className="px-6 py-4 font-bold text-slate-800">{req.pemilik_baru}</td>
+                          <td className="px-6 py-4 text-xs text-slate-500">{req.tanggal_pengajuan}</td>
+                          <td className="px-6 py-4 text-center">
+                            {req.status === 'pending' ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 rounded text-[10px] font-black uppercase"><Clock className="w-3 h-3" /> Pending</span>
+                            ) : req.status === 'approved' ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-[10px] font-black uppercase"><CheckCircle2 className="w-3 h-3" /> Disetujui</span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded text-[10px] font-black uppercase"><X className="w-3 h-3" /> Ditolak</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            {req.status === 'pending' ? (
+                              <div className="flex justify-center gap-2">
+                                <button onClick={() => handleApproveTransfer(req)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Setujui"><CheckCircle2 className="w-4 h-4" /></button>
+                                <button onClick={() => handleRejectTransfer(req)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Tolak"><X className="w-4 h-4" /></button>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 font-medium">{req.tanggal_diproses || '-'}</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
         </div>
