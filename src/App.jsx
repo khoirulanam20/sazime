@@ -10,8 +10,9 @@ import {
   Download, ArrowLeft, Package, ShoppingBag, ExternalLink, ChevronDown,
   Wallet, FileSpreadsheet, Edit3, X, Eye, Calendar, Share2, RefreshCw,
   Camera, Zap, Key, User, Truck, MapPin, CreditCard, Clock, FileText,
-  CheckSquare, Square, QrCode, Keyboard, Phone, Printer, Menu, Save,
-  Database, Receipt, BarChart3, ChevronLeft, Trash2
+  CheckSquare, Square, QrCode, Keyboard, Phone, Printer,   Menu, Save,
+  Database, Receipt, BarChart3, ChevronLeft, Trash2,
+  Cpu
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -35,7 +36,10 @@ const Sidebar = ({ activeMenu, setActiveMenu }) => {
   const menuGroups = [
     {
       title: 'Menu Utama',
-      items: [{ id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' }]
+      items: [
+        { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+        { id: 'nfc', icon: Cpu, label: 'NFC' }
+      ]
     },
     {
       title: 'Kasir & Toko Fisik',
@@ -119,6 +123,7 @@ const BottomNavbar = ({ activeMenu, setActiveMenu }) => (
   <nav className={`lg:hidden fixed bottom-0 left-0 right-0 ${THEME.bottomNav} text-white flex justify-around p-2 z-[60] pb-safe-area shadow-[0_-4px_20px_rgba(0,0,0,0.15)] overflow-x-auto`}>
     {[
       { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
+      { id: 'nfc', icon: Cpu, label: 'NFC' },
       { id: 'pos', icon: Receipt, label: 'POS' }, // NEW
       { id: 'database-produk-offline', icon: Database, label: 'Prd. Off' }, // NEW
       { id: 'toko', icon: Store, label: 'Toko' },
@@ -2063,6 +2068,33 @@ const App = () => {
 
   const handleDeleteOfflineOrder = (id) => {
     setOfflineOrders(prev => prev.filter(o => o.id !== id));
+  };
+
+  const [nfcChips, setNfcChips] = useState([
+    {
+      id: 1, id_nfc: '1234567890', id_produk: 'SK-001', nama_produk: 'Sangkar Murai No 1 Original',
+      deskripsi_produk: 'Sangkar murai kayu jati ukiran', nama_pemilik: 'Sazime Official',
+      tanggal_pembuatan: '2026-01-15', nomor_seri: 'SER-001-2026',
+      tanggal_registrasi: '2026-02-01', gambar: []
+    },
+    {
+      id: 2, id_nfc: '0987654321', id_produk: 'SK-002', nama_produk: 'Sangkar Lovebird Elegan',
+      deskripsi_produk: 'Sangkar lovebird bahan stainless', nama_pemilik: 'Sazime Woodwork',
+      tanggal_pembuatan: '2026-02-10', nomor_seri: 'SER-002-2026',
+      tanggal_registrasi: '2026-02-15', gambar: []
+    }
+  ]);
+
+  const handleAddNfcChip = (chip) => {
+    setNfcChips(prev => [chip, ...prev]);
+  };
+
+  const handleEditNfcChip = (updatedChip) => {
+    setNfcChips(prev => prev.map(c => c.id === updatedChip.id ? updatedChip : c));
+  };
+
+  const handleDeleteNfcChip = (id) => {
+    setNfcChips(prev => prev.filter(c => c.id !== id));
   };
 
   const handleAddExpense = (expense) => {
@@ -4132,6 +4164,392 @@ const App = () => {
     </div>
   );
 
+  const NFCView = ({ nfcChips, onAddNfcChip, onEditNfcChip, onDeleteNfcChip }) => {
+    const [activeNfcTab, setActiveNfcTab] = useState('list');
+    const [scanInput, setScanInput] = useState('');
+    const [scannedChip, setScannedChip] = useState(null);
+    const [showForm, setShowForm] = useState(false);
+    const [editChip, setEditChip] = useState(null);
+    const [formData, setFormData] = useState({
+      id_nfc: '', id_produk: '', nama_produk: '', deskripsi_produk: '',
+      nama_pemilik: '', tanggal_pembuatan: '', nomor_seri: '',
+      tanggal_registrasi: new Date().toISOString().slice(0, 10), gambar: []
+    });
+
+    const resetForm = () => {
+      setFormData({
+        id_nfc: '', id_produk: '', nama_produk: '', deskripsi_produk: '',
+        nama_pemilik: '', tanggal_pembuatan: '', nomor_seri: '',
+        tanggal_registrasi: new Date().toISOString().slice(0, 10), gambar: []
+      });
+      setEditChip(null);
+      setShowForm(false);
+    };
+
+    const handleScan = () => {
+      if (scanInput.length !== 10) return;
+      const found = nfcChips.find(c => c.id_nfc === scanInput);
+      setScannedChip(found || { id_nfc: scanInput });
+    };
+
+    const handleAddFromScan = () => {
+      setFormData(prev => ({ ...prev, id_nfc: scanInput }));
+      setShowForm(true);
+      setActiveNfcTab('write');
+    };
+
+    const handleEdit = (chip) => {
+      setEditChip(chip);
+      setFormData({ ...chip });
+      setShowForm(true);
+      setActiveNfcTab('write');
+    };
+
+    const handleDelete = (id) => {
+      if (window.confirm('Apakah Anda yakin ingin menghapus data NFC ini?')) {
+        onDeleteNfcChip(id);
+      }
+    };
+
+    const handleSave = () => {
+      if (editChip) {
+        onEditNfcChip({ ...formData, id: editChip.id });
+      } else {
+        onAddNfcChip({ ...formData, id: Date.now() });
+      }
+      resetForm();
+    };
+
+    const handleFormChange = (field, value) => {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    return (
+      <div className="space-y-6 animate-in fade-in duration-300">
+        {/* Header */}
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-red-50 rounded-lg"><Cpu className="w-5 h-5 text-red-600" /></div>
+            <div>
+              <h3 className="font-black text-slate-800 text-sm">NFC Management</h3>
+              <p className="text-[10px] text-slate-500 font-bold">Kelola data chip NFC produk sangkar</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs
+        <div className="flex space-x-2 bg-slate-100 p-1 rounded-xl">
+          {[
+            { id: 'scan', icon: ScanLine, label: 'Scan NFC' },
+            { id: 'write', icon: Edit3, label: 'Tulis NFC' },
+            { id: 'list', icon: Database, label: 'Data NFC' }
+          ].map(tab => (
+            <button key={tab.id} onClick={() => setActiveNfcTab(tab.id)} className={`flex-1 py-3 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeNfcTab === tab.id ? 'bg-white shadow-sm text-red-600' : 'text-slate-400 hover:text-slate-600'}`}>
+              <tab.icon className="w-4 h-4" /> {tab.label}
+            </button>
+          ))}
+        </div> */}
+
+        {/* Tab Content */}
+        <div className="animate-in slide-in-from-bottom-2 duration-300">
+          {activeNfcTab === 'scan' && (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <div className="max-w-md mx-auto space-y-6">
+                <div className="text-center">
+                  <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-dashed border-slate-200">
+                    <ScanLine className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <h4 className="font-black text-slate-800 text-lg uppercase tracking-tight">Scan NFC Chip</h4>
+                  <p className="text-xs text-slate-500 font-medium mt-1">Masukkan 10 digit kode NFC untuk memindai</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kode NFC (10 Digit)</label>
+                  <input
+                    type="text"
+                    value={scanInput}
+                    onChange={e => setScanInput(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="0000000000"
+                    className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-2xl font-mono font-black text-center tracking-[0.5em] outline-none focus:border-red-500 focus:bg-white transition-colors"
+                    maxLength={10}
+                  />
+                </div>
+                <button onClick={handleScan} className="w-full py-4 bg-red-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition flex items-center justify-center gap-2">
+                  <ScanLine className="w-4 h-4" /> Scan Sekarang
+                </button>
+                <button onClick={() => setActiveNfcTab('list')} className="w-full py-4 bg-slate-100 text-slate-700 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 transition flex items-center justify-center gap-2">
+                  <ArrowLeft className="w-4 h-4" /> Kembali
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Scan Result Modal */}
+          {scannedChip && (
+            <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center backdrop-blur-sm sm:p-4" onClick={() => setScannedChip(null)}>
+              <div className="bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300" onClick={e => e.stopPropagation()}>
+                <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                  <h3 className="text-lg text-slate-800 font-black tracking-tight uppercase italic flex items-center">
+                    <span className="w-1 h-6 bg-red-600 mr-3 rounded-full"></span>
+                    {scannedChip.id_produk ? 'Data Chip Ditemukan' : 'Chip Belum Terdaftar'}
+                  </h3>
+                  <button onClick={() => setScannedChip(null)} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-full transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                  {scannedChip.id_produk ? (
+                    <>
+                      {/* Gambar */}
+                      {scannedChip.gambar?.length > 0 && (
+                        <div className="flex gap-3 overflow-x-auto pb-2">
+                          {scannedChip.gambar.map((img, i) => (
+                            <div key={i} className="w-24 h-24 rounded-xl overflow-hidden border border-slate-200 shrink-0">
+                              <img src={img} alt={`Gambar ${i + 1}`} className="w-full h-full object-cover" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="bg-slate-50 p-3 rounded-xl">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID NFC</p>
+                          <p className="font-mono font-black text-slate-800 mt-1">{scannedChip.id_nfc}</p>
+                        </div>
+                        <div className="bg-slate-50 p-3 rounded-xl">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID Produk</p>
+                          <p className="font-black text-slate-800 mt-1">{scannedChip.id_produk}</p>
+                        </div>
+                        <div className="bg-slate-50 p-3 rounded-xl">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Produk</p>
+                          <p className="font-black text-slate-800 mt-1">{scannedChip.nama_produk}</p>
+                        </div>
+                        <div className="bg-slate-50 p-3 rounded-xl">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pemilik</p>
+                          <p className="font-black text-slate-800 mt-1">{scannedChip.nama_pemilik}</p>
+                        </div>
+                        {scannedChip.deskripsi_produk && (
+                          <div className="col-span-2 bg-slate-50 p-3 rounded-xl">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Deskripsi</p>
+                            <p className="font-bold text-slate-700 mt-1 text-xs">{scannedChip.deskripsi_produk}</p>
+                          </div>
+                        )}
+                        {scannedChip.nomor_seri && (
+                          <div className="bg-slate-50 p-3 rounded-xl">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No. Seri</p>
+                            <p className="font-mono font-bold text-slate-800 mt-1">{scannedChip.nomor_seri}</p>
+                          </div>
+                        )}
+                        {scannedChip.tanggal_pembuatan && (
+                          <div className="bg-slate-50 p-3 rounded-xl">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tgl. Pembuatan</p>
+                            <p className="font-bold text-slate-800 mt-1">{scannedChip.tanggal_pembuatan}</p>
+                          </div>
+                        )}
+                        {scannedChip.tanggal_registrasi && (
+                          <div className="bg-slate-50 p-3 rounded-xl">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tgl. Registrasi</p>
+                            <p className="font-bold text-slate-800 mt-1">{scannedChip.tanggal_registrasi}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-3 pt-2">
+                        <button onClick={() => { handleEdit(scannedChip); setScannedChip(null); }} className="flex-1 py-3.5 bg-red-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition flex items-center justify-center gap-2">
+                          <Edit3 className="w-4 h-4" /> Edit Data
+                        </button>
+                        <button onClick={() => setScannedChip(null)} className="flex-1 py-3.5 bg-slate-100 text-slate-700 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition">
+                          Tutup
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center space-y-5 py-4">
+                      <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
+                        <AlertCircle className="w-8 h-8 text-amber-600" />
+                      </div>
+                      <div>
+                        <p className="font-black text-slate-800 text-lg">Chip Belum Terdaftar</p>
+                        <p className="text-sm text-slate-500 font-medium mt-1">Kode NFC <span className="font-mono font-bold text-red-600">{scanInput}</span> belum memiliki data.</p>
+                      </div>
+                      <div className="flex gap-3">
+                        <button onClick={() => { handleAddFromScan(); setScannedChip(null); }} className="flex-1 py-3.5 bg-red-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition flex items-center justify-center gap-2">
+                          <Plus className="w-4 h-4" /> Tambah Data Chip
+                        </button>
+                        <button onClick={() => setScannedChip(null)} className="flex-1 py-3.5 bg-slate-100 text-slate-700 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition">
+                          Tutup
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeNfcTab === 'write' && (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <h4 className="font-black text-slate-800 text-lg uppercase tracking-tight mb-6 flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-red-600" /> {editChip ? 'Edit Data Chip NFC' : 'Tulis Data Chip NFC'}
+              </h4>
+
+              {!showForm && (
+                <div className="text-center py-8">
+                  <p className="text-slate-400 font-bold text-sm mb-4">Pilih metode untuk memulai</p>
+                  <div className="flex justify-center gap-4">
+                    <button onClick={() => { setShowForm(true); setEditChip(null); resetForm(); }} className="flex flex-col items-center gap-3 p-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 hover:border-red-500 hover:bg-red-50 transition group">
+                      <Plus className="w-8 h-8 text-slate-400 group-hover:text-red-600" />
+                      <span className="font-bold text-xs text-slate-600 group-hover:text-red-600 uppercase tracking-widest">Data Baru</span>
+                    </button>
+                    <button onClick={() => setActiveNfcTab('list')} className="flex flex-col items-center gap-3 p-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 hover:border-red-500 hover:bg-red-50 transition group">
+                      <Database className="w-8 h-8 text-slate-400 group-hover:text-red-600" />
+                      <span className="font-bold text-xs text-slate-600 group-hover:text-red-600 uppercase tracking-widest">Pilih dari Data</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {showForm && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ID NFC (10 Digit) *</label>
+                      <input type="text" value={formData.id_nfc} onChange={e => handleFormChange('id_nfc', e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="0000000000" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-red-500" maxLength={10} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ID Produk *</label>
+                      <input type="text" value={formData.id_produk} onChange={e => handleFormChange('id_produk', e.target.value)} placeholder="SK-001" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Produk *</label>
+                      <input type="text" value={formData.nama_produk} onChange={e => handleFormChange('nama_produk', e.target.value)} placeholder="Sangkar Murai No 1 Original" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Pemilik *</label>
+                      <input type="text" value={formData.nama_pemilik} onChange={e => handleFormChange('nama_pemilik', e.target.value)} placeholder="Nama pemilik" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Deskripsi Produk</label>
+                    <textarea value={formData.deskripsi_produk} onChange={e => handleFormChange('deskripsi_produk', e.target.value)} rows="2" placeholder="Deskripsi produk sangkar" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500 resize-none" />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tanggal Pembuatan</label>
+                      <input type="date" value={formData.tanggal_pembuatan} onChange={e => handleFormChange('tanggal_pembuatan', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nomor Seri</label>
+                      <input type="text" value={formData.nomor_seri} onChange={e => handleFormChange('nomor_seri', e.target.value)} placeholder="SER-001-2026" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-red-500" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tanggal Registrasi</label>
+                      <input type="date" value={formData.tanggal_registrasi} onChange={e => handleFormChange('tanggal_registrasi', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Gambar Produk</label>
+                    <div className="flex flex-wrap gap-3">
+                      {formData.gambar.map((img, idx) => (
+                        <div key={idx} className="relative w-32 h-32 border border-slate-200 rounded-xl overflow-hidden group">
+                          <img src={img} alt={`Gambar ${idx + 1}`} className="w-full h-full object-cover" />
+                          <button onClick={() => handleFormChange('gambar', formData.gambar.filter((_, i) => i !== idx))} className="absolute top-1 right-1 p-1 bg-slate-900/60 text-white rounded-lg hover:bg-red-600 transition opacity-0 group-hover:opacity-100">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                      <label className="flex flex-col items-center justify-center w-32 h-32 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-red-500 hover:bg-red-50 transition group shrink-0">
+                        <Camera className="w-6 h-6 text-slate-400 group-hover:text-red-600 mb-1" />
+                        <span className="text-[9px] font-bold text-slate-400 group-hover:text-red-600 uppercase tracking-widest">Upload</span>
+                        <input type="file" accept="image/*" multiple className="hidden" onChange={e => {
+                          const files = Array.from(e.target.files || []);
+                          Promise.all(files.map(file => new Promise(resolve => {
+                            const reader = new FileReader();
+                            reader.onload = ev => resolve(ev.target?.result || '');
+                            reader.readAsDataURL(file);
+                          }))).then(newImages => {
+                            setFormData(prev => ({ ...prev, gambar: [...prev.gambar, ...newImages.filter(Boolean)] }));
+                          });
+                          e.target.value = '';
+                        }} />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                  <button onClick={() => setActiveNfcTab('list')}  className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 transition">Batal</button>
+                    <button onClick={handleSave} disabled={!formData.id_nfc || formData.id_nfc.length !== 10 || !formData.id_produk || !formData.nama_produk || !formData.nama_pemilik} className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-black shadow-lg shadow-red-200 hover:bg-red-700 transition uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                      <Save className="w-5 h-5" /> {editChip ? 'Update Data' : 'Simpan Data'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeNfcTab === 'list' && (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-100 flex flex-wrap gap-3 justify-between items-center">
+                <h4 className="font-black text-slate-800 uppercase tracking-tight text-sm flex items-center gap-2">
+                  <Database className="w-4 h-4 text-red-600" /> Data Chip NFC ({nfcChips.length})
+                </h4>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button type="button" onClick={() => setActiveNfcTab('scan')} className="bg-red-600 text-white px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition flex items-center gap-2">
+                    <ScanLine className="w-4 h-4" /> Scan Sekarang
+                  </button>
+                  <button type="button" onClick={() => { resetForm(); setShowForm(true); setActiveNfcTab('write'); }} className="bg-red-600 text-white px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition flex items-center gap-2">
+                    <Plus className="w-4 h-4" /> Tambah Baru
+                  </button>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase">
+                    <tr>
+                      <th className="px-6 py-4">ID NFC</th>
+                      <th className="px-6 py-4">ID Produk</th>
+                      <th className="px-6 py-4">Nama Produk</th>
+                      <th className="px-6 py-4">Pemilik</th>
+                      <th className="px-6 py-4">No. Seri</th>
+                      <th className="px-6 py-4 text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {nfcChips.length === 0 ? (
+                      <tr><td colSpan="6" className="px-6 py-8 text-center text-slate-400 font-bold italic text-xs">Belum ada data chip NFC</td></tr>
+                    ) : (
+                      nfcChips.map(chip => (
+                        <tr key={chip.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-6 py-4 font-mono font-bold text-slate-700">{chip.id_nfc}</td>
+                          <td className="px-6 py-4 font-bold text-slate-800">{chip.id_produk}</td>
+                          <td className="px-6 py-4 font-bold text-slate-800">{chip.nama_produk}</td>
+                          <td className="px-6 py-4 text-slate-600">{chip.nama_pemilik}</td>
+                          <td className="px-6 py-4 font-mono text-xs text-slate-500">{chip.nomor_seri || '-'}</td>
+                          <td className="px-6 py-4 text-center">
+                            <div className="flex justify-center gap-2">
+                              <button onClick={() => handleEdit(chip)} className="p-2 text-slate-400 hover:text-emerald-600"><Edit3 className="w-4 h-4" /></button>
+                              <button onClick={() => handleDelete(chip.id)} className="p-2 text-slate-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-900 selection:bg-red-100">
       <style>{`
@@ -4149,6 +4567,7 @@ const App = () => {
         <main className="flex-1 p-4 md:p-8 pb-24 lg:pb-8 max-w-[1600px] mx-auto w-full overflow-x-hidden">
           {activeMenu === 'dashboard' && <Dashboard setTotalBalance={setTotalBalance} />}
 
+          {activeMenu === 'nfc' && <NFCView nfcChips={nfcChips} onAddNfcChip={handleAddNfcChip} onEditNfcChip={handleEditNfcChip} onDeleteNfcChip={handleDeleteNfcChip} />}
 
           {activeMenu === 'pos' && <POSView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} orders={offlineOrders} onCreateOrder={() => setActiveMenu('pos-create')} onEditOrder={handleEditOfflineOrder} onDeleteOrder={handleDeleteOfflineOrder} />}
           {activeMenu === 'pos-create' && <CreateOrderView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} onBack={() => setActiveMenu('pos')} />}
