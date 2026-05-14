@@ -12,7 +12,7 @@ import {
   Camera, Zap, Key, User, Truck, MapPin, CreditCard, Clock, FileText,
   CheckSquare, Square, QrCode, Keyboard, Phone, Printer,   Menu, Save,
   Database, Receipt, BarChart3, ChevronLeft, Trash2,
-  Cpu, Send
+  Cpu, Send, Users
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -29,6 +29,112 @@ const THEME = {
   headerMobile: 'bg-red-700',
   bottomNav: 'bg-red-700',
 };
+
+/** Kategori produk untuk verivication_id (3 digit, contoh 001) */
+const PRODUCT_VERIFICATION_CATEGORIES = [
+  { code: '001', label: 'Sangkar' },
+  { code: '002', label: 'Kandang / habitat' },
+  { code: '003', label: 'Peralatan & aksesoris' },
+  { code: '004', label: 'Pakan & suplemen' },
+  { code: '005', label: 'Lainnya' },
+];
+
+/** Format tampilan: 2600100001 → 26 001 00001 */
+function formatVerivicationIdDisplay(digits10) {
+  const s = digits10 != null ? String(digits10) : '';
+  if (s.length !== 10 || !/^\d{10}$/.test(s)) return s || '—';
+  return `${s.slice(0, 2)} ${s.slice(2, 5)} ${s.slice(5)}`;
+}
+
+/** 10 digit: YY + kategori(3) + urut per kategori per tahun(5) */
+function nextVerivicationId(existingChips, categoryCode) {
+  const yy = String(new Date().getFullYear()).slice(-2);
+  const cat = String(categoryCode ?? '001').replace(/\D/g, '').padStart(3, '0').slice(-3);
+  const prefix = yy + cat;
+  let maxSeq = 0;
+  for (const c of existingChips) {
+    const vid = c.verivication_id;
+    if (typeof vid === 'string' && /^\d{10}$/.test(vid) && vid.startsWith(prefix)) {
+      const seq = parseInt(vid.slice(5), 10);
+      if (!Number.isNaN(seq) && seq > maxSeq) maxSeq = seq;
+    }
+  }
+  return prefix + String(maxSeq + 1).padStart(5, '0');
+}
+
+const DEFAULT_NFC_CHIPS = [
+  {
+    id: 1, id_nfc: '1234567890', id_produk: 'SK-001', nama_produk: 'Sangkar Murai No 1 Original',
+    deskripsi_produk: 'Sangkar murai kayu jati ukiran', nama_pemilik: 'SAZIME OFFICIAL',
+    alamat_pemilik: 'JL. KENARI NO 1, JAKARTA', gmail_pemilik: 'demo.official.sazime@gmail.com', pemilik_terkonfirmasi: true,
+    tanggal_pembuatan: '2026-01-15', nomor_seri: 'SER-001-2026',
+    tanggal_registrasi: '2026-02-01', gambar: [],
+    kategori_produk: '001', verivication_id: '2600100001', tanggal_verivication_id: '2026-02-01'
+  },
+  {
+    id: 2, id_nfc: '0987654321', id_produk: 'SK-002', nama_produk: 'Sangkar Lovebird Elegan',
+    deskripsi_produk: 'Sangkar lovebird bahan stainless', nama_pemilik: 'SAZIME WOODWORK',
+    alamat_pemilik: 'JL. CENDRAWASIH NO 5, BANDUNG', gmail_pemilik: 'demo.woodwork.sazime@gmail.com', pemilik_terkonfirmasi: true,
+    tanggal_pembuatan: '2026-02-10', nomor_seri: 'SER-002-2026',
+    tanggal_registrasi: '2026-02-15', gambar: [],
+    kategori_produk: '001', verivication_id: '2600100002', tanggal_verivication_id: '2026-02-15'
+  }
+];
+
+function migrateNfcChipRow(c) {
+  const gmail = c.gmail_pemilik != null && String(c.gmail_pemilik).trim()
+    ? String(c.gmail_pemilik).trim().toLowerCase().replace(/\s/g, '')
+    : '';
+  let pemilik_terkonfirmasi = c.pemilik_terkonfirmasi;
+  if (pemilik_terkonfirmasi === undefined) {
+    pemilik_terkonfirmasi = !!(gmail || (c.nama_pemilik && String(c.nama_pemilik).trim()));
+  }
+  return {
+    ...c,
+    alamat_pemilik: c.alamat_pemilik ?? '',
+    gmail_pemilik: gmail,
+    pemilik_terkonfirmasi,
+    tanggal_verivication_id: c.tanggal_verivication_id || c.tanggal_registrasi || '',
+  };
+}
+
+function loadNfcChipsFromStorage() {
+  try {
+    const raw = localStorage.getItem('sazime_nfc_chips');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length) {
+        return parsed.map(migrateNfcChipRow);
+      }
+    }
+  } catch (_) { /* ignore */ }
+  return DEFAULT_NFC_CHIPS.map(migrateNfcChipRow);
+}
+
+const LS_PELANGGAN_SANGKAR = 'sazime_pelanggan_sangkar';
+
+function normalizeGmailPelanggan(email) {
+  return String(email ?? '').trim().toLowerCase().replace(/\s/g, '');
+}
+
+function loadPelangganSangkarFromStorage() {
+  try {
+    const raw = localStorage.getItem(LS_PELANGGAN_SANGKAR);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        const landingOnly = parsed.filter((p) => p && String(p.sumber || '') === 'konfirmasi_nfc');
+        if (landingOnly.length !== parsed.length) {
+          try {
+            localStorage.setItem(LS_PELANGGAN_SANGKAR, JSON.stringify(landingOnly));
+          } catch (_) { /* ignore */ }
+        }
+        return landingOnly;
+      }
+    }
+  } catch (_) { /* ignore */ }
+  return [];
+}
 
 // --- SUB-KOMPONEN UI ---
 
@@ -62,6 +168,7 @@ const Sidebar = ({ activeMenu, setActiveMenu }) => {
 
         { id: 'pos', icon: Receipt, label: 'POS (Kasir)' },
         { id: 'database-produk-offline', icon: Database, label: 'Produk Offline' },
+        { id: 'pelanggan-sangkar', icon: Users, label: 'Pelanggan Sangkar' },
         { id: 'pengeluaran', icon: TrendingDown, label: 'Pengeluaran' }
       ]
     },
@@ -178,6 +285,7 @@ const BottomNavbar = ({ activeMenu, setActiveMenu }) => (
       { id: 'nfc', icon: Cpu, label: 'NFC' },
       { id: 'pos', icon: Receipt, label: 'POS' }, // NEW
       { id: 'database-produk-offline', icon: Database, label: 'Prd. Off' }, // NEW
+      { id: 'pelanggan-sangkar', icon: Users, label: 'Plgn.' },
       { id: 'toko', icon: Store, label: 'Toko' },
       { id: 'database-produk', icon: Package, label: 'Prd. On' },
       // { id: 'status-pengiriman', icon: Truck, label: 'Kirim' },
@@ -220,7 +328,9 @@ const TopBar = ({ activeMenu, activeView, setActiveView, totalBalance }) => {
           ? 'SCAN NFC'
           : activeMenu === 'nfc-transfer'
             ? 'PERMINTAAN TRANSFER PEMILIK'
-            : activeMenu.replace(/-/g, ' ').toUpperCase();
+            : activeMenu === 'pelanggan-sangkar'
+              ? 'PELANGGAN SANGKAR'
+              : activeMenu.replace(/-/g, ' ').toUpperCase();
 
   return (
     <header className={`h-16 md:h-20 ${THEME.headerMobile} md:bg-white md:backdrop-blur-md md:border-b md:border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 shadow-sm transition-colors duration-300`}>
@@ -530,6 +640,64 @@ const OfflineProductView = ({ products, onAddProduct, onEditProduct }) => {
     </div>
   );
 };
+
+const PelangganSangkarView = ({ pelanggan }) => (
+  <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100">
+      <div className="flex items-center gap-3">
+        <div className="p-2 bg-red-50 rounded-lg">
+          <Users className="w-6 h-6 text-red-600" />
+        </div>
+        <div>
+          <h3 className="font-black text-slate-800 text-sm md:text-base tracking-tight">Pelanggan Sangkar</h3>
+          <p className="text-[10px] text-slate-500 font-bold mt-0.5">
+            Hanya diisi dari pemilik yang menyelesaikan registrasi di <span className="text-slate-800">halaman landing</span> verifikasi NFC (<span className="font-mono">/ceknfc</span>) setelah konfirmasi email.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="px-6 py-4 border-b border-slate-100">
+        <p className="text-xs font-bold text-slate-500">Total <span className="text-slate-900">{pelanggan.length}</span> pelanggan</p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase">
+            <tr>
+              <th className="px-6 py-4">Nama</th>
+              <th className="px-6 py-4">Alamat</th>
+              <th className="px-6 py-4">Gmail</th>
+              <th className="px-6 py-4">Terdaftar</th>
+              <th className="px-6 py-4">Sumber</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {pelanggan.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="px-6 py-10 text-center text-slate-400 font-bold text-xs italic leading-relaxed">
+                  Belum ada pelanggan. Data muncul setelah pengguna mendaftar dan mengonfirmasi email di halaman landing (<span className="font-mono not-italic">/ceknfc</span>).
+                </td>
+              </tr>
+            ) : (
+              pelanggan.map((p) => (
+                <tr key={p.id} className="hover:bg-slate-50">
+                  <td className="px-6 py-4 font-bold text-slate-800">{p.nama}</td>
+                  <td className="px-6 py-4 text-slate-600 max-w-[220px] text-xs leading-snug">{p.alamat || '—'}</td>
+                  <td className="px-6 py-4 font-mono text-xs text-slate-700">{p.gmail}</td>
+                  <td className="px-6 py-4 text-xs text-slate-500">{p.terdaftar_pada || '—'}</td>
+                  <td className="px-6 py-4">
+                    <span className="text-[10px] font-black uppercase px-2 py-1 rounded bg-slate-100 text-slate-600">{p.sumber === 'konfirmasi_nfc' ? 'Landing' : (p.sumber || '—')}</span>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+);
 
 const CreateOrderView = ({ offlineProducts, onAddOrder, onBack }) => {
   const [cart, setCart] = useState([]);
@@ -2136,20 +2304,27 @@ const App = () => {
     setOfflineOrders(prev => prev.filter(o => o.id !== id));
   };
 
-  const [nfcChips, setNfcChips] = useState([
-    {
-      id: 1, id_nfc: '1234567890', id_produk: 'SK-001', nama_produk: 'Sangkar Murai No 1 Original',
-      deskripsi_produk: 'Sangkar murai kayu jati ukiran', nama_pemilik: 'Sazime Official',
-      tanggal_pembuatan: '2026-01-15', nomor_seri: 'SER-001-2026',
-      tanggal_registrasi: '2026-02-01', gambar: []
-    },
-    {
-      id: 2, id_nfc: '0987654321', id_produk: 'SK-002', nama_produk: 'Sangkar Lovebird Elegan',
-      deskripsi_produk: 'Sangkar lovebird bahan stainless', nama_pemilik: 'Sazime Woodwork',
-      tanggal_pembuatan: '2026-02-10', nomor_seri: 'SER-002-2026',
-      tanggal_registrasi: '2026-02-15', gambar: []
-    }
-  ]);
+  const [nfcChips, setNfcChips] = useState(() => loadNfcChipsFromStorage());
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sazime_nfc_chips', JSON.stringify(nfcChips));
+    } catch (_) { /* ignore */ }
+  }, [nfcChips]);
+
+  const [pelangganSangkar, setPelangganSangkar] = useState(() => loadPelangganSangkarFromStorage());
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_PELANGGAN_SANGKAR, JSON.stringify(pelangganSangkar));
+    } catch (_) { /* ignore */ }
+  }, [pelangganSangkar]);
+
+  useEffect(() => {
+    const reload = () => setPelangganSangkar(loadPelangganSangkarFromStorage());
+    window.addEventListener('sazime-pelanggan-updated', reload);
+    return () => window.removeEventListener('sazime-pelanggan-updated', reload);
+  }, []);
 
   const handleAddNfcChip = (chip) => {
     setNfcChips(prev => [chip, ...prev]);
@@ -4230,27 +4405,35 @@ const App = () => {
     </div>
   );
 
-  const NFCView = ({ initialTab = 'list', setActiveMenu, nfcChips, onAddNfcChip, onEditNfcChip, onDeleteNfcChip }) => {
+  const NFCView = ({ initialTab = 'list', setActiveMenu, nfcChips, onAddNfcChip, onEditNfcChip, onDeleteNfcChip, offlineProducts = [], pelangganSangkar = [] }) => {
     const [activeNfcTab, setActiveNfcTab] = useState(initialTab);
     useEffect(() => { setActiveNfcTab(initialTab); }, [initialTab]);
     const [scanInput, setScanInput] = useState('');
     const [scannedChip, setScannedChip] = useState(null);
     const [showForm, setShowForm] = useState(false);
     const [editChip, setEditChip] = useState(null);
+    const [pelangganSelectId, setPelangganSelectId] = useState('');
+    const [offlineProductSelectId, setOfflineProductSelectId] = useState('');
     const [formData, setFormData] = useState({
       id_nfc: '', id_produk: '', nama_produk: '', deskripsi_produk: '',
-      nama_pemilik: '', tanggal_pembuatan: '', nomor_seri: '',
-      tanggal_registrasi: new Date().toISOString().slice(0, 10), gambar: []
+      nama_pemilik: '', alamat_pemilik: '', gmail_pemilik: '', pemilik_terkonfirmasi: false,
+      tanggal_pembuatan: '', nomor_seri: '',
+      tanggal_registrasi: new Date().toISOString().slice(0, 10), gambar: [],
+      kategori_produk: '', verivication_id: ''
     });
 
     const resetForm = () => {
       setFormData({
         id_nfc: '', id_produk: '', nama_produk: '', deskripsi_produk: '',
-        nama_pemilik: '', tanggal_pembuatan: '', nomor_seri: '',
-        tanggal_registrasi: new Date().toISOString().slice(0, 10), gambar: []
+        nama_pemilik: '', alamat_pemilik: '', gmail_pemilik: '', pemilik_terkonfirmasi: false,
+        tanggal_pembuatan: '', nomor_seri: '',
+        tanggal_registrasi: new Date().toISOString().slice(0, 10), gambar: [],
+        kategori_produk: '', verivication_id: ''
       });
       setEditChip(null);
       setShowForm(false);
+      setPelangganSelectId('');
+      setOfflineProductSelectId('');
     };
 
     const handleScan = () => {
@@ -4260,6 +4443,8 @@ const App = () => {
     };
 
     const handleAddFromScan = () => {
+      setPelangganSelectId('');
+      setOfflineProductSelectId('');
       setFormData(prev => ({ ...prev, id_nfc: scanInput }));
       setShowForm(true);
       setActiveNfcTab('write');
@@ -4267,7 +4452,17 @@ const App = () => {
 
     const handleEdit = (chip) => {
       setEditChip(chip);
-      setFormData({ ...chip });
+      const vid = chip.verivication_id && /^\d{10}$/.test(String(chip.verivication_id)) ? String(chip.verivication_id) : '';
+      setFormData({
+        ...chip,
+        verivication_id: vid,
+        kategori_produk: chip.kategori_produk || (vid ? vid.slice(2, 5) : '')
+      });
+      const gNorm = normalizeGmailPelanggan(chip.gmail_pemilik || '');
+      const matchPel = gNorm ? pelangganSangkar.find((p) => normalizeGmailPelanggan(p.gmail) === gNorm) : null;
+      setPelangganSelectId(matchPel ? String(matchPel.id) : '');
+      const matchPr = offlineProducts.find((pr) => pr.sku === chip.id_produk || pr.name === chip.nama_produk);
+      setOfflineProductSelectId(matchPr ? String(matchPr.id) : '');
       setShowForm(true);
       setActiveNfcTab('write');
     };
@@ -4279,10 +4474,36 @@ const App = () => {
     };
 
     const handleSave = () => {
+      const todayStr = new Date().toISOString().slice(0, 10);
       if (editChip) {
-        onEditNfcChip({ ...formData, id: editChip.id });
+        const hadVid = typeof formData.verivication_id === 'string' && /^\d{10}$/.test(formData.verivication_id);
+        let verivication_id = hadVid ? formData.verivication_id : '';
+        let kategori_produk = formData.kategori_produk;
+        let tanggal_verivication_id = editChip.tanggal_verivication_id || '';
+        if (!verivication_id) {
+          if (!kategori_produk) return;
+          verivication_id = nextVerivicationId(
+            nfcChips.filter(c => c.id !== editChip.id),
+            kategori_produk
+          );
+          tanggal_verivication_id = todayStr;
+        } else {
+          kategori_produk = verivication_id.slice(2, 5);
+          if (!tanggal_verivication_id) {
+            tanggal_verivication_id = formData.tanggal_registrasi || editChip.tanggal_registrasi || todayStr;
+          }
+        }
+        onEditNfcChip({ ...formData, id: editChip.id, verivication_id, kategori_produk, tanggal_verivication_id });
       } else {
-        onAddNfcChip({ ...formData, id: Date.now() });
+        if (!formData.kategori_produk) return;
+        const verivication_id = nextVerivicationId(nfcChips, formData.kategori_produk);
+        onAddNfcChip({
+          ...formData,
+          id: Date.now(),
+          verivication_id,
+          kategori_produk: formData.kategori_produk,
+          tanggal_verivication_id: todayStr,
+        });
       }
       resetForm();
     };
@@ -4303,7 +4524,10 @@ const App = () => {
     };
 
     const handleApproveTransfer = (req) => {
-      const chip = nfcChips.find(c => c.id_nfc === req.id_nfc);
+      const chip = nfcChips.find(c =>
+        (req.verivication_id && String(c.verivication_id) === String(req.verivication_id))
+        || (req.id_nfc && c.id_nfc === req.id_nfc)
+      );
       if (chip) onEditNfcChip({ ...chip, nama_pemilik: req.pemilik_baru });
       const updated = transferRequests.map(r =>
         r.id === req.id ? { ...r, status: 'approved', tanggal_diproses: new Date().toISOString().slice(0, 10) } : r
@@ -4397,6 +4621,13 @@ const App = () => {
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID NFC</p>
                           <p className="font-mono font-black text-slate-800 mt-1">{scannedChip.id_nfc}</p>
                         </div>
+                        {scannedChip.verivication_id && /^\d{10}$/.test(String(scannedChip.verivication_id)) && (
+                          <div className="bg-slate-50 p-3 rounded-xl">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Verivication ID</p>
+                            <p className="font-mono font-black text-slate-800 mt-1 tracking-wide">{formatVerivicationIdDisplay(scannedChip.verivication_id)}</p>
+                            <p className="text-[10px] font-mono text-slate-500 mt-0.5">{scannedChip.verivication_id}</p>
+                          </div>
+                        )}
                         <div className="bg-slate-50 p-3 rounded-xl">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID Produk</p>
                           <p className="font-black text-slate-800 mt-1">{scannedChip.id_produk}</p>
@@ -4473,6 +4704,70 @@ const App = () => {
               
               {showForm && (
                 <div className="space-y-4">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50/90 p-4 space-y-3">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Data dari master</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pelanggan sangkar</label>
+                        <select
+                          value={pelangganSelectId}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setPelangganSelectId(v);
+                            if (!v) return;
+                            const p = pelangganSangkar.find((x) => String(x.id) === v);
+                            if (p) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                nama_pemilik: String(p.nama || '').toUpperCase(),
+                                alamat_pemilik: String(p.alamat || '').toUpperCase(),
+                                gmail_pemilik: normalizeGmailPelanggan(p.gmail),
+                                pemilik_terkonfirmasi: true,
+                              }));
+                            }
+                          }}
+                          className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                        >
+                          <option value="">— Pilih pelanggan (atau isi manual di bawah) —</option>
+                          {pelangganSangkar.map((p) => (
+                            <option key={p.id} value={String(p.id)}>{p.nama} · {p.gmail}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Produk offline</label>
+                        <select
+                          value={offlineProductSelectId}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setOfflineProductSelectId(v);
+                            if (!v) return;
+                            const pr = offlineProducts.find((x) => String(x.id) === v);
+                            if (pr) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                id_produk: pr.sku,
+                                nama_produk: pr.name,
+                              }));
+                            }
+                          }}
+                          className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                        >
+                          <option value="">— Pilih produk (atau isi manual di bawah) —</option>
+                          {offlineProducts.map((pr) => (
+                            <option key={pr.id} value={String(pr.id)}>{pr.name} ({pr.sku})</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    {pelangganSangkar.length === 0 && (
+                      <p className="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">Belum ada pelanggan dari landing page. Minta pemilik menyelesaikan registrasi &amp; konfirmasi email di <span className="font-mono">/ceknfc</span>; daftar terisi otomatis di menu <span className="font-black">Pelanggan Sangkar</span>.</p>
+                    )}
+                    {offlineProducts.length === 0 && (
+                      <p className="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">Belum ada produk offline — tambah di menu <span className="font-black">Produk Offline</span>.</p>
+                    )}
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ID NFC (10 Digit) *</label>
@@ -4486,13 +4781,71 @@ const App = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori produk *</label>
+                      {editChip && /^\d{10}$/.test(String(formData.verivication_id || '')) ? (
+                        <div className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-700">
+                          {PRODUCT_VERIFICATION_CATEGORIES.find(c => c.code === String(formData.verivication_id).slice(2, 5))?.label || `Kode ${String(formData.verivication_id).slice(2, 5)}`}
+                          <span className="block text-[10px] font-mono text-slate-500 mt-0.5">{String(formData.verivication_id).slice(2, 5)}</span>
+                        </div>
+                      ) : (
+                        <select
+                          value={formData.kategori_produk}
+                          onChange={e => handleFormChange('kategori_produk', e.target.value)}
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                        >
+                          <option value="">— Pilih kategori —</option>
+                          {PRODUCT_VERIFICATION_CATEGORIES.map(c => (
+                            <option key={c.code} value={c.code}>{c.code} — {c.label}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Verivication ID</label>
+                      {editChip && /^\d{10}$/.test(String(formData.verivication_id || '')) ? (
+                        <div className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-mono font-black text-slate-800 tracking-wide">
+                          {formatVerivicationIdDisplay(formData.verivication_id)}
+                          <span className="block text-[9px] font-bold text-slate-500 mt-1 normal-case tracking-normal">{formData.verivication_id}</span>
+                        </div>
+                      ) : (
+                        <div className="w-full px-4 py-3 bg-amber-50 border border-amber-100 rounded-xl text-xs font-bold text-amber-900">
+                          Angka 10 digit dibuat otomatis saat simpan (tahun + kategori + nomor urut per kategori).
+                          {formData.kategori_produk && (!editChip || !/^\d{10}$/.test(String(formData.verivication_id || ''))) && (
+                            <p className="mt-2 font-mono text-sm text-amber-950">Berikutnya: {formatVerivicationIdDisplay(nextVerivicationId(
+                              editChip ? nfcChips.filter(c => c.id !== editChip.id) : nfcChips,
+                              formData.kategori_produk
+                            ))}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Produk *</label>
                       <input type="text" value={formData.nama_produk} onChange={e => handleFormChange('nama_produk', e.target.value)} placeholder="Sangkar Murai No 1 Original" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" />
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Pemilik *</label>
-                      <input type="text" value={formData.nama_pemilik} onChange={e => handleFormChange('nama_pemilik', e.target.value)} placeholder="Nama pemilik" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500" />
+                      <input type="text" value={formData.nama_pemilik} onChange={e => handleFormChange('nama_pemilik', e.target.value.toUpperCase())} placeholder="NAMA PEMILIK" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500 uppercase placeholder:normal-case placeholder:text-slate-300" />
                     </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Alamat pemilik</label>
+                    <textarea value={formData.alamat_pemilik} onChange={e => handleFormChange('alamat_pemilik', e.target.value.toUpperCase())} rows={2} placeholder="ALAMAT LENGKAP PEMILIK" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-red-500 resize-none uppercase placeholder:normal-case placeholder:text-slate-300" />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Gmail pemilik</label>
+                      <input type="email" inputMode="email" autoComplete="email" value={formData.gmail_pemilik} onChange={e => handleFormChange('gmail_pemilik', e.target.value.trim().toLowerCase().replace(/\s/g, ''))} placeholder="nama@gmail.com" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-red-500 lowercase placeholder:normal-case" />
+                    </div>
+                    <label className="flex items-center gap-3 cursor-pointer select-none pb-3 md:pb-4 px-1">
+                      <input type="checkbox" checked={!!formData.pemilik_terkonfirmasi} onChange={e => handleFormChange('pemilik_terkonfirmasi', e.target.checked)} className="w-4 h-4 rounded border-slate-300 text-red-600 focus:ring-red-500" />
+                      <span className="text-xs font-bold text-slate-700">Pemilik terkonfirmasi (lewat email / manual admin)</span>
+                    </label>
                   </div>
 
                   <div className="space-y-1.5">
@@ -4546,7 +4899,7 @@ const App = () => {
 
                   <div className="flex gap-3 pt-4">
                   <button type="button" onClick={() => { resetForm(); setActiveNfcTab('list'); setActiveMenu?.('nfc'); }} className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 transition">Batal</button>
-                    <button onClick={handleSave} disabled={!formData.id_nfc || formData.id_nfc.length !== 10 || !formData.id_produk || !formData.nama_produk || !formData.nama_pemilik} className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-black shadow-lg shadow-red-200 hover:bg-red-700 transition uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                    <button onClick={handleSave} disabled={!formData.id_nfc || formData.id_nfc.length !== 10 || !formData.id_produk || !formData.nama_produk || !formData.nama_pemilik || ((!editChip || !/^\d{10}$/.test(String(formData.verivication_id || ''))) && !formData.kategori_produk)} className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-black shadow-lg shadow-red-200 hover:bg-red-700 transition uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                       <Save className="w-5 h-5" /> {editChip ? 'Update Data' : 'Simpan Data'}
                     </button>
                   </div>
@@ -4570,23 +4923,39 @@ const App = () => {
                   <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase">
                     <tr>
                       <th className="px-6 py-4">ID NFC</th>
+                      <th className="px-6 py-4">Verivication ID</th>
                       <th className="px-6 py-4">ID Produk</th>
                       <th className="px-6 py-4">Nama Produk</th>
                       <th className="px-6 py-4">Pemilik</th>
+                      <th className="px-6 py-4">Gmail</th>
+                      <th className="px-6 py-4">Konfirmasi</th>
                       <th className="px-6 py-4">No. Seri</th>
                       <th className="px-6 py-4 text-center">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {nfcChips.length === 0 ? (
-                      <tr><td colSpan="6" className="px-6 py-8 text-center text-slate-400 font-bold italic text-xs">Belum ada data chip NFC</td></tr>
+                      <tr><td colSpan="9" className="px-6 py-8 text-center text-slate-400 font-bold italic text-xs">Belum ada data chip NFC</td></tr>
                     ) : (
                       nfcChips.map(chip => (
                         <tr key={chip.id} className="hover:bg-slate-50 transition-colors">
                           <td className="px-6 py-4 font-mono font-bold text-slate-700">{chip.id_nfc}</td>
+                          <td className="px-6 py-4 font-mono text-xs text-slate-600">
+                            {chip.verivication_id && /^\d{10}$/.test(String(chip.verivication_id))
+                              ? formatVerivicationIdDisplay(chip.verivication_id)
+                              : '—'}
+                          </td>
                           <td className="px-6 py-4 font-bold text-slate-800">{chip.id_produk}</td>
                           <td className="px-6 py-4 font-bold text-slate-800">{chip.nama_produk}</td>
                           <td className="px-6 py-4 text-slate-600">{chip.nama_pemilik}</td>
+                          <td className="px-6 py-4 font-mono text-[10px] text-slate-600 max-w-[140px] truncate" title={chip.gmail_pemilik || ''}>{chip.gmail_pemilik || '—'}</td>
+                          <td className="px-6 py-4">
+                            {chip.pemilik_terkonfirmasi ? (
+                              <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-100 text-emerald-700">Ya</span>
+                            ) : (
+                              <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-black uppercase bg-amber-100 text-amber-800">Belum</span>
+                            )}
+                          </td>
                           <td className="px-6 py-4 font-mono text-xs text-slate-500">{chip.nomor_seri || '-'}</td>
                           <td className="px-6 py-4 text-center">
                             <div className="flex justify-center gap-2">
@@ -4623,7 +4992,7 @@ const App = () => {
                   <table className="w-full text-left text-sm">
                     <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase">
                       <tr>
-                        <th className="px-6 py-4">ID NFC</th>
+                        <th className="px-6 py-4">Verivication ID</th>
                         <th className="px-6 py-4">Produk</th>
                         <th className="px-6 py-4">Pemilik Lama</th>
                         <th className="px-6 py-4">Pemilik Baru</th>
@@ -4635,7 +5004,7 @@ const App = () => {
                     <tbody className="divide-y divide-slate-100">
                       {transferRequests.map(req => (
                         <tr key={req.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="px-6 py-4 font-mono font-bold text-slate-700">{req.id_nfc}</td>
+                          <td className="px-6 py-4 font-mono font-bold text-slate-700">{req.verivication_id || req.id_nfc || '—'}</td>
                           <td className="px-6 py-4 font-bold text-slate-800 max-w-[120px] truncate" title={req.nama_produk}>{req.nama_produk}</td>
                           <td className="px-6 py-4 text-slate-600">{req.pemilik_lama}</td>
                           <td className="px-6 py-4 font-bold text-slate-800">{req.pemilik_baru}</td>
@@ -4695,7 +5064,7 @@ const App = () => {
                     <span className="w-1 h-6 bg-red-600 rounded-full inline-block" />
                     Dokumen Bukti Transfer
                   </h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">ID NFC <span className="font-mono text-slate-600">{evidenceModalReq.id_nfc}</span></p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Verivication ID <span className="font-mono text-slate-600">{evidenceModalReq.verivication_id || evidenceModalReq.id_nfc || '—'}</span></p>
                 </div>
                 <button type="button" onClick={() => setEvidenceModalReq(null)} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-full transition-colors">
                   <X className="w-5 h-5" />
@@ -4802,12 +5171,17 @@ const App = () => {
               onAddNfcChip={handleAddNfcChip}
               onEditNfcChip={handleEditNfcChip}
               onDeleteNfcChip={handleDeleteNfcChip}
+              offlineProducts={offlineProducts}
+              pelangganSangkar={pelangganSangkar}
             />
           )}
 
           {activeMenu === 'pos' && <POSView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} orders={offlineOrders} onCreateOrder={() => setActiveMenu('pos-create')} onEditOrder={handleEditOfflineOrder} onDeleteOrder={handleDeleteOfflineOrder} />}
           {activeMenu === 'pos-create' && <CreateOrderView offlineProducts={offlineProducts} onAddOrder={handleAddOfflineOrder} onBack={() => setActiveMenu('pos')} />}
           {activeMenu === 'database-produk-offline' && <OfflineProductView products={offlineProducts} onAddProduct={handleAddOfflineProduct} onEditProduct={handleEditOfflineProduct} />}
+          {activeMenu === 'pelanggan-sangkar' && (
+            <PelangganSangkarView pelanggan={pelangganSangkar} />
+          )}
           {activeMenu === 'pengeluaran' && <ExpenseView expenses={expenses} onAddExpense={handleAddExpense} />}
           {activeMenu === 'rekap-cashflow' && (
             <CashflowRecapView
